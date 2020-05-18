@@ -11,6 +11,8 @@ layout (location = 5) in mat4 model_matrix;
 uniform mat4x4 mat_mvp;
 uniform mat4x4 mat_world;
 
+uniform samplerBuffer sb1;
+
 //----out vars
 out Vertex {
 	vec2 uv;
@@ -22,7 +24,14 @@ out Vertex {
 
 void main()
 {
-	gl_Position = mat_mvp * model_matrix * vec4(vPosition, 1);
+	vec4 col1 = texelFetch(sb1, gl_InstanceID * 4);
+	vec4 col2 = texelFetch(sb1, gl_InstanceID * 4 + 1);
+	vec4 col3 = texelFetch(sb1, gl_InstanceID * 4 + 2);
+	vec4 col4 = texelFetch(sb1, gl_InstanceID * 4 + 3);
+
+	mat4 model_matrix2 = mat4(col1, col2, col3, col4);
+
+	gl_Position = mat_mvp * model_matrix2 * vec4(vPosition, 1);
 	//gl_Position = mat_mvp * vec4(vPosition, 1);
 	
 	worldPos = (mat_world * vec4(vPosition, 1)).xyz;

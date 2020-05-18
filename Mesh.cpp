@@ -3,7 +3,7 @@
 #include "ShaderHelper.h"
 
 Mesh::Mesh()
-	:m_vao(0), m_vbo(0), m_vaeo(0), m_instanceBufferId(0)
+	:m_vao(0), m_vbo(0), m_vaeo(0), m_instanceBufferId(0), m_tbo1(0)
 {
 	initializeOpenGLFunctions();
 
@@ -247,6 +247,16 @@ void Mesh::BindBuffer()
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
+
+	// sampler buffer bind
+	glGenBuffers(1, &m_tbo1);
+	glBindBuffer(GL_TEXTURE_BUFFER, m_tbo1);
+	glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 16 * 10, nullptr, GL_STATIC_DRAW);
+	GLuint tex1;
+	glCreateTextures(GL_TEXTURE_BUFFER, 1, &tex1);
+	glTextureBuffer(tex1, GL_RGBA32F, m_tbo1);
+	glBindTextureUnit(0, m_tbo1);
+	glBindBuffer(GL_TEXTURE_BUFFER, 0);
 }
 
 GLuint Mesh::GetVao()
@@ -312,4 +322,9 @@ void Mesh::AddDiffuseTexture(Texture *tex)
 void Mesh::AddSpecularTexture(Texture *tex)
 {
 	m_specularTexVec.append(tex);
+}
+
+GLuint Mesh::GetTextureBuffer1() const
+{
+	return m_tbo1;
 }

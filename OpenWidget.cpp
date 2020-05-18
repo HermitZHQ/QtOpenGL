@@ -36,7 +36,9 @@ void OpenWidget::initializeGL()
 	glCullFace(GL_BACK);
 // 	glFrontFace(GL_CW);
 
+	glClearStencil(0x0);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
 
 	// we should init shader first, so we can get attri location from shader
 	InitShaders();
@@ -52,6 +54,9 @@ void OpenWidget::initializeGL()
 		mat.scale(10, 10, 10);
 		pMod->SetWroldMat(mat);
 	}
+
+// 	glEnable(GL_SCISSOR_TEST);
+// 	glScissor(0, 0, 200, 200);
 }
 
 void OpenWidget::resizeGL(int w, int h)
@@ -64,6 +69,13 @@ void OpenWidget::paintGL()
 	static const GLfloat black[] = { 0.278f, 0.278f, 0.278f, 0.0f };
 	glClearBufferfv(GL_COLOR, 0, black);
 	glClear(GL_DEPTH_BUFFER_BIT);
+
+	glStencilFunc(GL_EQUAL, 0x1, 0x1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+// 	drawSphere();
+
+	glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
+// 	drawTori();
 
 	auto modelNum = ModelMgr::Instance().GetModelNum();
 	for (unsigned int i = 0; i < modelNum; ++i)
@@ -103,10 +115,11 @@ void OpenWidget::paintGL()
 
 			// multi instances test
 			const static int instanceNum = 10;
-			if (mesh->GetInstancesBufferId() != 0)
+// 			if (mesh->GetInstancesBufferId() != 0)
 			{
-				glBindBuffer(GL_ARRAY_BUFFER, mesh->GetInstancesBufferId());
-				void *pBuf = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+// 				glBindBuffer(GL_ARRAY_BUFFER, mesh->GetInstancesBufferId());
+				glBindBuffer(GL_TEXTURE_BUFFER, mesh->GetTextureBuffer1());
+				void *pBuf = glMapBuffer(GL_TEXTURE_BUFFER, GL_WRITE_ONLY);
 // 				pBuf = (GLchar*)pBuf + mesh->GetMultiInstanceModelMatrixOffset();
 
 				if (nullptr != pBuf)
@@ -127,7 +140,8 @@ void OpenWidget::paintGL()
 					}
 	
 					glUnmapBuffer(GL_ARRAY_BUFFER);
-					glBindBuffer(GL_ARRAY_BUFFER, 0);
+					// 					glBindBuffer(GL_ARRAY_BUFFER, 0);
+					glBindBuffer(GL_TEXTURE_BUFFER, 0);
 				}
 			}
 

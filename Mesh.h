@@ -77,6 +77,7 @@ public:
 	//----texture
 	void AddDiffuseTexture(Texture *tex);
 	void AddSpecularTexture(Texture *tex);
+	GLuint GetTextureBuffer1() const;
 
 private:
 	QVector<float>						m_vertices;
@@ -98,5 +99,6 @@ private:
 	GLuint								m_vbo;
 	GLuint								m_vaeo;// vertex array elements object
 	GLuint								m_instanceBufferId;
+	GLuint								m_tbo1;// texture buffer object
 };
 
