@@ -1,9 +1,12 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include "ShaderHelper.h"
+#include "PreDef.h"
+#include "QMatrix4x4"
 
 Mesh::Mesh()
 	:m_vao(0), m_vbo(0), m_vaeo(0), m_instanceBufferId(0), m_tbo1(0)
+	, m_shaderType(Default)
 {
 	initializeOpenGLFunctions();
 
@@ -172,6 +175,12 @@ void Mesh::AddVertInfo(const VertInfo &info)
 
 void Mesh::BindBuffer()
 {
+	// init the shaders first
+	InitShaders();
+}
+
+void Mesh::BindVertexRelevantBuffer()
+{
 	const GLuint *vertex_indices = GetIndices();
 
 	const GLfloat *vertex_positions = GetVertices();
@@ -203,12 +212,12 @@ void Mesh::BindBuffer()
 		+ GetTangentsMemSize() + GetBitangentsMemSize(),
 		GetNormalsMemSize(), vertex_normals);
 
-	GLint positionLoc = ShaderHelper::Instance().GetAttriLocation("vPosition");
-	GLint uvLoc = ShaderHelper::Instance().GetAttriLocation("vUV");
-	GLint normalLoc = ShaderHelper::Instance().GetAttriLocation("vNormal");
-	GLint tangentLoc = ShaderHelper::Instance().GetAttriLocation("vTangent");
-	GLint bitangentLoc = ShaderHelper::Instance().GetAttriLocation("vBitangent");
-	GLint modelMatLoc = ShaderHelper::Instance().GetAttriLocation("model_matrix");
+	GLint positionLoc = 0;
+	GLint uvLoc = 1;
+	GLint tangentLoc = 2;
+	GLint bitangentLoc = 3;
+	GLint normalLoc = 4;
+	GLint modelMatLoc = -1;
 
 	glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 0, (0));
 	glEnableVertexAttribArray(positionLoc);
@@ -233,7 +242,7 @@ void Mesh::BindBuffer()
 		glBindBuffer(GL_ARRAY_BUFFER, m_instanceBufferId);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * 10, nullptr, GL_STATIC_DRAW);
 
-// 		m_instanceBufferId = m_vbo;
+		// 		m_instanceBufferId = m_vbo;
 
 		// mat4 type take space of 4 vec4, so we should circle 4 times
 		for (int i = 0; i < 4; ++i)
@@ -327,4 +336,130 @@ void Mesh::AddSpecularTexture(Texture *tex)
 GLuint Mesh::GetTextureBuffer1() const
 {
 	return m_tbo1;
+}
+
+void Mesh::Draw(QMatrix4x4 &matVP, QMatrix4x4 &matModel, QVector3D &camPos)
+{
+#ifdef ENABLE_TEX
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, GetTexture1());
+#ifdef ENABLE_NORMALMAP
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, GetTextureNormalMap());
+#endif
+#endif
+	glBindVertexArray(GetVao());
+
+	matVP = matVP * matModel;
+	SetMVPMatrix(matVP);
+	SetWorldMatrix(matModel);
+	SetCamWorldPos(camPos);
+
+	// Draw element(with indices)
+// 	glDrawArrays(GL_TRIANGLES, 0, NumVertices);
+	glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, 0);
+}
+
+void Mesh::InitShaders()
+{
+	InitDefaultShader();
+	InitShader1();
+	BindVertexRelevantBuffer();
+
+	SwitchShader(Shader1);
+}
+
+void Mesh::InitDefaultShader()
+{
+	ShaderHelper::ShaderInfo info[] = {
+	{GL_VERTEX_SHADER, "./shaders/triangle.vert"},
+	{GL_FRAGMENT_SHADER, "./shaders/triangle.frag"}
+	};
+	GLuint program = m_shaders[Default].LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+	if (program != 0) {
+		AddTipInfo(Q8("读取shader文件成功----"));
+	}
+	else {
+		AddTipInfo(Q8("读取shader文件失败----"));
+	}
+	m_shaders[Default].Use();
+
+	m_matMVPLoc[Default] = m_shaders[Default].GetUniformLocation("mat_mvp");
+	m_matWorldLoc[Default] = m_shaders[Default].GetUniformLocation("mat_world");
+	m_worldCamPosLoc[Default] = m_shaders[Default].GetUniformLocation("worldCamPos");
+
+	auto texId = m_shaders[Default].GetUniformLocation("tex");
+	auto normalMapId = m_shaders[Default].GetUniformLocation("normalMap");
+	glUniform1i(texId, 0);
+	glUniform1i(normalMapId, 1);
+
+	if (-1 == m_matMVPLoc[Default] || -1 == m_matWorldLoc[Default]
+		|| -1 == m_worldCamPosLoc[Default]) {
+		AddTipInfo(Q8("查询uniform失败！"));
+	}
+
+	m_shaders[Default].Unuse();
+}
+
+void Mesh::InitShader1()
+{
+	ShaderHelper::ShaderInfo info2[] = {
+		{GL_VERTEX_SHADER, "./shaders/program1.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/program1.frag"}
+	};
+	GLuint program = m_shaders[Shader1].LoadShaders(info2, sizeof(info2) / sizeof(ShaderHelper::ShaderInfo));
+	if (program != 0) {
+		AddTipInfo(Q8("读取shader1文件成功----"));
+	}
+	else {
+		AddTipInfo(Q8("读取shader1文件失败----"));
+	}
+	m_shaders[Shader1].Use();
+
+	m_matMVPLoc[Shader1] = m_shaders[Shader1].GetUniformLocation("mat_mvp");
+	m_matWorldLoc[Shader1] = m_shaders[Shader1].GetUniformLocation("mat_world");
+	m_worldCamPosLoc[Shader1] = m_shaders[Shader1].GetUniformLocation("worldCamPos");
+
+	auto texId = m_shaders[Shader1].GetUniformLocation("tex");
+	auto normalMapId = m_shaders[Shader1].GetUniformLocation("normalMap");
+	glUniform1i(texId, 0);
+	glUniform1i(normalMapId, 1);
+
+	if (-1 == m_matMVPLoc[Shader1] || -1 == m_matWorldLoc[Shader1]
+		|| -1 == m_worldCamPosLoc[Shader1]) {
+		AddTipInfo(Q8("查询uniform1失败！"));
+	}
+
+	m_shaders[Shader1].Unuse();
+}
+
+void Mesh::SwitchShader(eShaderType type)
+{
+	m_shaderType = type;
+	m_shaders[m_shaderType].Use();
+}
+
+void Mesh::SetMVPMatrix(QMatrix4x4 &matMVP)
+{
+	glUniformMatrix4fv(m_matMVPLoc[m_shaderType], 1, GL_FALSE, matMVP.data());
+}
+
+void Mesh::SetWorldMatrix(QMatrix4x4 &matWorld)
+{
+	glUniformMatrix4fv(m_matWorldLoc[m_shaderType], 1, GL_FALSE, matWorld.data());
+}
+
+void Mesh::SetCamWorldPos(QVector3D &camPos)
+{
+	glUniform3f(m_worldCamPosLoc[m_shaderType], camPos.x(), camPos.y(), camPos.z());
+}
+
+GLuint Mesh::GetDefaultProgram() const
+{
+	return m_shaders[Default].GetProgram();
+}
+
+GLuint Mesh::GetProgram1() const
+{
+	return m_shaders[Shader1].GetProgram();
 }

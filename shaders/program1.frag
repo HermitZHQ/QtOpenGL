@@ -41,13 +41,13 @@ void main()
 
 	vec4 albedo = texture(tex, uv);
 	ambient = ambient * 0.7 * albedo.rgb;
-	vec3 diffuse = worldLightColor * ambient.rgb * clamp(dot(worldLightDir, normal), 0.0, 1.0);
+	vec3 diffuse = worldLightColor * ambient.rgb * clamp(dot(worldLightDir, worldNormal), 0.0, 1.0);
 
-	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
+	float spec = pow(max(dot(halfDir, worldNormal), 0.0), 512);
 	vec3 specular = worldLightColor * specularColor.rgb * spec;
 
-	fColor = vec4(ambient + diffuse + specular, 1);
+	fColor = vec4(ambient + diffuse, 1);
 	//fColor = vec4(albedo.rgb, 1);
 	//fColor = albedo;
-	//fColor = vec4(f1, f2, f3, 1);
+	fColor = vec4(1, 1, 0, 1);
 }

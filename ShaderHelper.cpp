@@ -3,7 +3,7 @@
 #include "PreDef.h"
 
 ShaderHelper::ShaderHelper()
-	:m_obj(Q_NULLPTR), m_program(0)
+	:m_program(0)
 {
 }
 
@@ -15,6 +15,8 @@ GLuint ShaderHelper::LoadShaders(ShaderInfo *info, GLuint size)
 {
 	initializeOpenGLFunctions();
 
+	glGenProgramPipelines(1, &m_pipeline);
+	glBindProgramPipeline(m_pipeline);
 	m_program = glCreateProgram();
 
 	GLint res = 0;
@@ -30,7 +32,6 @@ GLuint ShaderHelper::LoadShaders(ShaderInfo *info, GLuint size)
 		}
 
 		QString strContent = file.readAll();
-		auto len = strContent.length();
 
 		QByteArray ba = strContent.toLocal8Bit();
 		const GLchar *content = ba.data();
@@ -70,11 +71,15 @@ GLuint ShaderHelper::GetProgram() const
 void ShaderHelper::Use()
 {
 	glUseProgram(m_program);
+// 	glActiveShaderProgram(m_pipeline, m_program);
 }
 
 void ShaderHelper::Unuse()
 {
+// 	glDeleteProgram(m_program);
 	glUseProgram(0);
+// 	glActiveShaderProgram(m_pipeline, 0);
+// 	m_program = 0;
 }
 
 GLint ShaderHelper::GetAttriLocation(const GLchar *name)
@@ -85,12 +90,4 @@ GLint ShaderHelper::GetAttriLocation(const GLchar *name)
 GLint ShaderHelper::GetUniformLocation(const GLchar *name)
 {
 	return glGetUniformLocation(m_program, name);
-}
-
-void ShaderHelper::AddTipInfo(QString info)
-{
-	if (Q_NULLPTR != m_obj)
-	{
-		QMetaObject::invokeMethod(m_obj, "AddInfo", Q_ARG(QString, info));
-	}
 }

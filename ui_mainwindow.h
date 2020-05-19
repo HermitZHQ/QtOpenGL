@@ -12,7 +12,6 @@
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QListWidget>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>
@@ -25,9 +24,8 @@ class Ui_MainWindow
 {
 public:
     QWidget *centralwidget;
-    QLineEdit *lineEdit;
-    QPushButton *pushButton;
-    QPushButton *pushButton_2;
+    QPushButton *btn_reloadShader;
+    QPushButton *btn_Start;
     QListWidget *list_info;
     QSlider *horizontalSlider;
     QLabel *label;
@@ -36,36 +34,34 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
-        MainWindow->resize(529, 222);
+        MainWindow->resize(619, 262);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
-        lineEdit = new QLineEdit(centralwidget);
-        lineEdit->setObjectName(QString::fromUtf8("lineEdit"));
-        lineEdit->setGeometry(QRect(400, 0, 113, 21));
-        pushButton = new QPushButton(centralwidget);
-        pushButton->setObjectName(QString::fromUtf8("pushButton"));
-        pushButton->setGeometry(QRect(10, 0, 121, 28));
-        pushButton_2 = new QPushButton(centralwidget);
-        pushButton_2->setObjectName(QString::fromUtf8("pushButton_2"));
-        pushButton_2->setGeometry(QRect(10, 30, 93, 28));
+        btn_reloadShader = new QPushButton(centralwidget);
+        btn_reloadShader->setObjectName(QString::fromUtf8("btn_reloadShader"));
+        btn_reloadShader->setGeometry(QRect(10, 50, 111, 28));
+        btn_Start = new QPushButton(centralwidget);
+        btn_Start->setObjectName(QString::fromUtf8("btn_Start"));
+        btn_Start->setGeometry(QRect(10, 10, 111, 28));
         list_info = new QListWidget(centralwidget);
         list_info->setObjectName(QString::fromUtf8("list_info"));
-        list_info->setGeometry(QRect(0, 150, 521, 71));
+        list_info->setGeometry(QRect(0, 90, 621, 171));
         horizontalSlider = new QSlider(centralwidget);
         horizontalSlider->setObjectName(QString::fromUtf8("horizontalSlider"));
-        horizontalSlider->setGeometry(QRect(10, 120, 160, 22));
+        horizontalSlider->setGeometry(QRect(140, 40, 160, 22));
         horizontalSlider->setMinimum(1);
         horizontalSlider->setMaximum(100);
         horizontalSlider->setValue(15);
         horizontalSlider->setOrientation(Qt::Horizontal);
         label = new QLabel(centralwidget);
         label->setObjectName(QString::fromUtf8("label"));
-        label->setGeometry(QRect(10, 90, 91, 21));
+        label->setGeometry(QRect(140, 10, 91, 21));
         MainWindow->setCentralWidget(centralwidget);
 
         retranslateUi(MainWindow);
-        QObject::connect(pushButton, SIGNAL(clicked()), MainWindow, SLOT(OnBtnReloadShaders()));
+        QObject::connect(btn_reloadShader, SIGNAL(clicked()), MainWindow, SLOT(OnBtnReloadShaders()));
         QObject::connect(horizontalSlider, SIGNAL(valueChanged(int)), MainWindow, SLOT(OnSliderMouseSpeedChanged(int)));
+        QObject::connect(btn_Start, SIGNAL(clicked()), MainWindow, SLOT(OnBtnStartClicked()));
 
         QMetaObject::connectSlotsByName(MainWindow);
     } // setupUi
@@ -73,8 +69,8 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", nullptr));
-        pushButton->setText(QApplication::translate("MainWindow", "ReloadShader", nullptr));
-        pushButton_2->setText(QApplication::translate("MainWindow", "PushButton", nullptr));
+        btn_reloadShader->setText(QApplication::translate("MainWindow", "ReloadShader", nullptr));
+        btn_Start->setText(QApplication::translate("MainWindow", "Start", nullptr));
         label->setText(QApplication::translate("MainWindow", "MouseSpeed", nullptr));
     } // retranslateUi
 

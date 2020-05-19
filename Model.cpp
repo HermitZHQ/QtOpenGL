@@ -24,7 +24,7 @@ unsigned int Model::GetMeshNum() const
 	return m_meshes.size();
 }
 
-Mesh* Model::GetMesh(unsigned int index) const
+Mesh* Model::GetMesh(int index) const
 {
 	if (index > m_meshes.size() - 1) {
 		return nullptr;

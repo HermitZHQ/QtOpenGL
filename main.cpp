@@ -1,14 +1,17 @@
-#include "mainwindow.h"
-
 #include <QApplication>
 #include <QtOpenGL/QGLFormat>
-#include "OpenWidget.h"
+#include "PreDef.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    MainWindow w;
-    w.show();
+// 	QSurfaceFormat format;
+// 	format.setDepthBufferSize(24);
+// 	format.setStencilBufferSize(8);
+// 	QSurfaceFormat::setDefaultFormat(format);
+
+	MainWindow *pWnd = GetGlobalMainWndPtr();
+	pWnd->show();
     return a.exec();
 }

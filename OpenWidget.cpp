@@ -2,7 +2,6 @@
 #include "QResizeEvent"
 #include "ShaderHelper.h"
 #include "PreDef.h"
-#include "mainwindow.h"
 #include "Camera.h"
 #include "AssetImport.h"
 #include "Mesh.h"
@@ -36,9 +35,10 @@ void OpenWidget::initializeGL()
 	glCullFace(GL_BACK);
 // 	glFrontFace(GL_CW);
 
-	glClearStencil(0x0);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	// we should init shader first, so we can get attri location from shader
 	InitShaders();
@@ -46,17 +46,23 @@ void OpenWidget::initializeGL()
 	// test load model
 	AssetImport::Instance().LoadModel("./models/02.obj");
 	AssetImport::Instance().LoadModel("./models/plane.obj");
+	AssetImport::Instance().LoadModel("./models/plane2.obj");
 	Model *pMod = ModelMgr::Instance().FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
 		QMatrix4x4 mat;
-		mat.translate(0, 30, 0);
+		mat.translate(0, 15, 0);
 		mat.rotate(180, QVector3D(0, 0, 1));
 		mat.scale(10, 10, 10);
 		pMod->SetWroldMat(mat);
 	}
-
-// 	glEnable(GL_SCISSOR_TEST);
-// 	glScissor(0, 0, 200, 200);
+	Model *pMod2 = ModelMgr::Instance().FindModelByName("Plane002");
+	if (Q_NULLPTR != pMod2) {
+		QMatrix4x4 mat;
+		mat.translate(-30, 0, 0);
+		mat.rotate(90, QVector3D(0, 0, 1));
+		mat.scale(10, 10, 10);
+		pMod2->SetWroldMat(mat);
+	}
 }
 
 void OpenWidget::resizeGL(int w, int h)
@@ -66,16 +72,12 @@ void OpenWidget::resizeGL(int w, int h)
 
 void OpenWidget::paintGL()
 {
+	glColorMask(1, 1, 1, 1);
+	glStencilMask(0xff);
 	static const GLfloat black[] = { 0.278f, 0.278f, 0.278f, 0.0f };
 	glClearBufferfv(GL_COLOR, 0, black);
-	glClear(GL_DEPTH_BUFFER_BIT);
-
-	glStencilFunc(GL_EQUAL, 0x1, 0x1);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-// 	drawSphere();
-
-	glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
-// 	drawTori();
+	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+// 	glClearStencil(0);
 
 	auto modelNum = ModelMgr::Instance().GetModelNum();
 	for (unsigned int i = 0; i < modelNum; ++i)
@@ -84,123 +86,109 @@ void OpenWidget::paintGL()
 		if (nullptr == mod) {
 			continue;
 		}
+
+		// use the first model to be the stencil
+		if (i == 0)	{
+			glDepthMask(0);
+			glColorMask(0, 0, 0, 0);
+
+			glDisable(GL_DEPTH_TEST);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+			glStencilFunc(GL_ALWAYS, 1, 0xff);
+			glStencilMask(0xff);
+		}
+		else {
+			glEnable(GL_DEPTH_TEST);
+			glStencilFunc(GL_ALWAYS, 1, 0xff);
+			glStencilMask(0x0);
+		}
 		
 		auto meshNum = mod->GetMeshNum();
 		for (unsigned int j = 0; j < meshNum; ++j)
 		{
 			Mesh *mesh = mod->GetMesh(j);
-			if (nullptr == mesh) {
-				continue;
-			}
-
-#ifdef ENABLE_TEX
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, mesh->GetTexture1());
-#ifdef ENABLE_NORMALMAP
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, mesh->GetTextureNormalMap());
-#endif
-#endif
-			glBindVertexArray(mesh->GetVao());
-
+			mesh->SwitchShader(Mesh::Default);
 
 			QMatrix4x4 matVP = m_cam->GetVPMatrix();
 			QMatrix4x4 matModel = mod->GetWorldMat();
-// 			static QMatrix4x4 matModel;
-// 			matModel.rotate(0.1f, QVector3D(0, 1, 0));
-			matVP = matVP * matModel;
-			glUniformMatrix4fv(m_matMVPLoc, 1, GL_FALSE, matVP.data());
-			glUniformMatrix4fv(m_matWorldLoc, 1, GL_FALSE, matModel.data());
-			glUniform3f(m_worldCamPosLoc, m_cam->GetCamPos().x(), m_cam->GetCamPos().y(), m_cam->GetCamPos().z());
+			QVector3D camPos = m_cam->GetCamPos().toVector3D();
+			mesh->Draw(matVP, matModel, camPos);
+		}
 
-			// multi instances test
-			const static int instanceNum = 10;
-// 			if (mesh->GetInstancesBufferId() != 0)
+		// scale the cube and get the outline
+		if (0 == i) {
+			Model *pMod = ModelMgr::Instance().FindModelByName("Box001");
+
+			glEnable(GL_DEPTH_TEST);
+			glColorMask(1, 1, 1, 1);
+			glDepthMask(1);
+
+			glStencilFunc(GL_ALWAYS, 1, 0xff);
+			glStencilMask(0x0);
+
+			for (int i = 0; i < pMod->GetMeshNum(); ++i)
 			{
-// 				glBindBuffer(GL_ARRAY_BUFFER, mesh->GetInstancesBufferId());
-				glBindBuffer(GL_TEXTURE_BUFFER, mesh->GetTextureBuffer1());
-				void *pBuf = glMapBuffer(GL_TEXTURE_BUFFER, GL_WRITE_ONLY);
-// 				pBuf = (GLchar*)pBuf + mesh->GetMultiInstanceModelMatrixOffset();
+				auto mesh = pMod->GetMesh(i);
+				mesh->SwitchShader(Mesh::Default);
 
-				if (nullptr != pBuf)
-				{
-					int xOffset = 0;
-					GLfloat *pStartAddr = (GLfloat*)pBuf;
-					for (int i = 0; i < instanceNum; ++i)
-					{
-						// set the different matrix to instances
-						QMatrix4x4 modelMat;
-						modelMat.setToIdentity();
-						modelMat.translate(xOffset, 0, 0);
-	
-						memcpy_s(pStartAddr, sizeof(GLfloat) * 16, modelMat.data(), sizeof(GLfloat) * 16);
-						pStartAddr += 16;
-
-						xOffset += 25;
-					}
-	
-					glUnmapBuffer(GL_ARRAY_BUFFER);
-					// 					glBindBuffer(GL_ARRAY_BUFFER, 0);
-					glBindBuffer(GL_TEXTURE_BUFFER, 0);
-				}
+				QMatrix4x4 matVP = m_cam->GetVPMatrix();
+				QMatrix4x4 matModel = mod->GetWorldMat();
+				QVector3D camPos = m_cam->GetCamPos().toVector3D();
+				mesh->Draw(matVP, matModel, camPos);
 			}
 
-			// Draw element(with indices)
-			// 	glDrawArrays(GL_TRIANGLES, 0, NumVertices);
-// 			glDrawElements(GL_TRIANGLES, mesh->GetIndicesNum(), GL_UNSIGNED_INT, 0);
-			glDrawElementsInstanced(GL_TRIANGLES, mesh->GetIndicesNum(), GL_UNSIGNED_INT, 0, instanceNum);
+			glDisable(GL_DEPTH_TEST);
+			glDepthMask(0);
+			glColorMask(1, 1, 1, 1);
+			glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+			glStencilMask(0x0);
+
+			for (int i = 0; i < pMod->GetMeshNum(); ++i)
+			{
+				auto mesh = pMod->GetMesh(i);
+				mesh->SwitchShader(Mesh::Shader1);
+
+				QMatrix4x4 matVP = m_cam->GetVPMatrix();
+				QMatrix4x4 matModel = mod->GetWorldMat();
+				matModel.scale(1.05, 1.05, 1.05);
+				QVector3D camPos = m_cam->GetCamPos().toVector3D();
+				mesh->Draw(matVP, matModel, camPos);
+			}
+
+			glEnable(GL_DEPTH_TEST);
+			glDepthMask(1);
+			glStencilMask(0xff);
 		}
 	}
 }
 
 void OpenWidget::InitShaders()
 {
-	ShaderHelper::ShaderInfo info[] = {
-		{GL_VERTEX_SHADER, "./shaders/triangle.vert"},
-		{GL_FRAGMENT_SHADER, "./shaders/triangle.frag"}
-	};
-	GLuint program = ShaderHelper::Instance().LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
-	if (program != 0) {
-		AddTipInfo(Q8("读取shader文件成功----"));
-	}
-	else {
-		AddTipInfo(Q8("读取shader文件失败----"));
-	}
-	ShaderHelper::Instance().Use();
-
-	m_matMVPLoc = ShaderHelper::Instance().GetUniformLocation("mat_mvp");
-	m_matWorldLoc = ShaderHelper::Instance().GetUniformLocation("mat_world");
-	m_worldCamPosLoc = ShaderHelper::Instance().GetUniformLocation("worldCamPos");
-
-	auto texId = ShaderHelper::Instance().GetUniformLocation("tex");
-	auto normalMapId = ShaderHelper::Instance().GetUniformLocation("normalMap");
-	glUniform1i(texId, 0);
-	glUniform1i(normalMapId, 1);
-
-	if (-1 == m_matMVPLoc || -1 == m_matWorldLoc
-		|| -1 == m_worldCamPosLoc) {
-		AddTipInfo(Q8("查询uniform失败！"));
-	}
 }
 
 GLuint OpenWidget::ReloadShaders()
 {
-	ShaderHelper::Instance().Unuse();
-	ShaderHelper::ShaderInfo info[] = {
-	{GL_VERTEX_SHADER, "./shaders/triangle.vert"},
-	{GL_FRAGMENT_SHADER, "./shaders/triangle.frag"}
-	};
-	GLuint program = ShaderHelper::Instance().LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
-	if (program != 0) {
-		AddTipInfo(Q8("读取shader文件成功----"));
-	}
-	else {
-		AddTipInfo(Q8("读取shader文件失败----"));
+	auto modelNum = ModelMgr::Instance().GetModelNum();
+	for (unsigned int i = 0; i < modelNum; ++i)
+	{
+		Model *pMod = ModelMgr::Instance().GetModel(i);
+		if (nullptr == pMod) {
+			continue;
+		}
+
+		auto meshNum = pMod->GetMeshNum();
+		for (unsigned int j = 0; j < meshNum; ++j)
+		{
+			Mesh *pMesh = pMod->GetMesh(j);
+			if (nullptr == pMesh) {
+				continue;
+			}
+
+			pMesh->SwitchShader(Mesh::Default);
+		}
 	}
 
-	ShaderHelper::Instance().Use();
-
-	return program;
+	return 0;
 }
 
 void OpenWidget::ChangeMouseMoveSpeed(int value)
@@ -232,13 +220,6 @@ void OpenWidget::UpdateKeys()
 	}
 
 	update();
-}
-
-void OpenWidget::AddTipInfo(QString info)
-{
-	if (Q_NULLPTR != m_mainObj) {
-		QMetaObject::invokeMethod(m_mainObj, "AddInfo", Q_ARG(QString, info));
-	}
 }
 
 void OpenWidget::moveEvent(QMoveEvent *event)

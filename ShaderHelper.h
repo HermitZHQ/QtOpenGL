@@ -18,12 +18,8 @@ public:
 		}
 	};
 
+	ShaderHelper();
 	~ShaderHelper();
-
-	static ShaderHelper& Instance() {
-		static ShaderHelper instance;
-		return instance;
-	}
 
 	GLuint LoadShaders(ShaderInfo *info, GLuint size);
 	GLuint GetProgram() const;
@@ -33,17 +29,10 @@ public:
 	GLint GetAttriLocation(const GLchar *name);
 	GLint GetUniformLocation(const GLchar *name);
 
-	void SetMainWindow(QObject *obj) {
-		m_obj = obj;
-	}
-
-	void AddTipInfo(QString info);
-
 protected:
-	ShaderHelper();
 
 private:
-	QObject					*m_obj;
+	GLuint					m_pipeline;
 	GLuint					m_program;
 };
 

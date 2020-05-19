@@ -198,6 +198,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelMgr.cpp" />
     <ClCompile Include="OpenWidget.cpp" />
+    <ClCompile Include="PreDef.cpp" />
     <ClCompile Include="ShaderHelper.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
@@ -239,6 +240,8 @@
     <ClInclude Include="Texture.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\program1.frag" />
+    <None Include="shaders\program1.vert" />
     <None Include="shaders\triangle.frag" />
     <None Include="shaders\triangle.vert" />
   </ItemGroup>

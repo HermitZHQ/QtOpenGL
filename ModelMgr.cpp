@@ -41,4 +41,6 @@ Model* ModelMgr::FindModelByName(QString name)
 			return mod;
 		}
 	}
+
+	return nullptr;
 }

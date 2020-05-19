@@ -27,7 +27,6 @@ protected:
 
 	void InitShaders();
 
-	void AddTipInfo(QString info);
 	virtual void moveEvent(QMoveEvent *event) override;
 	virtual void keyPressEvent(QKeyEvent *event) override;
 	virtual void keyReleaseEvent(QKeyEvent *event) override;

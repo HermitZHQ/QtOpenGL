@@ -7,6 +7,7 @@
 #include "QResizeEvent"
 #include "QPushButton"
 #include "ShaderHelper.h"
+#include "QTimer"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -15,16 +16,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
 	ui->setupUi(this);
 
-	// bind this to shaderHelper
-	ShaderHelper::Instance().SetMainWindow(this);
-
-	m_openWidgetPtr = new OpenWidget();
-	m_openWidgetPtr->resize(800, 600);
-	m_openWidgetPtr->SetMainWndObj(this);
-	m_openWidgetPtr->show();
-	auto geo = m_openWidgetPtr->geometry();
-
-	move(geo.x(), geo.y() + geo.height());
+	m_delayStartTimer = new QTimer(this);
+	connect(m_delayStartTimer, &QTimer::timeout, this, &MainWindow::OnBtnStartClicked);
+	m_delayStartTimer->setSingleShot(true);
+	m_delayStartTimer->start(500);
 }
 
 MainWindow::~MainWindow()
@@ -49,6 +44,18 @@ void MainWindow::OnBtnReloadShaders()
 	}
 
 	m_openWidgetPtr->ReloadShaders();
+}
+
+void MainWindow::OnBtnStartClicked()
+{
+	m_openWidgetPtr = new OpenWidget();
+	m_openWidgetPtr->resize(800, 600);
+	m_openWidgetPtr->move(600, 100);
+	m_openWidgetPtr->SetMainWndObj(this);
+	m_openWidgetPtr->show();
+	auto geo = m_openWidgetPtr->geometry();
+
+	move(geo.x(), geo.y() + geo.height());
 }
 
 void MainWindow::OnSliderMouseSpeedChanged(int value)

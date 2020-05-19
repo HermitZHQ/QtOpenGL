@@ -18,8 +18,8 @@ out Vertex {
 	vec2 uv;
 	vec3 worldNormal;
 	vec3 worldPos;
-	mat3x3 tangentToModelMat;
 	mat4x4 worldMat;
+	mat3x3 tangentToModelMat;
 };
 
 void main()
@@ -32,7 +32,7 @@ void main()
 	mat4 model_matrix2 = mat4(col1, col2, col3, col4);
 
 	gl_Position = mat_mvp * model_matrix2 * vec4(vPosition, 1);
-	//gl_Position = mat_mvp * vec4(vPosition, 1);
+	gl_Position = mat_mvp * vec4(vPosition, 1);
 	
 	worldPos = (mat_world * vec4(vPosition, 1)).xyz;
 

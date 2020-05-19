@@ -103,7 +103,7 @@ int AssetImport::HandleMeshMaterial(aiMaterial *mat, Mesh *mesh)
 	auto diffuseTexCount = mat->GetTextureCount(aiTextureType_DIFFUSE);
 	auto specularTexCount = mat->GetTextureCount(aiTextureType_SPECULAR);
 
-	for (int i = 0; i < diffuseTexCount; ++i)
+	for (unsigned int i = 0; i < diffuseTexCount; ++i)
 	{
 		aiString path;
 		mat->GetTexture(aiTextureType_DIFFUSE, i, &path);
@@ -121,7 +121,7 @@ int AssetImport::HandleMeshMaterial(aiMaterial *mat, Mesh *mesh)
 		mesh->AddDiffuseTexture(tex);
 	}
 
-	for (int i = 0; i < specularTexCount; ++i)
+	for (unsigned int i = 0; i < specularTexCount; ++i)
 	{
 		aiString strPath;
 		mat->GetTexture(aiTextureType_SPECULAR, i, &strPath);

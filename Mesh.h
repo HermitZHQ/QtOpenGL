@@ -4,11 +4,19 @@
 #include "QVector3D"
 #include "QVector4D"
 #include "QOpenGLFunctions_4_5_Core"
+#include "ShaderHelper.h"
+
+#define MAX_SHADER_NUM 8
 
 class Texture;
 class Mesh : public QOpenGLFunctions_4_5_Core
 {
 public:
+	enum eShaderType
+	{
+		Default,
+		Shader1,
+	};
 	struct VertInfo
 	{
 		QVector3D			pos;
@@ -24,6 +32,7 @@ public:
 
 	void AddVertInfo(const VertInfo &info);
 	void BindBuffer();
+	void BindVertexRelevantBuffer();
 	GLuint GetVao();
 	GLuint GetTexture1() const;
 	GLuint GetTextureNormalMap() const;
@@ -79,6 +88,18 @@ public:
 	void AddSpecularTexture(Texture *tex);
 	GLuint GetTextureBuffer1() const;
 
+	//----shader & draw
+	void Draw(QMatrix4x4 &matVP, QMatrix4x4 &matModel, QVector3D &camPos);
+	void InitShaders();
+	void InitDefaultShader();
+	void InitShader1();
+	void SwitchShader(eShaderType type);
+	void SetMVPMatrix(QMatrix4x4 &matMVP);
+	void SetWorldMatrix(QMatrix4x4 &matWorld);
+	void SetCamWorldPos(QVector3D &camPos);
+	GLuint GetDefaultProgram() const;
+	GLuint GetProgram1() const;
+
 private:
 	QVector<float>						m_vertices;
 	QVector<float>						m_colors;
@@ -94,6 +115,13 @@ private:
 
 	unsigned short						m_faceNum;
 	QVector<unsigned int>				m_indices;
+
+	eShaderType							m_shaderType;
+	ShaderHelper						m_shaders[MAX_SHADER_NUM];
+
+	GLint								m_matMVPLoc[MAX_SHADER_NUM];
+	GLint								m_matWorldLoc[MAX_SHADER_NUM];
+	GLint								m_worldCamPosLoc[MAX_SHADER_NUM];
 
 	GLuint								m_vao;
 	GLuint								m_vbo;

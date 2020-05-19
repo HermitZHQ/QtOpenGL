@@ -6,30 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>529</width>
-    <height>222</height>
+    <width>619</width>
+    <height>262</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLineEdit" name="lineEdit">
-    <property name="geometry">
-     <rect>
-      <x>400</x>
-      <y>0</y>
-      <width>113</width>
-      <height>21</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="btn_reloadShader">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>0</y>
-      <width>121</width>
+      <y>50</y>
+      <width>111</width>
       <height>28</height>
      </rect>
     </property>
@@ -37,34 +27,34 @@
      <string>ReloadShader</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="btn_Start">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>30</y>
-      <width>93</width>
+      <y>10</y>
+      <width>111</width>
       <height>28</height>
      </rect>
     </property>
     <property name="text">
-     <string>PushButton</string>
+     <string>Start</string>
     </property>
    </widget>
    <widget class="QListWidget" name="list_info">
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>150</y>
-      <width>521</width>
-      <height>71</height>
+      <y>90</y>
+      <width>621</width>
+      <height>171</height>
      </rect>
     </property>
    </widget>
    <widget class="QSlider" name="horizontalSlider">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>120</y>
+      <x>140</x>
+      <y>40</y>
       <width>160</width>
       <height>22</height>
      </rect>
@@ -85,8 +75,8 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>90</y>
+      <x>140</x>
+      <y>10</y>
       <width>91</width>
       <height>21</height>
      </rect>
@@ -100,14 +90,14 @@
  <resources/>
  <connections>
   <connection>
-   <sender>pushButton</sender>
+   <sender>btn_reloadShader</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
    <slot>OnBtnReloadShaders()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>103</x>
-     <y>13</y>
+     <y>63</y>
     </hint>
     <hint type="destinationlabel">
      <x>154</x>
@@ -131,9 +121,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>btn_Start</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>OnBtnStartClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>90</x>
+     <y>17</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>126</x>
+     <y>9</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnBtnReloadShaders()</slot>
   <slot>OnSliderMouseSpeedChanged(int)</slot>
+  <slot>OnBtnStartClicked()</slot>
  </slots>
 </ui>

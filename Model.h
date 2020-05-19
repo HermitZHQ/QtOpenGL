@@ -11,7 +11,7 @@ public:
 
 	void AddMesh(Mesh *mesh);
 	unsigned int GetMeshNum() const;
-	Mesh* GetMesh(unsigned int index) const;
+	Mesh* GetMesh(int index) const;
 
 	void SetWroldMat(QMatrix4x4 worldMat);
 	QMatrix4x4 GetWorldMat() const;
