@@ -4,6 +4,7 @@
 #include "QOpenGLFunctions_4_5_Compatibility"
 #include "QGLWidget"
 #include "QTimer"
+#include "ShaderHelper.h"
 
 class Camera;
 class Mesh;
@@ -16,16 +17,18 @@ public:
 	void SetMainWndObj(QObject *obj) {
 		m_mainObj = obj;
 	}
-	GLuint ReloadShaders();
 	void ChangeMouseMoveSpeed(int value);
 	void UpdateKeys();
 
 protected:
 	virtual void initializeGL() override;
 	virtual void resizeGL(int w, int h) override;
+	void paintClearAndReset();
 	virtual void paintGL() override;
+	void SwitchShader(ShaderHelper::eShaderType type);
+	void BeginGetOcclusionSampleNum();
+	void EndGetOcclusionSampleNum();
 
-	void InitShaders();
 
 	virtual void moveEvent(QMoveEvent *event) override;
 	virtual void keyPressEvent(QKeyEvent *event) override;
@@ -40,6 +43,9 @@ private:
 	GLint						m_matWorldLoc;
 	GLint						m_worldCamPosLoc;
 	Camera						*m_cam;
+
+	GLuint						m_query;
+	GLuint						m_sampleNum;
 
 	QTimer						m_updateKeyTimer;
 	QVector<Qt::Key>			m_pressedKeyVec;

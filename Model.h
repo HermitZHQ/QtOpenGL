@@ -1,11 +1,12 @@
 #pragma once
 #include "QVector"
 #include "QMatrix4x4"
+#include "Mesh.h"
 
-class Mesh;
 class Model
 {
 public:
+
 	Model();
 	~Model();
 
@@ -18,6 +19,8 @@ public:
 
 	void SetModelName(QString str);
 	QString GetModelName() const;
+
+	void Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos);
 
 private:
 	QString								m_name;

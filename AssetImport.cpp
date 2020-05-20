@@ -27,6 +27,12 @@ int AssetImport::LoadModel(const char *path)
 		return -1;
 	}
 
+	m_prePath = path;
+	auto index = m_prePath.lastIndexOf("/");
+	if (-1 != index) {
+		m_prePath = m_prePath.left(index + 1);
+	}
+
 	HandleChildNode(scene, scene->mRootNode);
 
 	return 0;
@@ -40,6 +46,10 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 		auto child = node->mChildren[a];
 		if (child->mNumChildren > 0) {
 			HandleChildNode(scene, child);
+		}
+
+		if (0) {
+			continue;
 		}
 
 		// create a new model for a child
@@ -112,8 +122,8 @@ int AssetImport::HandleMeshMaterial(aiMaterial *mat, Mesh *mesh)
 		strPath.replace("/", "\\");
 		auto index = strPath.lastIndexOf("\\");
 		if (-1 != index) {
-			strPath = strPath.right(strPath.length() - index);
-			strPath.prepend("./models");
+			strPath = strPath.right(strPath.length() - index - 1);
+			strPath.prepend(m_prePath);
 		}
 
 		Texture *tex = new Texture;

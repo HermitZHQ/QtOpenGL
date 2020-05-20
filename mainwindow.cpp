@@ -30,6 +30,7 @@ MainWindow::~MainWindow()
 Q_INVOKABLE void MainWindow::AddInfo(QString info)
 {
 	ui->list_info->addItem(info);
+	ui->list_info->scrollToBottom();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -42,15 +43,13 @@ void MainWindow::OnBtnReloadShaders()
 	if (Q_NULLPTR == m_openWidgetPtr) {
 		return;
 	}
-
-	m_openWidgetPtr->ReloadShaders();
 }
 
 void MainWindow::OnBtnStartClicked()
 {
 	m_openWidgetPtr = new OpenWidget();
 	m_openWidgetPtr->resize(800, 600);
-	m_openWidgetPtr->move(600, 100);
+	m_openWidgetPtr->move(175, 55);
 	m_openWidgetPtr->SetMainWndObj(this);
 	m_openWidgetPtr->show();
 	auto geo = m_openWidgetPtr->geometry();

@@ -18,15 +18,18 @@ void Texture::LoadTexture(QString path)
 {
 	m_path = path;
 
-	glGenTextures(1, &m_texId);
-
 	int w = 0, h = 0, channels = 0;
 	QImage image(path);
 	auto tex = image.bits();
+	if (nullptr == tex) {
+		return;
+	}
 	w = image.width();
 	h = image.height();
 	auto f = image.format();
 
+
+	glGenTextures(1, &m_texId);
 	// Assign texture to ID
 	glBindTexture(GL_TEXTURE_2D, m_texId);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
@@ -38,17 +41,6 @@ void Texture::LoadTexture(QString path)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-// 	switch (index)
-// 	{
-// 	case 0:
-// 		glActiveTexture(GL_TEXTURE0);
-// 		break;
-// 	case 1:
-// 		glActiveTexture(GL_TEXTURE1);
-// 		break;
-// 	default:
-// 		break;
-// 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 

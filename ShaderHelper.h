@@ -6,6 +6,13 @@ class QObject;
 class ShaderHelper : public QOpenGLFunctions_4_5_Core
 {
 public:
+	enum eShaderType
+	{
+		ShaderDefault,
+		ShaderPureColor,
+		ShaderDiffuse,
+	};
+
 	struct ShaderInfo 
 	{
 		GLuint			shaderType;
@@ -18,10 +25,18 @@ public:
 		}
 	};
 
-	ShaderHelper();
 	~ShaderHelper();
 
-	GLuint LoadShaders(ShaderInfo *info, GLuint size);
+	static ShaderHelper& Instance() {
+		static ShaderHelper ins;
+		return ins;
+	}
+
+	void SetShaderType(eShaderType type);
+	void SetMVPMatrix(QMatrix4x4 &matMVP);
+	void SetWorldMatrix(QMatrix4x4 &matWorld);
+	void SetCamWorldPos(QVector3D &camPos);
+
 	GLuint GetProgram() const;
 	void Use();
 	void Unuse();
@@ -30,9 +45,23 @@ public:
 	GLint GetUniformLocation(const GLchar *name);
 
 protected:
+	void Init();
+	GLuint LoadShaders(ShaderInfo *info, GLuint size);
+	void GetCommonUniformLocation();
+	void InitDefaultShader();
+	void InitPureColorShader();
+	void InitDiffuseShader();
 
 private:
-	GLuint					m_pipeline;
-	GLuint					m_program;
+	ShaderHelper();
+
+	const static int		maxShaderNum = 8;
+	GLuint					m_programs[maxShaderNum];
+	eShaderType				m_shaderType;
+
+	// common share uniform location
+	GLint					m_matMVPLoc[maxShaderNum];
+	GLint					m_matWorldLoc[maxShaderNum];
+	GLint					m_worldCamPosLoc[maxShaderNum];
 };
 

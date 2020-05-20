@@ -2,6 +2,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "QString"
 
 #pragma comment(lib, "assimp-vc141-mtd.lib")
 
@@ -22,5 +23,7 @@ public:
 
 private:
 	AssetImport();
+
+	QString						m_prePath;
 };
 

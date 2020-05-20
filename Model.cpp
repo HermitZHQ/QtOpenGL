@@ -52,3 +52,13 @@ QString Model::GetModelName() const
 {
 	return m_name;
 }
+
+void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos)
+{
+	auto meshNum = GetMeshNum();
+	for (int i = 0; i < meshNum; ++i)
+	{
+		auto mesh = GetMesh(i);
+		mesh->Draw(matVP, matModel, camPos);
+	}
+}
