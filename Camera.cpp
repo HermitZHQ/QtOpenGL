@@ -5,7 +5,7 @@
 Camera::Camera()
 	:m_nearClip(1.0f), m_farClip(1000.0f)
 	, m_fov(60.0f), m_aspectRatio(1.0f)
-	, m_camPos(0, -50, 200, 1), m_lookAtPos(0, 0, 0, 1), m_camUpDir(0, 1, 0)
+	, m_camPos(0, 50, -200, 1), m_lookAtPos(0, 0, 0, 1), m_camUpDir(0, -1, 0)
 	, m_camMoveSpeed(0.7f), m_camRotateSpeed(0.05f), m_camRotateEnable(false)
 {
 }
@@ -22,7 +22,7 @@ QMatrix4x4 Camera::GetViewMatrix() const
 // 	matPose.rotate(m_camWorldPose);
 
 	// 方法1：使用lookat方式，这种方式可以锁定看的地方
-	QVector3D axisZ = (m_camPos - m_lookAtPos).normalized().toVector3D();
+	QVector3D axisZ = (m_camPos - m_lookAtPos).toVector3D().normalized();
 	QVector3D axisX = (QVector3D::crossProduct(m_camUpDir, axisZ)).normalized();
 	QVector3D axisY = QVector3D::crossProduct(axisZ, axisX);
 

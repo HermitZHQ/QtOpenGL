@@ -37,21 +37,20 @@ void OpenWidget::initializeGL()
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
-	glStencilFunc(GL_ALWAYS, 1, 0xff);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	// test load model
-	AssetImport::Instance().LoadModel("./models/plane.obj");
-// 	AssetImport::Instance().LoadModel("./models/plane2.obj");
-// 	AssetImport::Instance().LoadModel("./models/plane3.obj");
 	AssetImport::Instance().LoadModel("./models/Box001.obj");
 	AssetImport::Instance().LoadModel("./models/Box002.obj");
+	AssetImport::Instance().LoadModel("./models/plane.obj");
+	AssetImport::Instance().LoadModel("./models/plane2.obj");
+	AssetImport::Instance().LoadModel("./models/plane3.obj");
 // 	AssetImport::Instance().LoadModel("./models/dva/001.obj");
 	Model *pMod = ModelMgr::Instance().FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
 		QMatrix4x4 mat;
-		mat.translate(0, 30, 0);
-		mat.rotate(180, QVector3D(0, 0, 1));
+// 		mat.translate(0, 30, 0);
+// 		mat.rotate(180, QVector3D(0, 0, 1));
 		mat.scale(10, 10, 10);
 		pMod->SetWroldMat(mat);
 	}
@@ -72,11 +71,18 @@ void OpenWidget::initializeGL()
 		pMod3->SetWroldMat(mat);
 	}
 
-	Model *pMod4 = ModelMgr::Instance().FindModelByName("Box002");
-	if (Q_NULLPTR != pMod4) {
+
+	Model *pBox001 = ModelMgr::Instance().FindModelByName("Box001");
+	if (Q_NULLPTR != pBox001) {
 		QMatrix4x4 mat;
-		mat.translate(0, 38, 0);
-		pMod4->SetWroldMat(mat);
+		mat.translate(0, 15, 0);
+		pBox001->SetWroldMat(mat);
+	}
+	Model *pBox002 = ModelMgr::Instance().FindModelByName("Box002");
+	if (Q_NULLPTR != pBox002) {
+		QMatrix4x4 mat;
+		mat.translate(0, -37, 0);
+		pBox002->SetWroldMat(mat);
 	}
 }
 
@@ -93,6 +99,7 @@ void OpenWidget::paintClearAndReset()
 	// set the default value at the beginning, otherwise may cause the unexpected error
 	glColorMask(1, 1, 1, 1);
 	glStencilMask(0xff);
+	glStencilFunc(GL_ALWAYS, 1, 0xff);
 	glDepthMask(1);
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
@@ -113,37 +120,53 @@ void OpenWidget::paintGL()
 {
 	paintClearAndReset();
 
+	QMatrix4x4 matVP = m_cam->GetVPMatrix();
+	QVector3D camPos = m_cam->GetCamPos().toVector3D();
+
 	auto modelNum = ModelMgr::Instance().GetModelNum();
 	for (unsigned int i = 0; i < modelNum; ++i)
 	{
 		Model *mod = ModelMgr::Instance().GetModel(i);
 
 		if (0 == i)	{
-			// get the plane mask
-			glStencilMask(0xff);
+			// get the obj mask
+			glStencilMask(0);
 			glStencilFunc(GL_ALWAYS, 1, 0xff);
-			SwitchShader(ShaderHelper::ShaderDiffuse);
-		}
-		else if (modelNum - 1 == i) {
-			glDisable(GL_DEPTH_TEST);
 
-			glStencilMask(0xff);
-			glStencilFunc(GL_EQUAL, 1, 0xff);
-
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_DST_COLOR);
-			SwitchShader(ShaderHelper::ShaderDiffuse);
+			glEnable(GL_CLIP_PLANE0);
+			SwitchShader(ShaderHelper::ShaderPlaneClip);
 		}
 		else {
-			glStencilMask(0xff);
+			glDisable(GL_CLIP_PLANE0);
+			glStencilMask(0x0);
 			glStencilFunc(GL_ALWAYS, 0, 0xff);
 			SwitchShader(ShaderHelper::ShaderDefault);
 		}
 
-		QMatrix4x4 matVP = m_cam->GetVPMatrix();
-		QVector3D camPos = m_cam->GetCamPos().toVector3D();
+
 		QMatrix4x4 matModel = mod->GetWorldMat();
 		mod->Draw(matVP, matModel, camPos);
+
+		if (modelNum - 1 == i) {
+			Model *pBox = ModelMgr::Instance().FindModelByName("Box001");
+
+			SwitchShader(ShaderHelper::ShaderPlaneClip);
+			glFrontFace(GL_CW);
+			glEnable(GL_CLIP_PLANE0);
+			glStencilMask(0xff);
+			glStencilFunc(GL_ALWAYS, 1, 0xff);
+			glColorMask(0, 0, 0, 0);
+
+			pBox->Draw(matVP, pBox->GetWorldMat(), camPos);
+			glFrontFace(GL_CCW);
+			glDisable(GL_CLIP_PLANE0);
+			glColorMask(1, 1, 1, 1);
+
+			glStencilMask(0);
+			glStencilFunc(GL_EQUAL, 1, 0xff);
+			SwitchShader(ShaderHelper::ShaderPureColor);
+			pBox->Draw(matVP, pBox->GetWorldMat(), camPos);
+		}
 	}
 }
 

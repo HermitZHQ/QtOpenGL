@@ -11,6 +11,7 @@ public:
 		ShaderDefault,
 		ShaderPureColor,
 		ShaderDiffuse,
+		ShaderPlaneClip,
 	};
 
 	struct ShaderInfo 
@@ -51,11 +52,12 @@ protected:
 	void InitDefaultShader();
 	void InitPureColorShader();
 	void InitDiffuseShader();
+	void InitPlaneClipShader();
 
 private:
 	ShaderHelper();
 
-	const static int		maxShaderNum = 8;
+	const static int		maxShaderNum = 20;
 	GLuint					m_programs[maxShaderNum];
 	eShaderType				m_shaderType;
 

@@ -20,7 +20,7 @@ void main()
 {
 	// assumption directional light color and dir
 	vec3 worldLightColor = vec3(1, 1, 1);
-	vec3 worldLightDir = vec3(1, -1, -1);
+	vec3 worldLightDir = vec3(1, 1, 1);
 	worldLightDir = normalize(worldLightDir);
 
 	// assumption ambient light color

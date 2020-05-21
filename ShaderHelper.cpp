@@ -129,11 +129,25 @@ void ShaderHelper::InitDiffuseShader()
 	GetCommonUniformLocation();
 }
 
+void ShaderHelper::InitPlaneClipShader()
+{
+	m_shaderType = ShaderPlaneClip;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/planeClip.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/planeClip.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
 void ShaderHelper::Init()
 {
 	InitDefaultShader();
 	InitPureColorShader();
 	InitDiffuseShader();
+	InitPlaneClipShader();
 
 	m_shaderType = ShaderDefault;
 	Use();
