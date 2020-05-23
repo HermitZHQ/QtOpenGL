@@ -38,6 +38,7 @@ public:
 
 	QMatrix4x4 GetViewMatrix() const;
 	QMatrix4x4 GetProjectionMatrix() const;
+	QMatrix4x4 GetOrthographicMatrix() const;
 	QMatrix4x4 GetVPMatrix() const;
 
 	// camera move
@@ -63,6 +64,9 @@ public:
 	void UpdateRotateInfo();
 
 private:
+	unsigned int			m_width;
+	unsigned int			m_height;
+	float					m_orthoSize;
 	float					m_nearClip;
 	float					m_farClip;
 	float					m_fov;

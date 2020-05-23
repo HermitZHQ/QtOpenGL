@@ -10,15 +10,18 @@ layout (location = 5) in mat4 model_matrix;
 
 uniform mat4x4 mat_mvp;
 uniform mat4x4 mat_world;
+uniform vec3 worldCamPos;
 
 uniform samplerBuffer sb1;
 
 //----out vars
 out Vertex {
 	vec2 uv;
+	vec3 skyboxUV;
 	vec3 worldNormal;
 	vec3 worldPos;
 	mat4x4 worldMat;
+	vec3 camPosWorld;
 	mat3x3 tangentToModelMat;
 };
 
@@ -56,7 +59,11 @@ void main()
 
 	//tangentToModelMat = mat3(T, B, N);//for method 1
 
+	camPosWorld = worldCamPos;
+	vec3 worldView = worldPos - worldCamPos;
 	worldNormal = normalize(vNormal * inverse(mat3(mat_world)));
+	skyboxUV = reflect(worldView, worldNormal);
+	skyboxUV = worldView - 2 * dot(worldNormal, worldView) * worldNormal;
 
 	uv = vUV;
 	worldMat = mat_world;

@@ -8,10 +8,13 @@ class ShaderHelper : public QOpenGLFunctions_4_5_Core
 public:
 	enum eShaderType
 	{
-		ShaderDefault,
-		ShaderPureColor,
-		ShaderDiffuse,
-		ShaderPlaneClip,
+		Default,
+		PureColor,
+		Diffuse,
+		PlaneClip,
+		PointSprite,
+		Skybox,
+		Decal,
 	};
 
 	struct ShaderInfo 
@@ -37,6 +40,9 @@ public:
 	void SetMVPMatrix(QMatrix4x4 &matMVP);
 	void SetWorldMatrix(QMatrix4x4 &matWorld);
 	void SetCamWorldPos(QVector3D &camPos);
+	void SetProjMat(QMatrix4x4 &matProj);
+	void SetOrthoMat(QMatrix4x4 &matOrtho);
+	void SetViewMat(QMatrix4x4 &matView);
 
 	GLuint GetProgram() const;
 	void Use();
@@ -53,6 +59,9 @@ protected:
 	void InitPureColorShader();
 	void InitDiffuseShader();
 	void InitPlaneClipShader();
+	void InitPointSpriteShader();
+	void InitSkyboxShader();
+	void InitDecalShader();
 
 private:
 	ShaderHelper();
@@ -65,5 +74,8 @@ private:
 	GLint					m_matMVPLoc[maxShaderNum];
 	GLint					m_matWorldLoc[maxShaderNum];
 	GLint					m_worldCamPosLoc[maxShaderNum];
+	GLint					m_matProjLoc[maxShaderNum];
+	GLint					m_matOrthoLoc[maxShaderNum];
+	GLint					m_matViewLoc[maxShaderNum];
 };
 

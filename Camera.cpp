@@ -3,9 +3,9 @@
 #include "QQuaternion"
 
 Camera::Camera()
-	:m_nearClip(1.0f), m_farClip(1000.0f)
-	, m_fov(60.0f), m_aspectRatio(1.0f)
-	, m_camPos(0, 50, -200, 1), m_lookAtPos(0, 0, 0, 1), m_camUpDir(0, -1, 0)
+	:m_nearClip(2.03f), m_farClip(10000.0f)
+	, m_fov(60.0f), m_aspectRatio(1.0f), m_orthoSize(55.5f)
+	, m_camPos(0, 50, -200, 1), m_lookAtPos(0, 0, 0, 1), m_camUpDir(0, 1, 0)
 	, m_camMoveSpeed(0.7f), m_camRotateSpeed(0.05f), m_camRotateEnable(false)
 {
 }
@@ -32,10 +32,10 @@ QMatrix4x4 Camera::GetViewMatrix() const
 // 	QVector3D axisZ = matPose.row(2).toVector3D();
 
 	// 必须用C到P的列主序形式实现，因为该矩阵不能直接转置成P到C
-	matView.setRow(0, QVector4D(axisX.x(), axisY.x(), axisZ.x(), m_camPos.x()));
-	matView.setRow(1, QVector4D(axisX.y(), axisY.y(), axisZ.y(), m_camPos.y()));
-	matView.setRow(2, QVector4D(axisX.z(), axisY.z(), axisZ.z(), m_camPos.z()));
-	matView.setRow(3, QVector4D(0, 0, 0, 1.0f));
+	matView.setColumn(0, QVector4D(axisX, 0));
+	matView.setColumn(1, QVector4D(axisY, 0));
+	matView.setColumn(2, QVector4D(axisZ, 0));
+	matView.setColumn(3, m_camPos);
 
 	// 这里为什么不能直接用转置到行的表示，是因为，观察矩阵不是一个正交矩阵
 	// 如果需要用行表示的话，其中的xyz是需要加负号的，这是我通过上面列排列的
@@ -53,12 +53,36 @@ QMatrix4x4 Camera::GetProjectionMatrix() const
 {
 	QMatrix4x4 matProjection;
 
-	matProjection.setRow(0, QVector4D(qTan(m_fov / 2.0f) * m_nearClip / m_aspectRatio, 0, 0, 0));
-	matProjection.setRow(1, QVector4D(0, qTan(m_fov / 2.0f) * m_nearClip, 0, 0));
-	matProjection.setRow(2, QVector4D(0, 0, -1 * (m_farClip + m_nearClip) / (m_farClip - m_nearClip), -1.0f));
-	matProjection.setRow(3, QVector4D(0, 0, -2 * m_farClip * m_nearClip / (m_farClip - m_nearClip),	0));
+	matProjection.setColumn(0, QVector4D(1.0f / qTan(m_fov / 2.0f * M_PI / 180.0f) / m_aspectRatio, 0, 0, 0));
+	matProjection.setColumn(1, QVector4D(0, 1.0f / qTan(m_fov / 2.0f * M_PI / 180.0f), 0, 0));
+	matProjection.setColumn(2, QVector4D(0, 0, -1 * (m_farClip + m_nearClip) / (m_farClip - m_nearClip), -1));
+	matProjection.setColumn(3, QVector4D(0, 0, -2 * m_farClip * m_nearClip / (m_farClip - m_nearClip), 0));
+
+	// 神奇的错用了公式，居然摄像头基本是正确的（只是上下左右移动都反了，当然其实视觉效果还是有点问题的，比如天空盒的接缝就很明显）
+// 	matProjection.setRow(0, QVector4D(qTan(m_fov / 2.0f) * m_nearClip / m_aspectRatio, 0, 0, 0));
+// 	matProjection.setRow(1, QVector4D(0, qTan(m_fov / 2.0f) * m_nearClip, 0, 0));
+// 	matProjection.setRow(2, QVector4D(0, 0, -1 * (m_farClip + m_nearClip) / (m_farClip - m_nearClip), -1.0f));
+// 	matProjection.setRow(3, QVector4D(0, 0, -2 * m_farClip * m_nearClip / (m_farClip - m_nearClip), 0));
+
+	// 测试上面的错误公式的效果，其实上面算出来就是一个定值r或者t，就是一个正数（因为我当时n为1，所有rt都应该小于1）
+// 	matProjection.setRow(0, QVector4D(2.5f / m_aspectRatio, 0, 0, 0));
+// 	matProjection.setRow(1, QVector4D(0, 2.5f, 0, 0));
+// 	matProjection.setRow(2, QVector4D(0, 0, -1 * (m_farClip + m_nearClip) / (m_farClip - m_nearClip), -1.0f));
+// 	matProjection.setRow(3, QVector4D(0, 0, -2 * m_farClip * m_nearClip / (m_farClip - m_nearClip), 0));
 
 	return matProjection;
+}	
+
+QMatrix4x4 Camera::GetOrthographicMatrix() const
+{
+	QMatrix4x4 matOrtho;
+
+	matOrtho.setColumn(0, QVector4D(1.0f / m_orthoSize, 0, 0, 0));
+	matOrtho.setColumn(1, QVector4D(0, 1.0f / m_orthoSize, 0, 0));
+	matOrtho.setColumn(2, QVector4D(0, 0, -2 / (m_farClip - m_nearClip), 0));
+	matOrtho.setColumn(3, QVector4D(0, 0, 0, 1));
+
+	return matOrtho;
 }
 
 QMatrix4x4 Camera::GetVPMatrix() const
@@ -91,8 +115,8 @@ void Camera::MoveLeft()
 	QVector3D axisZFroward = (m_lookAtPos - m_camPos).toVector3D().normalized();
 	QVector3D axisX = QVector3D::crossProduct(m_camUpDir, axisZFroward).normalized();
 
-	m_camPos -= axisX * m_camMoveSpeed;
-	m_lookAtPos -= axisX * m_camMoveSpeed;
+	m_camPos += axisX * m_camMoveSpeed;
+	m_lookAtPos += axisX * m_camMoveSpeed;
 }
 
 void Camera::MoveRight()
@@ -100,20 +124,20 @@ void Camera::MoveRight()
 	QVector3D axisZFroward = (m_lookAtPos - m_camPos).toVector3D().normalized();
 	QVector3D axisX = QVector3D::crossProduct(m_camUpDir, axisZFroward).normalized();
 
-	m_camPos += axisX * m_camMoveSpeed;
-	m_lookAtPos += axisX * m_camMoveSpeed;
+	m_camPos -= axisX * m_camMoveSpeed;
+	m_lookAtPos -= axisX * m_camMoveSpeed;
 }
 
 void Camera::MoveUp()
 {
-	m_camPos -= m_camUpDir * m_camMoveSpeed;
-	m_lookAtPos -= m_camUpDir * m_camMoveSpeed;
+	m_camPos += m_camUpDir * m_camMoveSpeed;
+	m_lookAtPos += m_camUpDir * m_camMoveSpeed;
 }
 
 void Camera::MoveDown()
 {
-	m_camPos += m_camUpDir * m_camMoveSpeed;
-	m_lookAtPos += m_camUpDir * m_camMoveSpeed;
+	m_camPos -= m_camUpDir * m_camMoveSpeed;
+	m_lookAtPos -= m_camUpDir * m_camMoveSpeed;
 }
 
 void Camera::UpdateRotateInfo()
@@ -123,8 +147,8 @@ void Camera::UpdateRotateInfo()
 	}
 
 	QPoint ptDiff = m_rotateCurPos - m_rotateStartPos;
-	float xAngle = ptDiff.x() * m_camRotateSpeed;
-	float yAngle = ptDiff.y() * m_camRotateSpeed;
+	float xAngle = ptDiff.x() * -1.0f * m_camRotateSpeed;
+	float yAngle = ptDiff.y() * -1.0f * m_camRotateSpeed;
 
 	QQuaternion qDiff = QQuaternion::fromEulerAngles(yAngle, xAngle, 0);
 	QMatrix4x4 matR;

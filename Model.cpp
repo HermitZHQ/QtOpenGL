@@ -53,12 +53,37 @@ QString Model::GetModelName() const
 	return m_name;
 }
 
-void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos)
+void Model::EnableSkybox()
+{
+	for (auto &mesh : m_meshes)
+	{
+		mesh->InitSkybox();
+	}
+}
+
+void Model::EnableProjTex()
+{
+	for (auto &mesh : m_meshes)
+	{
+		mesh->InitProjTex();
+	}
+}
+
+void Model::SetDrawType(Mesh::eDrawType type)
+{
+	for (auto &mesh : m_meshes)
+	{
+		mesh->SetDrawType(type);
+	}
+}
+
+void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
+	QMatrix4x4 matOrtho)
 {
 	auto meshNum = GetMeshNum();
 	for (int i = 0; i < meshNum; ++i)
 	{
 		auto mesh = GetMesh(i);
-		mesh->Draw(matVP, matModel, camPos);
+		mesh->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
 }

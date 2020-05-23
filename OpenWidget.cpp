@@ -39,15 +39,21 @@ void OpenWidget::initializeGL()
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+// 	glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+
 	// test load model
 	AssetImport::Instance().LoadModel("./models/Box001.obj");
 	AssetImport::Instance().LoadModel("./models/Box002.obj");
 	AssetImport::Instance().LoadModel("./models/plane.obj");
 	AssetImport::Instance().LoadModel("./models/plane2.obj");
 	AssetImport::Instance().LoadModel("./models/plane3.obj");
+// 	AssetImport::Instance().LoadModel("./models/teapot.obj");
+	AssetImport::Instance().LoadModel("./models/skybox.obj");
 // 	AssetImport::Instance().LoadModel("./models/dva/001.obj");
 	Model *pMod = ModelMgr::Instance().FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
+// 		pMod->EnableProjTex();
 		QMatrix4x4 mat;
 // 		mat.translate(0, 30, 0);
 // 		mat.rotate(180, QVector3D(0, 0, 1));
@@ -74,6 +80,7 @@ void OpenWidget::initializeGL()
 
 	Model *pBox001 = ModelMgr::Instance().FindModelByName("Box001");
 	if (Q_NULLPTR != pBox001) {
+		pBox001->EnableProjTex();
 		QMatrix4x4 mat;
 		mat.translate(0, 15, 0);
 		pBox001->SetWroldMat(mat);
@@ -84,11 +91,28 @@ void OpenWidget::initializeGL()
 		mat.translate(0, -37, 0);
 		pBox002->SetWroldMat(mat);
 	}
+
+	Model *pTeapot = ModelMgr::Instance().FindModelByName("defaultobject");
+	if (Q_NULLPTR != pTeapot) {
+		QMatrix4x4 mat;
+		mat.translate(20, 0, 0);
+		mat.scale(5);
+		pTeapot->SetWroldMat(mat);
+	}	
+	Model *pSkybox = ModelMgr::Instance().FindModelByName("skybox");
+	if (Q_NULLPTR != pSkybox) {
+		pSkybox->EnableSkybox();
+
+		QMatrix4x4 mat;
+// 		mat.scale(500);s
+		pSkybox->SetWroldMat(mat);
+	}
 }
 
 void OpenWidget::resizeGL(int w, int h)
 {
 	glViewport(0, 0, w, h);
+	m_cam->SetAspectRatio((float)w / (float)h);
 }
 
 void OpenWidget::paintClearAndReset()
@@ -121,6 +145,9 @@ void OpenWidget::paintGL()
 	paintClearAndReset();
 
 	QMatrix4x4 matVP = m_cam->GetVPMatrix();
+	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
+	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
+	QMatrix4x4 matView = m_cam->GetViewMatrix();
 	QVector3D camPos = m_cam->GetCamPos().toVector3D();
 
 	auto modelNum = ModelMgr::Instance().GetModelNum();
@@ -128,44 +155,57 @@ void OpenWidget::paintGL()
 	{
 		Model *mod = ModelMgr::Instance().GetModel(i);
 
-		if (0 == i)	{
-			// get the obj mask
-			glStencilMask(0);
-			glStencilFunc(GL_ALWAYS, 1, 0xff);
+		SwitchShader(ShaderHelper::Default);
+// 		if (0 == i)	{
+// 			// get the obj mask
+// 			glStencilMask(0);
+// 			glStencilFunc(GL_ALWAYS, 1, 0xff);
+// 
+// 			glEnable(GL_CLIP_PLANE0);
+// 			SwitchShader(ShaderHelper::PlaneClip);
+// 		}
+// 		else {
+// 			glDisable(GL_CLIP_PLANE0);
+// 			glStencilMask(0x0);
+// 			glStencilFunc(GL_ALWAYS, 0, 0xff);
+// 		}
 
-			glEnable(GL_CLIP_PLANE0);
-			SwitchShader(ShaderHelper::ShaderPlaneClip);
+		{
+// 			glEnable(GL_POINT_SPRITE);
+// 			glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+// 			SwitchShader(ShaderHelper::PointSprite);
+// 			glPointParameterf(GL_POINT_SIZE_MIN, 20.0f);
+// 			glPointParameterf(GL_POINT_SIZE_MAX, 50.0f);
+// 			mod->SetDrawType(Mesh::Point);
+// 			glPointSize(50);
 		}
-		else {
-			glDisable(GL_CLIP_PLANE0);
-			glStencilMask(0x0);
-			glStencilFunc(GL_ALWAYS, 0, 0xff);
-			SwitchShader(ShaderHelper::ShaderDefault);
+
+// 		SwitchShader(ShaderHelper::Decal);
+		if (mod->GetModelName().compare("Box001") == 0) {
+			SwitchShader(ShaderHelper::Decal);
 		}
-
-
 		QMatrix4x4 matModel = mod->GetWorldMat();
-		mod->Draw(matVP, matModel, camPos);
+		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 
 		if (modelNum - 1 == i) {
 			Model *pBox = ModelMgr::Instance().FindModelByName("Box001");
 
-			SwitchShader(ShaderHelper::ShaderPlaneClip);
-			glFrontFace(GL_CW);
-			glEnable(GL_CLIP_PLANE0);
-			glStencilMask(0xff);
-			glStencilFunc(GL_ALWAYS, 1, 0xff);
-			glColorMask(0, 0, 0, 0);
-
-			pBox->Draw(matVP, pBox->GetWorldMat(), camPos);
-			glFrontFace(GL_CCW);
-			glDisable(GL_CLIP_PLANE0);
-			glColorMask(1, 1, 1, 1);
-
-			glStencilMask(0);
-			glStencilFunc(GL_EQUAL, 1, 0xff);
-			SwitchShader(ShaderHelper::ShaderPureColor);
-			pBox->Draw(matVP, pBox->GetWorldMat(), camPos);
+// 			SwitchShader(ShaderHelper::PlaneClip);
+// 			glFrontFace(GL_CW);
+// 			glEnable(GL_CLIP_PLANE0);
+// 			glStencilMask(0xff);
+// 			glStencilFunc(GL_ALWAYS, 1, 0xff);
+// 			glColorMask(0, 0, 0, 0);
+// 
+// 			pBox->Draw(matVP, pBox->GetWorldMat(), camPos);
+// 			glFrontFace(GL_CCW);
+// 			glDisable(GL_CLIP_PLANE0);
+// 			glColorMask(1, 1, 1, 1);
+// 
+// 			glStencilMask(0);
+// 			glStencilFunc(GL_EQUAL, 1, 0xff);
+// 			SwitchShader(ShaderHelper::PureColor);
+// 			pBox->Draw(matVP, pBox->GetWorldMat(), camPos);
 		}
 	}
 }

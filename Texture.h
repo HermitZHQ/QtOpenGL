@@ -9,9 +9,12 @@ public:
 	~Texture();
 
 	void LoadTexture(QString path);
+	void LoadSkyboxTexture(QVector<QString> paths);
 	GLuint GetId() const;
+	GLuint GetSkyboxId() const;
 
 private:
 	QString						m_path;
 	GLuint						m_texId;
+	GLuint						m_skyboxId;
 };

@@ -21,7 +21,7 @@ int AssetImport::LoadModel(const char *path)
 	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate 
 		| aiProcess_FlipUVs 
 		| aiProcess_CalcTangentSpace
-		/*| aiProcess_GenNormals*/);
+		| aiProcess_GenNormals);
 	if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		return -1;
@@ -71,7 +71,6 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 			for (unsigned int j = 0; j < mesh->mNumVertices; ++j)
 			{
 				auto vert = mesh->mVertices[j];
-				auto uv = mesh->mTextureCoords[0][j];
 				Mesh::VertInfo info;
 
 				info.pos = QVector3D(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z);
@@ -85,7 +84,10 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 				{
 					info.bitangent = QVector4D(mesh->mBitangents[j].x, mesh->mBitangents[j].y, mesh->mBitangents[j].z, 0);
 				}
-				info.uv1 = QVector2D(mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y);
+				if (nullptr != mesh->mTextureCoords[0])
+				{
+					info.uv1 = QVector2D(mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y);
+				}
 
 				m->AddVertInfo(info);
 			}

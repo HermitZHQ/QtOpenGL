@@ -76,11 +76,24 @@ void ShaderHelper::GetCommonUniformLocation()
 	m_matMVPLoc[m_shaderType] = GetUniformLocation("mat_mvp");
 	m_matWorldLoc[m_shaderType] = GetUniformLocation("mat_world");
 	m_worldCamPosLoc[m_shaderType] = GetUniformLocation("worldCamPos");
+	m_matProjLoc[m_shaderType] = GetUniformLocation("projMat");
+	m_matOrthoLoc[m_shaderType] = GetUniformLocation("orthoMat");
+	m_matViewLoc[m_shaderType] = GetUniformLocation("viewMat");
+
 
 	auto texId = GetUniformLocation("tex");
 	auto normalMapId = GetUniformLocation("normalMap");
+	auto projTexId = GetUniformLocation("projTex");
 	glUniform1i(texId, 0);
 	glUniform1i(normalMapId, 1);
+	if (-1 != projTexId) {
+		glUniform1i(projTexId, 10);
+	}
+
+	if (Skybox == m_shaderType) {
+// 		auto skyboxId = GetUniformLocation("skybox");
+// 		glBindTextureUnit(0, skyboxId);
+	}
 
 	if (-1 == m_matMVPLoc[m_shaderType] || -1 == m_matWorldLoc[m_shaderType]
 		|| -1 == m_worldCamPosLoc[m_shaderType]) {
@@ -92,7 +105,7 @@ void ShaderHelper::GetCommonUniformLocation()
 
 void ShaderHelper::InitDefaultShader()
 {
-	m_shaderType = ShaderDefault;
+	m_shaderType = Default;
 
 	ShaderHelper::ShaderInfo info[] = {
 		{GL_VERTEX_SHADER, "./shaders/triangle.vert"},
@@ -105,7 +118,7 @@ void ShaderHelper::InitDefaultShader()
 
 void ShaderHelper::InitPureColorShader()
 {
-	m_shaderType = ShaderPureColor;
+	m_shaderType = PureColor;
 
 	ShaderHelper::ShaderInfo info[] = {
 		{GL_VERTEX_SHADER, "./shaders/program1.vert"},
@@ -118,7 +131,7 @@ void ShaderHelper::InitPureColorShader()
 
 void ShaderHelper::InitDiffuseShader()
 {
-	m_shaderType = ShaderDiffuse;
+	m_shaderType = Diffuse;
 
 	ShaderHelper::ShaderInfo info[] = {
 		{GL_VERTEX_SHADER, "./shaders/diffuse.vert"},
@@ -131,7 +144,7 @@ void ShaderHelper::InitDiffuseShader()
 
 void ShaderHelper::InitPlaneClipShader()
 {
-	m_shaderType = ShaderPlaneClip;
+	m_shaderType = PlaneClip;
 
 	ShaderHelper::ShaderInfo info[] = {
 		{GL_VERTEX_SHADER, "./shaders/planeClip.vert"},
@@ -142,14 +155,63 @@ void ShaderHelper::InitPlaneClipShader()
 	GetCommonUniformLocation();
 }
 
+void ShaderHelper::InitPointSpriteShader()
+{
+	m_shaderType = PointSprite;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/sprite.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/sprite.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
+void ShaderHelper::InitSkyboxShader()
+{
+	m_shaderType = Skybox;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/skybox.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/skybox.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
+void ShaderHelper::InitDecalShader()
+{
+	m_shaderType = Decal;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/decal.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/decal.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
 void ShaderHelper::Init()
 {
+	memset(m_matMVPLoc, -1, sizeof(m_matMVPLoc));
+	memset(m_matWorldLoc, -1, sizeof(m_matWorldLoc));
+	memset(m_worldCamPosLoc, -1, sizeof(m_worldCamPosLoc));
+	memset(m_matProjLoc, -1, sizeof(m_matProjLoc));
+	memset(m_matViewLoc, -1, sizeof(m_matViewLoc));
+	memset(m_matOrthoLoc, -1, sizeof(m_matOrthoLoc));
+
 	InitDefaultShader();
 	InitPureColorShader();
 	InitDiffuseShader();
 	InitPlaneClipShader();
+	InitPointSpriteShader();
+	InitSkyboxShader();
+	InitDecalShader();
 
-	m_shaderType = ShaderDefault;
+	m_shaderType = Default;
 	Use();
 }
 
@@ -161,17 +223,50 @@ void ShaderHelper::SetShaderType(eShaderType type)
 
 void ShaderHelper::SetMVPMatrix(QMatrix4x4 &matMVP)
 {
-	glUniformMatrix4fv(m_matMVPLoc[m_shaderType], 1, GL_FALSE, matMVP.data());
+	if (m_matMVPLoc[m_shaderType] != -1)
+	{
+		glUniformMatrix4fv(m_matMVPLoc[m_shaderType], 1, GL_FALSE, matMVP.data());
+	}
 }
 
 void ShaderHelper::SetWorldMatrix(QMatrix4x4 &matWorld)
 {
-	glUniformMatrix4fv(m_matWorldLoc[m_shaderType], 1, GL_FALSE, matWorld.data());
+	if (m_matWorldLoc[m_shaderType] != -1)
+	{
+		glUniformMatrix4fv(m_matWorldLoc[m_shaderType], 1, GL_FALSE, matWorld.data());
+	}
 }
 
 void ShaderHelper::SetCamWorldPos(QVector3D &camPos)
 {
-	glUniform3f(m_worldCamPosLoc[m_shaderType], camPos.x(), camPos.y(), camPos.z());
+	if (m_worldCamPosLoc[m_shaderType] != -1)
+	{
+		glUniform3f(m_worldCamPosLoc[m_shaderType], camPos.x(), camPos.y(), camPos.z());
+	}
+}
+
+void ShaderHelper::SetProjMat(QMatrix4x4 &matProj)
+{
+	if (m_matProjLoc[m_shaderType] != -1)
+	{
+		glUniformMatrix4fv(m_matProjLoc[m_shaderType], 1, GL_FALSE, matProj.data());
+	}
+}
+
+void ShaderHelper::SetOrthoMat(QMatrix4x4 &matOrtho)
+{
+	if (m_matOrthoLoc[m_shaderType] != -1)
+	{
+		glUniformMatrix4fv(m_matOrthoLoc[m_shaderType], 1, GL_FALSE, matOrtho.data());
+	}
+}
+
+void ShaderHelper::SetViewMat(QMatrix4x4 &matView)
+{
+	if (m_matViewLoc[m_shaderType] != -1)
+	{
+		glUniformMatrix4fv(m_matViewLoc[m_shaderType], 1, GL_FALSE, matView.data());
+	}
 }
 
 GLuint ShaderHelper::GetProgram() const

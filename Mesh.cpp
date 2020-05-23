@@ -6,6 +6,7 @@
 
 Mesh::Mesh()
 	:m_vao(0), m_vbo(0), m_vaeo(0), m_instanceBufferId(0), m_tbo1(0)
+	, m_drawType(Triangle), m_skyboxTex(nullptr), m_projTex(nullptr)
 {
 	initializeOpenGLFunctions();
 
@@ -288,6 +289,11 @@ GLuint Mesh::GetTextureNormalMap() const
 	return m_normalMapTex->GetId();
 }
 
+GLuint Mesh::GetSkyboxTextureId() const
+{
+	return m_skyboxTex->GetSkyboxId();
+}
+
 void Mesh::AddIndex(unsigned int index)
 {
 	m_indices.push_back(index);
@@ -339,7 +345,42 @@ GLuint Mesh::GetTextureBuffer1() const
 	return m_tbo1;
 }
 
-void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos)
+void Mesh::InitSkybox()
+{
+// 	QVector<QString> pathVec = {
+// 		"./textures/skybox/right.jpg",
+// 		"./textures/skybox/left.jpg",
+// 		"./textures/skybox/top.jpg",
+// 		"./textures/skybox/bottom.jpg",
+// 		"./textures/skybox/front.jpg",
+// 		"./textures/skybox/back.jpg",
+// 	};
+
+	QVector<QString> pathVec = {
+	"./textures/cloudy/bluecloud_bk.jpg",
+	"./textures/cloudy/bluecloud_ft.jpg",
+	"./textures/cloudy/bluecloud_up.jpg",
+	"./textures/cloudy/bluecloud_dn.jpg",
+	"./textures/cloudy/bluecloud_lf.jpg",
+	"./textures/cloudy/bluecloud_rt.jpg",
+	};
+	m_skyboxTex = new Texture;
+	m_skyboxTex->LoadSkyboxTexture(pathVec);
+}
+
+void Mesh::InitProjTex()
+{
+	m_projTex = new Texture;
+	m_projTex->LoadTexture("./textures/proj.jpg");
+}
+
+void Mesh::SetDrawType(eDrawType type)
+{
+	m_drawType = type;
+}
+
+void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
+	QMatrix4x4 matOrtho)
 {
 #ifdef ENABLE_TEX
 	glActiveTexture(GL_TEXTURE0);
@@ -351,12 +392,40 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos)
 #endif
 	glBindVertexArray(GetVao());
 
+	if (m_skyboxTex) {
+		glBindTexture(GL_TEXTURE_CUBE_MAP, GetSkyboxTextureId());
+		matModel.translate(camPos);
+		matModel.scale(1000);
+		glCullFace(GL_FRONT);
+		glDepthMask(0);
+		ShaderHelper::Instance().SetShaderType(ShaderHelper::Skybox);
+	}
+	else if (m_projTex) {
+		glActiveTexture(GL_TEXTURE10);
+		glBindTexture(GL_TEXTURE_2D, m_projTex->GetId());
+		ShaderHelper::Instance().SetShaderType(ShaderHelper::Decal);
+	}
 	matVP = matVP * matModel;
 	ShaderHelper::Instance().SetMVPMatrix(matVP);
 	ShaderHelper::Instance().SetWorldMatrix(matModel);
 	ShaderHelper::Instance().SetCamWorldPos(camPos);
+	ShaderHelper::Instance().SetProjMat(matProj);
+	ShaderHelper::Instance().SetViewMat(matView);
+	ShaderHelper::Instance().SetOrthoMat(matOrtho);
 
 	// Draw element(with indices)
-// 	glDrawArrays(GL_TRIANGLES, 0, NumVertices);
-	glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, 0);
+	if (Triangle == m_drawType)
+	{
+		glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, 0);
+	} 
+	else if (Point == m_drawType)
+	{
+		glDrawArrays(GL_POINTS, 0, GetVerticesNum());
+	}
+
+	if (m_skyboxTex) {
+		glCullFace(GL_BACK);
+		glDepthMask(1);
+	}
+	glBindVertexArray(0);
 }

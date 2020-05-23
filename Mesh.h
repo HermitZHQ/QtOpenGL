@@ -12,6 +12,12 @@ class Texture;
 class Mesh : public QOpenGLFunctions_4_5_Core
 {
 public:
+	enum eDrawType
+	{
+		Triangle,
+		Point,
+	};
+
 	struct VertInfo
 	{
 		QVector3D			pos;
@@ -31,6 +37,7 @@ public:
 	GLuint GetVao();
 	GLuint GetTexture1() const;
 	GLuint GetTextureNormalMap() const;
+	GLuint GetSkyboxTextureId() const;
 
 	//----vertex
 	void AddVertex(QVector3D vert);
@@ -82,11 +89,16 @@ public:
 	void AddDiffuseTexture(Texture *tex);
 	void AddSpecularTexture(Texture *tex);
 	GLuint GetTextureBuffer1() const;
+	void InitSkybox();
+	void InitProjTex();
 
 	//----shader & draw
-	void Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos);
+	void SetDrawType(eDrawType type);
+	void Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
+		QMatrix4x4 matOrtho);
 
 private:
+	eDrawType							m_drawType;
 	QVector<float>						m_vertices;
 	QVector<float>						m_colors;
 	QVector<float>						m_normals;
@@ -97,7 +109,9 @@ private:
 
 	QVector<Texture*>					m_diffuseTexVec;
 	QVector<Texture*>					m_specularTexVec;
+	Texture								*m_skyboxTex;
 	Texture								*m_normalMapTex;
+	Texture								*m_projTex;
 
 	unsigned short						m_faceNum;
 	QVector<unsigned int>				m_indices;

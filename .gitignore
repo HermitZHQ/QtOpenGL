@@ -4,3 +4,4 @@ release/
 assimp-vc141-mtd.dll
 *.user
 .qmake.stash
+textures/

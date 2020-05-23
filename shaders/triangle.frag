@@ -2,17 +2,18 @@
 
 layout (location = 0) out vec4 fColor;
 
-uniform vec3 worldCamPos;
-
 uniform sampler2D tex;
 uniform sampler2D normalMap;
+uniform samplerCube skybox;
 
 //----in vars
 in Vertex {
 	vec2 uv;
+	vec3 skyboxUV;
 	vec3 worldNormal;
 	vec3 worldPos;
 	mat4x4 worldMat;
+	vec3 camPosWorld;
 	mat3x3 tangentToModelMat;
 };
 
@@ -36,10 +37,11 @@ void main()
 	normal = normalize(tangentToModelMat * normal);
 	//normal = normalize(mat3(worldMat) * normal);//not for method 1
 
-	vec3 viewDir = normalize(worldCamPos - worldPos);
+	vec3 viewDir = normalize(camPosWorld - worldPos);
 	vec3 halfDir = normalize(viewDir + worldLightDir);
 
-	vec4 albedo = texture(tex, uv);
+	vec4 albedo = texture(tex, uv) * 0.6 + texture(skybox, skyboxUV) * 0.4;
+	//albedo = texture(skybox, skyboxUV);
 	ambient = ambient * 0.7 * albedo.rgb;
 	vec3 diffuse = worldLightColor * ambient.rgb * clamp(dot(worldLightDir, normal), 0.0, 1.0);
 
