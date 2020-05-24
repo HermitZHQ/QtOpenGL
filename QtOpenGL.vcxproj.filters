@@ -79,6 +79,9 @@
     <ClCompile Include="PreDef.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextureMgr.cpp">
+      <Filter>AssetImport</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h">
@@ -125,6 +128,9 @@
     </ClInclude>
     <ClInclude Include="PreDef.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureMgr.h">
+      <Filter>AssetImport</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

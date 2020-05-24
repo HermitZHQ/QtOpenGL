@@ -2,7 +2,7 @@
 #include "Mesh.h"
 #include "Model.h"
 #include "ModelMgr.h"
-#include "Texture.h"
+#include "TextureMgr.h"
 #include <string>
 
 using namespace Assimp;
@@ -128,9 +128,8 @@ int AssetImport::HandleMeshMaterial(aiMaterial *mat, Mesh *mesh)
 			strPath.prepend(m_prePath);
 		}
 
-		Texture *tex = new Texture;
-		tex->LoadTexture(strPath.toLocal8Bit());
-		mesh->AddDiffuseTexture(tex);
+		auto texID = TextureMgr::Instance().LoadTexture(strPath.toLocal8Bit());
+		mesh->SetDiffuseTexID(texID);
 	}
 
 	for (unsigned int i = 0; i < specularTexCount; ++i)

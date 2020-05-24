@@ -1,35 +1,23 @@
 #include "Mesh.h"
-#include "Texture.h"
+#include "TextureMgr.h"
 #include "ShaderHelper.h"
 #include "PreDef.h"
 #include "QMatrix4x4"
 
 Mesh::Mesh()
 	:m_vao(0), m_vbo(0), m_vaeo(0), m_instanceBufferId(0), m_tbo1(0)
-	, m_drawType(Triangle), m_skyboxTex(nullptr), m_projTex(nullptr)
+	, m_drawType(Triangle)
+	, m_skyboxTexID(0), m_projTexID(0), m_normalmapTexID(0)
+	, m_diffuseTex1ID(0)
 {
 	initializeOpenGLFunctions();
 
-	m_normalMapTex = new Texture;
-	m_normalMapTex->LoadTexture("./models/brickwall_normal.jpg");
+	m_normalmapTexID = TextureMgr::Instance().LoadTexture("./models/brickwall_normal.jpg");
 }
 
 Mesh::~Mesh()
 {
-	for (auto &tex : m_diffuseTexVec)
-	{
-		delete tex;
-	}
 
-	for (auto &tex : m_specularTexVec)
-	{
-		delete tex;
-	}
-
-	if (nullptr != m_normalMapTex) {
-		delete m_normalMapTex;
-		m_normalMapTex = nullptr;
-	}
 }
 
 void Mesh::AddVertex(QVector3D vert)
@@ -275,25 +263,6 @@ GLuint Mesh::GetVao()
 	return m_vao;
 }
 
-GLuint Mesh::GetTexture1() const
-{
-	if (0 == m_diffuseTexVec.size()) {
-		return 0;
-	}
-
-	return m_diffuseTexVec[0]->GetId();
-}
-
-GLuint Mesh::GetTextureNormalMap() const
-{
-	return m_normalMapTex->GetId();
-}
-
-GLuint Mesh::GetSkyboxTextureId() const
-{
-	return m_skyboxTex->GetSkyboxId();
-}
-
 void Mesh::AddIndex(unsigned int index)
 {
 	m_indices.push_back(index);
@@ -330,14 +299,14 @@ GLuint Mesh::GetInstancesBufferId() const
 	return m_instanceBufferId;
 }
 
-void Mesh::AddDiffuseTexture(Texture *tex)
+void Mesh::SetDiffuseTexID(GLuint id)
 {
-	m_diffuseTexVec.append(tex);
+	m_diffuseTex1ID = id;
 }
 
-void Mesh::AddSpecularTexture(Texture *tex)
+void Mesh::AddSpecularTexture(GLuint id)
 {
-	m_specularTexVec.append(tex);
+	m_specularTex1ID = id;
 }
 
 GLuint Mesh::GetTextureBuffer1() const
@@ -347,31 +316,12 @@ GLuint Mesh::GetTextureBuffer1() const
 
 void Mesh::InitSkybox()
 {
-// 	QVector<QString> pathVec = {
-// 		"./textures/skybox/right.jpg",
-// 		"./textures/skybox/left.jpg",
-// 		"./textures/skybox/top.jpg",
-// 		"./textures/skybox/bottom.jpg",
-// 		"./textures/skybox/front.jpg",
-// 		"./textures/skybox/back.jpg",
-// 	};
-
-	QVector<QString> pathVec = {
-	"./textures/cloudy/bluecloud_bk.jpg",
-	"./textures/cloudy/bluecloud_ft.jpg",
-	"./textures/cloudy/bluecloud_up.jpg",
-	"./textures/cloudy/bluecloud_dn.jpg",
-	"./textures/cloudy/bluecloud_lf.jpg",
-	"./textures/cloudy/bluecloud_rt.jpg",
-	};
-	m_skyboxTex = new Texture;
-	m_skyboxTex->LoadSkyboxTexture(pathVec);
+	m_skyboxTexID = TextureMgr::Instance().LoadTexture("skybox");
 }
 
 void Mesh::InitProjTex()
 {
-	m_projTex = new Texture;
-	m_projTex->LoadTexture("./textures/proj.jpg");
+	m_projTexID = TextureMgr::Instance().LoadTexture("./textures/proj.jpg");
 }
 
 void Mesh::SetDrawType(eDrawType type)
@@ -382,29 +332,34 @@ void Mesh::SetDrawType(eDrawType type)
 void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 	QMatrix4x4 matOrtho)
 {
-#ifdef ENABLE_TEX
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, GetTexture1());
-#ifdef ENABLE_NORMALMAP
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, GetTextureNormalMap());
-#endif
-#endif
-	glBindVertexArray(GetVao());
 
-	if (m_skyboxTex) {
-		glBindTexture(GL_TEXTURE_CUBE_MAP, GetSkyboxTextureId());
+	if (0 != m_diffuseTex1ID)
+	{
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_diffuseTex1ID);
+	}
+
+	if (0 != m_normalmapTexID)
+	{
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_normalmapTexID);
+	}
+
+
+	if (0 != m_skyboxTexID) {
+		glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexID);
 		matModel.translate(camPos);
-		matModel.scale(1000);
+		matModel.scale(10000);
 		glCullFace(GL_FRONT);
 		glDepthMask(0);
 		ShaderHelper::Instance().SetShaderType(ShaderHelper::Skybox);
 	}
-	else if (m_projTex) {
+	else if (0 != m_projTexID) {
 		glActiveTexture(GL_TEXTURE10);
-		glBindTexture(GL_TEXTURE_2D, m_projTex->GetId());
+		glBindTexture(GL_TEXTURE_2D, m_projTexID);
 		ShaderHelper::Instance().SetShaderType(ShaderHelper::Decal);
 	}
+	glBindVertexArray(GetVao());
 	matVP = matVP * matModel;
 	ShaderHelper::Instance().SetMVPMatrix(matVP);
 	ShaderHelper::Instance().SetWorldMatrix(matModel);
@@ -423,7 +378,7 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 		glDrawArrays(GL_POINTS, 0, GetVerticesNum());
 	}
 
-	if (m_skyboxTex) {
+	if (0 != m_skyboxTexID) {
 		glCullFace(GL_BACK);
 		glDepthMask(1);
 	}

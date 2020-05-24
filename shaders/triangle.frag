@@ -40,7 +40,7 @@ void main()
 	vec3 viewDir = normalize(camPosWorld - worldPos);
 	vec3 halfDir = normalize(viewDir + worldLightDir);
 
-	vec4 albedo = texture(tex, uv) * 0.6 + texture(skybox, skyboxUV) * 0.4;
+	vec4 albedo = texture(tex, uv) * 0.5 + texture(skybox, skyboxUV) * 0.5;
 	//albedo = texture(skybox, skyboxUV);
 	ambient = ambient * 0.7 * albedo.rgb;
 	vec3 diffuse = worldLightColor * ambient.rgb * clamp(dot(worldLightDir, normal), 0.0, 1.0);

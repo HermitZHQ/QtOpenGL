@@ -35,9 +35,6 @@ public:
 	void BindBuffer();
 	void BindVertexRelevantBuffer();
 	GLuint GetVao();
-	GLuint GetTexture1() const;
-	GLuint GetTextureNormalMap() const;
-	GLuint GetSkyboxTextureId() const;
 
 	//----vertex
 	void AddVertex(QVector3D vert);
@@ -86,8 +83,8 @@ public:
 	GLuint GetInstancesBufferId() const;
 
 	//----texture
-	void AddDiffuseTexture(Texture *tex);
-	void AddSpecularTexture(Texture *tex);
+	void SetDiffuseTexID(GLuint id);
+	void AddSpecularTexture(GLuint id);
 	GLuint GetTextureBuffer1() const;
 	void InitSkybox();
 	void InitProjTex();
@@ -107,11 +104,11 @@ private:
 	QVector<float>						m_uvs1;
 	QVector<VertInfo>					m_vertInfoVec;
 
-	QVector<Texture*>					m_diffuseTexVec;
-	QVector<Texture*>					m_specularTexVec;
-	Texture								*m_skyboxTex;
-	Texture								*m_normalMapTex;
-	Texture								*m_projTex;
+	GLuint								m_diffuseTex1ID;
+	GLuint								m_specularTex1ID;
+	GLuint								m_skyboxTexID;
+	GLuint								m_projTexID;
+	GLuint								m_normalmapTexID;
 
 	unsigned short						m_faceNum;
 	QVector<unsigned int>				m_indices;

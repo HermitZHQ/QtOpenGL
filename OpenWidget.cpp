@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include "Model.h"
 #include "ModelMgr.h"
+#include "TextureMgr.h"
 
 
 OpenWidget::OpenWidget()
@@ -41,6 +42,8 @@ void OpenWidget::initializeGL()
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 // 	glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+
+	TextureMgr::Instance();
 
 	// test load model
 	AssetImport::Instance().LoadModel("./models/Box001.obj");
@@ -81,6 +84,7 @@ void OpenWidget::initializeGL()
 	Model *pBox001 = ModelMgr::Instance().FindModelByName("Box001");
 	if (Q_NULLPTR != pBox001) {
 		pBox001->EnableProjTex();
+// 		pBox001->SetDrawType(Mesh::Point);
 		QMatrix4x4 mat;
 		mat.translate(0, 15, 0);
 		pBox001->SetWroldMat(mat);
@@ -104,7 +108,7 @@ void OpenWidget::initializeGL()
 		pSkybox->EnableSkybox();
 
 		QMatrix4x4 mat;
-// 		mat.scale(500);s
+// 		mat.scale(500);
 		pSkybox->SetWroldMat(mat);
 	}
 }
@@ -154,8 +158,8 @@ void OpenWidget::paintGL()
 	for (unsigned int i = 0; i < modelNum; ++i)
 	{
 		Model *mod = ModelMgr::Instance().GetModel(i);
-
 		SwitchShader(ShaderHelper::Default);
+
 // 		if (0 == i)	{
 // 			// get the obj mask
 // 			glStencilMask(0);
@@ -182,7 +186,7 @@ void OpenWidget::paintGL()
 
 // 		SwitchShader(ShaderHelper::Decal);
 		if (mod->GetModelName().compare("Box001") == 0) {
-			SwitchShader(ShaderHelper::Decal);
+// 			SwitchShader(ShaderHelper::Decal);
 		}
 		QMatrix4x4 matModel = mod->GetWorldMat();
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);

@@ -201,6 +201,7 @@
     <ClCompile Include="PreDef.cpp" />
     <ClCompile Include="ShaderHelper.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TextureMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h">
@@ -238,6 +239,7 @@
     <ClInclude Include="PreDef.h" />
     <ClInclude Include="ShaderHelper.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TextureMgr.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\program1.frag" />

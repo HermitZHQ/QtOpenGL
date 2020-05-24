@@ -90,9 +90,12 @@ void ShaderHelper::GetCommonUniformLocation()
 		glUniform1i(projTexId, 10);
 	}
 
-	if (Skybox == m_shaderType) {
-// 		auto skyboxId = GetUniformLocation("skybox");
-// 		glBindTextureUnit(0, skyboxId);
+
+	auto skyboxId = GetUniformLocation("skybox");
+	if (-1 != skyboxId)
+	{
+// 		glBindTextureUnit(2, skyboxId);
+		glUniform1i(skyboxId, 30);// why I should set it 2?? I don't understand here.....
 	}
 
 	if (-1 == m_matMVPLoc[m_shaderType] || -1 == m_matWorldLoc[m_shaderType]

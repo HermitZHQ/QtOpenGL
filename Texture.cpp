@@ -1,11 +1,12 @@
 #include "Texture.h"
 #include "SOIL.h"
 #include "QImage"
+#include "PreDef.h"
 
 #pragma comment(lib, "SOIL.lib")
 
 Texture::Texture()
-	:m_texId(0), m_skyboxId(0)
+	:m_texId(0)
 {
 	initializeOpenGLFunctions();
 }
@@ -22,6 +23,7 @@ void Texture::LoadTexture(QString path)
 	QImage image(path);
 	auto tex = image.bits();
 	if (nullptr == tex) {
+		AddTipInfo(Q8("纹理无效[%1]").arg(path));
 		return;
 	}
 	w = image.width();
@@ -45,8 +47,8 @@ void Texture::LoadTexture(QString path)
 
 void Texture::LoadSkyboxTexture(QVector<QString> paths)
 {
-	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_skyboxId);
-	glTextureStorage2D(m_skyboxId, 10, GL_BGRA, 1024, 1024);
+	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_texId);
+	glTextureStorage2D(m_texId, 10, GL_BGRA, 2048, 2048);
 
 	QVector<QImage> imgVec;
 	for (int face = 0; face < 6; ++face)
@@ -57,6 +59,7 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 		imgVec.push_back(QImage(path));
 		auto tex = imgVec[face].bits();
 		if (nullptr == tex) {
+			AddTipInfo(Q8("纹理无效[%1]").arg(path));
 			return;
 		}
 		w = imgVec[face].width();
@@ -67,6 +70,10 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
 			0, GL_BGRA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
+		auto err = glGetError();
+		if (0 != err) {
+			AddTipInfo(Q8("生成cube纹理错误"));
+		}
 // 		glTextureSubImage3D(m_skyboxId,
 // 			10,
 // 			0, 0,
@@ -90,9 +97,4 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 GLuint Texture::GetId() const
 {
 	return m_texId;
-}
-
-GLuint Texture::GetSkyboxId() const
-{
-	return m_skyboxId;
 }
