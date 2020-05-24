@@ -23,12 +23,16 @@ public:
 protected:
 	virtual void initializeGL() override;
 	virtual void resizeGL(int w, int h) override;
+
+	void SwitchShader(ShaderHelper::eShaderType type);
 	void paintClearAndReset();
 	virtual void paintGL() override;
-	void SwitchShader(ShaderHelper::eShaderType type);
+
 	void BeginGetOcclusionSampleNum();
 	void EndGetOcclusionSampleNum();
 
+	void CreateOffScreenFrameBufferTexture();
+	void DrawOffScreenTexture();
 
 	virtual void moveEvent(QMoveEvent *event) override;
 	virtual void keyPressEvent(QKeyEvent *event) override;
@@ -49,5 +53,10 @@ private:
 
 	QTimer						m_updateKeyTimer;
 	QVector<Qt::Key>			m_pressedKeyVec;
+
+	// ----FrameBuffer
+	GLuint						m_fb;
+	GLint						m_oldFb;
+	GLuint						m_texOffscreenId;
 };
 

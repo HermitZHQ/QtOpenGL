@@ -49,6 +49,7 @@ void MainWindow::OnBtnStartClicked()
 {
 	m_openWidgetPtr = new OpenWidget();
 	m_openWidgetPtr->resize(800, 600);
+// 	m_openWidgetPtr->resize(580, 490);
 	m_openWidgetPtr->move(175, 55);
 	m_openWidgetPtr->SetMainWndObj(this);
 	m_openWidgetPtr->show();

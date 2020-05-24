@@ -15,6 +15,7 @@ public:
 		PointSprite,
 		Skybox,
 		Decal,
+		FrameBuffer1,
 	};
 
 	struct ShaderInfo 
@@ -62,6 +63,7 @@ protected:
 	void InitPointSpriteShader();
 	void InitSkyboxShader();
 	void InitDecalShader();
+	void InitFrameBuffer1Shader();
 
 private:
 	ShaderHelper();

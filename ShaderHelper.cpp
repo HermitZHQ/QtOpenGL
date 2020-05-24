@@ -94,7 +94,6 @@ void ShaderHelper::GetCommonUniformLocation()
 	auto skyboxId = GetUniformLocation("skybox");
 	if (-1 != skyboxId)
 	{
-// 		glBindTextureUnit(2, skyboxId);
 		glUniform1i(skyboxId, 30);// why I should set it 2?? I don't understand here.....
 	}
 
@@ -197,6 +196,19 @@ void ShaderHelper::InitDecalShader()
 	GetCommonUniformLocation();
 }
 
+void ShaderHelper::InitFrameBuffer1Shader()
+{
+	m_shaderType = FrameBuffer1;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/framebuffer1.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/framebuffer1.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
 void ShaderHelper::Init()
 {
 	memset(m_matMVPLoc, -1, sizeof(m_matMVPLoc));
@@ -213,6 +225,7 @@ void ShaderHelper::Init()
 	InitPointSpriteShader();
 	InitSkyboxShader();
 	InitDecalShader();
+	InitFrameBuffer1Shader();
 
 	m_shaderType = Default;
 	Use();
