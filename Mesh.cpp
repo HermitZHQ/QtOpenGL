@@ -8,7 +8,8 @@ Mesh::Mesh()
 	:m_vao(0), m_vbo(0), m_vaeo(0), m_instanceBufferId(0), m_tbo1(0)
 	, m_drawType(Triangle)
 	, m_skyboxTexID(0), m_projTexID(0), m_normalmapTexID(0)
-	, m_diffuseTex1ID(0)
+	, m_diffuseTex1ID(0), m_shader(ShaderHelper::Instance())
+	, m_mainWnd(GetGlobalMainWndPtr())
 {
 	initializeOpenGLFunctions();
 
@@ -333,14 +334,12 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	QMatrix4x4 matOrtho)
 {
 
-	if (0 != m_diffuseTex1ID)
-	{
+	if (0 != m_diffuseTex1ID) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_diffuseTex1ID);
 	}
 
-	if (0 != m_normalmapTexID)
-	{
+	if (0 != m_normalmapTexID) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_normalmapTexID);
 	}
@@ -352,7 +351,7 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 		matModel.scale(10000);
 		glCullFace(GL_FRONT);
 		glDepthMask(0);
-		ShaderHelper::Instance().SetShaderType(ShaderHelper::Skybox);
+		m_shader.SetShaderType(ShaderHelper::Skybox);
 	}
 	else if (0 != m_projTexID) {
 		glActiveTexture(GL_TEXTURE10);
@@ -361,20 +360,21 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	}
 	glBindVertexArray(GetVao());
 	matVP = matVP * matModel;
-	ShaderHelper::Instance().SetMVPMatrix(matVP);
-	ShaderHelper::Instance().SetWorldMatrix(matModel);
-	ShaderHelper::Instance().SetCamWorldPos(camPos);
-	ShaderHelper::Instance().SetProjMat(matProj);
-	ShaderHelper::Instance().SetViewMat(matView);
-	ShaderHelper::Instance().SetOrthoMat(matOrtho);
+	m_shader.SetMVPMatrix(matVP);
+	m_shader.SetWorldMatrix(matModel);
+	m_shader.SetCamWorldPos(camPos);
+	m_shader.SetProjMat(matProj);
+	m_shader.SetViewMat(matView);
+	m_shader.SetOrthoMat(matOrtho);
+
+	m_shader.SetAmbientColor(m_mainWnd->GetAmbientColor());
+	m_shader.SetSpecularColor(m_mainWnd->GetSpecularColor());
 
 	// Draw element(with indices)
-	if (Triangle == m_drawType)
-	{
+	if (Triangle == m_drawType)	{
 		glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, 0);
 	} 
-	else if (Point == m_drawType)
-	{
+	else if (Point == m_drawType) {
 		glDrawArrays(GL_POINTS, 0, GetVerticesNum());
 	}
 

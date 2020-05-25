@@ -13,7 +13,7 @@
 OpenWidget::OpenWidget()
 	:m_mainObj(Q_NULLPTR), m_cam(Q_NULLPTR)
 	, m_matWorldLoc(0), m_worldCamPosLoc(0), m_query(0), m_sampleNum(0)
-	, m_fb()
+	, m_offScreenFbo(), m_shadowTexWidth(2048), m_shadowTexHeight(2048)
 {
 	m_cam = new Camera();
 
@@ -102,7 +102,7 @@ void OpenWidget::initializeGL()
 		QMatrix4x4 mat;
 // 		mat.translate(0, 30, 0);
 // 		mat.rotate(180, QVector3D(0, 0, 1));
-		mat.scale(10, 10, 10);
+		mat.scale(20, 20, 20);
 		pMod->SetWroldMat(mat);
 	}
 	Model *pMod2 = ModelMgr::Instance().FindModelByName("Plane002");
@@ -125,7 +125,7 @@ void OpenWidget::initializeGL()
 
 	Model *pBox001 = ModelMgr::Instance().FindModelByName("Box001");
 	if (Q_NULLPTR != pBox001) {
-		pBox001->EnableProjTex();
+// 		pBox001->EnableProjTex();
 // 		pBox001->SetDrawType(Mesh::Point);
 		QMatrix4x4 mat;
 		mat.translate(0, 15, 0);
@@ -192,15 +192,18 @@ void OpenWidget::paintGL()
 	if (0 == i){
 		++i;
 		CreateOffScreenFrameBufferTexture();
+		CreateShadowMapFrameBufferTexture();
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_fb);
-// 	auto wndSize = size();
-// 	glViewport(0, 0, wndSize.width(), wndSize.height());
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_offScreenFbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
+// 	glDrawBuffer(GL_NONE);
+// 	glReadBuffer(GL_NONE);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		return;
 	}
 	paintClearAndReset();
+	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
 
 	QMatrix4x4 matVP = m_cam->GetVPMatrix();
 	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
@@ -208,44 +211,27 @@ void OpenWidget::paintGL()
 	QMatrix4x4 matView = m_cam->GetViewMatrix();
 	QVector3D camPos = m_cam->GetCamPos().toVector3D();
 
+	//for light view
+	matVP = matProj * m_cam->GetLightViewMatrix();
+	matView = m_cam->GetLightViewMatrix();
+
+// 	glCullFace(GL_FRONT);
 	auto modelNum = ModelMgr::Instance().GetModelNum();
 	for (unsigned int i = 0; i < modelNum; ++i)
 	{
 		Model *mod = ModelMgr::Instance().GetModel(i);
-		SwitchShader(ShaderHelper::Default);
 
-// 		SwitchShader(ShaderHelper::Decal);
-		if (mod->GetModelName().compare("Box001") == 0) {
-// 			SwitchShader(ShaderHelper::Decal);
-		}
 		QMatrix4x4 matModel = mod->GetWorldMat();
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
-
-		if (modelNum - 1 == i) {
-			Model *pBox = ModelMgr::Instance().FindModelByName("Box001");
-
-// 			SwitchShader(ShaderHelper::PlaneClip);
-// 			glFrontFace(GL_CW);
-// 			glEnable(GL_CLIP_PLANE0);
-// 			glStencilMask(0xff);
-// 			glStencilFunc(GL_ALWAYS, 1, 0xff);
-// 			glColorMask(0, 0, 0, 0);
-// 
-// 			pBox->Draw(matVP, pBox->GetWorldMat(), camPos);
-// 			glFrontFace(GL_CCW);
-// 			glDisable(GL_CLIP_PLANE0);
-// 			glColorMask(1, 1, 1, 1);
-// 
-// 			glStencilMask(0);
-// 			glStencilFunc(GL_EQUAL, 1, 0xff);
-// 			SwitchShader(ShaderHelper::PureColor);
-// 			pBox->Draw(matVP, pBox->GetWorldMat(), camPos);
-		}
 	}
+// 	glCullFace(GL_BACK);
 
 	//-----------------------------------------------
 	// test the frame buffer
-	DrawOffScreenTexture();
+// 	DrawOffScreenTexture();
+// 	DrawShadowMapTexture_ForTest();
+	glViewport(0, 0, size().width(), size().height());
+	DrawOriginalSceneWithShadow();
 }
 
 void OpenWidget::SwitchShader(ShaderHelper::eShaderType type)
@@ -285,22 +271,22 @@ void OpenWidget::EndGetOcclusionSampleNum()
 
 void OpenWidget::CreateOffScreenFrameBufferTexture()
 {
-	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_oldFb);
-	if (m_oldFb != 1) {
-		AddTipInfo(Q8("帧缓存创建错误，应该在主窗口创建之后再创建"));
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
+	if (m_originalFbo != 1) {
+		AddTipInfo(Q8("OffScreen帧缓存创建错误，应该在主窗口创建之后再创建"));
 	}
-	glCreateFramebuffers(1, &m_fb);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_fb);
+	glCreateFramebuffers(1, &m_offScreenFbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_offScreenFbo);
 
-	glCreateTextures(GL_TEXTURE_2D, 1, &m_texOffscreenId);
-	glBindTexture(GL_TEXTURE_2D, m_texOffscreenId);
+	glCreateTextures(GL_TEXTURE_2D, 1, &m_offScreenTexId);
+	glBindTexture(GL_TEXTURE_2D, m_offScreenTexId);
 	auto wndSize = this->size();
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wndSize.width(), wndSize.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-	glTextureParameteri(m_texOffscreenId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTextureParameteri(m_texOffscreenId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// bind texture to framebuffer
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texOffscreenId, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_offScreenTexId, 0);
 
 	// bind render buffer for depth test and stencil test
 	GLuint rb = 0;
@@ -311,12 +297,12 @@ void OpenWidget::CreateOffScreenFrameBufferTexture()
 
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rb);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_oldFb);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 }
 
 void OpenWidget::DrawOffScreenTexture()
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, m_oldFb);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 // 	auto wndSize = size();
 // 	glViewport(0, 0, wndSize.width(), wndSize.height());
 	// check if we are good to go
@@ -332,11 +318,99 @@ void OpenWidget::DrawOffScreenTexture()
 	SwitchShader(ShaderHelper::FrameBuffer1);
 	glBindVertexArray(vao);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_texOffscreenId);
+	glBindTexture(GL_TEXTURE_2D, m_offScreenTexId);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	glBindVertexArray(0);
 // 	glEnable(GL_DEPTH_TEST);
+}
+
+void OpenWidget::CreateShadowMapFrameBufferTexture()
+{
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
+	if (m_originalFbo != 1) {
+		AddTipInfo(Q8("ShadowMap帧缓存创建错误，应该在主窗口创建之后再创建"));
+	}
+	glCreateFramebuffers(1, &m_shadowMapFbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
+
+	auto wndSize = size();
+	glGenTextures(1, &m_shadowMapTexId);
+	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_shadowTexWidth, m_shadowTexHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	static float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMapTexId, 0);
+// 	glDrawBuffer(GL_NONE);
+// 	glReadBuffer(GL_NONE);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+}
+
+void OpenWidget::DrawShadowMapTexture_ForTest()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+
+	// check if we are good to go
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return;
+	}
+
+	glDrawBuffer(GL_FRONT_AND_BACK);
+	glReadBuffer(GL_FRONT_AND_BACK);
+	// clear the framebuffer
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	SwitchShader(ShaderHelper::FrameBuffer1);
+	glBindVertexArray(vao);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glBindVertexArray(0);
+}
+
+void OpenWidget::DrawOriginalSceneWithShadow()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+
+	// check if we are good to go
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return;
+	}
+
+	paintClearAndReset();
+	glDrawBuffer(GL_FRONT);
+	glReadBuffer(GL_FRONT);
+
+	QMatrix4x4 matVP = m_cam->GetVPMatrix();
+	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
+	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
+	QMatrix4x4 matView = m_cam->GetViewMatrix();
+	QVector3D camPos = m_cam->GetCamPos().toVector3D();
+
+	//for light view
+	QMatrix4x4 matLightVP = matProj * m_cam->GetLightViewMatrix();
+
+	auto modelNum = ModelMgr::Instance().GetModelNum();
+	for (unsigned int i = 0; i < modelNum; ++i)
+	{
+		Model *mod = ModelMgr::Instance().GetModel(i);
+
+		SwitchShader(ShaderHelper::Default);
+		ShaderHelper::Instance().SetLightVPMat(matLightVP);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+		QMatrix4x4 matModel = mod->GetWorldMat();
+		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+	}
 }
 
 void OpenWidget::ChangeMouseMoveSpeed(int value)
@@ -366,6 +440,12 @@ void OpenWidget::UpdateKeys()
 	if (m_pressedKeyVec.contains(Qt::Key_E)) {
 		m_cam->MoveUp();
 	}
+	if (m_pressedKeyVec.contains(Qt::Key_Shift)) {
+		m_cam->SetSpeedBoost(true);
+	}
+	else {
+		m_cam->SetSpeedBoost(false);
+	}
 
 	update();
 }
@@ -373,11 +453,11 @@ void OpenWidget::UpdateKeys()
 void OpenWidget::moveEvent(QMoveEvent *event)
 {
 	Q_UNUSED(event);
-	if (Q_NULLPTR != m_mainObj) {
-		auto geo = geometry();
-
-		((MainWindow*)m_mainObj)->move(geo.x(), geo.y() + geo.height());
-	}
+// 	if (Q_NULLPTR != m_mainObj) {
+// 		auto geo = geometry();
+// 
+// 		((MainWindow*)m_mainObj)->move(geo.x(), geo.y() + geo.height());
+// 	}
 }
 
 void OpenWidget::keyPressEvent(QKeyEvent *event)

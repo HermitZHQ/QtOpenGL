@@ -73,33 +73,43 @@ void ShaderHelper::GetCommonUniformLocation()
 
 	Use();
 
+	//----matrix
 	m_matMVPLoc[m_shaderType] = GetUniformLocation("mat_mvp");
 	m_matWorldLoc[m_shaderType] = GetUniformLocation("mat_world");
 	m_worldCamPosLoc[m_shaderType] = GetUniformLocation("worldCamPos");
 	m_matProjLoc[m_shaderType] = GetUniformLocation("projMat");
 	m_matOrthoLoc[m_shaderType] = GetUniformLocation("orthoMat");
 	m_matViewLoc[m_shaderType] = GetUniformLocation("viewMat");
+	m_matLightVPLoc[m_shaderType] = GetUniformLocation("lightVPMat");
 
+	//----light
+	m_ambientColorLoc[m_shaderType] = GetUniformLocation("ambientColor");
+	m_specularColorLoc[m_shaderType] = GetUniformLocation("specularColor");
 
+	//----texture
 	auto texId = GetUniformLocation("tex");
+	if (-1 != texId) {
+		glUniform1i(texId, 0);
+	}
+
 	auto normalMapId = GetUniformLocation("normalMap");
+	if (-1 != normalMapId) {
+		glUniform1i(normalMapId, 1);
+	}
+
 	auto projTexId = GetUniformLocation("projTex");
-	glUniform1i(texId, 0);
-	glUniform1i(normalMapId, 1);
 	if (-1 != projTexId) {
 		glUniform1i(projTexId, 10);
 	}
 
-
-	auto skyboxId = GetUniformLocation("skybox");
-	if (-1 != skyboxId)
-	{
-		glUniform1i(skyboxId, 30);// why I should set it 2?? I don't understand here.....
+	auto shadowMapId = GetUniformLocation("shadowMap");
+	if (-1 != shadowMapId) {
+		glUniform1i(shadowMapId, 2);
 	}
 
-	if (-1 == m_matMVPLoc[m_shaderType] || -1 == m_matWorldLoc[m_shaderType]
-		|| -1 == m_worldCamPosLoc[m_shaderType]) {
-		AddTipInfo(Q8("查询uniform失败！"));
+	auto skyboxId = GetUniformLocation("skybox");
+	if (-1 != skyboxId)	{
+		glUniform1i(skyboxId, 30);// why I should set it 2?? I don't understand here.....
 	}
 
 	Unuse();
@@ -215,8 +225,11 @@ void ShaderHelper::Init()
 	memset(m_matWorldLoc, -1, sizeof(m_matWorldLoc));
 	memset(m_worldCamPosLoc, -1, sizeof(m_worldCamPosLoc));
 	memset(m_matProjLoc, -1, sizeof(m_matProjLoc));
-	memset(m_matViewLoc, -1, sizeof(m_matViewLoc));
+	memset(m_matViewLoc, -1, sizeof(m_matViewLoc)); 
 	memset(m_matOrthoLoc, -1, sizeof(m_matOrthoLoc));
+	memset(m_ambientColorLoc, -1, sizeof(m_ambientColorLoc));
+	memset(m_specularColorLoc, -1, sizeof(m_specularColorLoc));
+	memset(m_matLightVPLoc, -1, sizeof(m_matLightVPLoc));
 
 	InitDefaultShader();
 	InitPureColorShader();
@@ -285,6 +298,28 @@ void ShaderHelper::SetViewMat(QMatrix4x4 &matView)
 	}
 }
 
+void ShaderHelper::SetLightVPMat(QMatrix4x4 &matLightVP)
+{
+	if (m_matLightVPLoc[m_shaderType] != -1)
+	{
+		glUniformMatrix4fv(m_matLightVPLoc[m_shaderType], 1, GL_FALSE, matLightVP.data());
+	}
+}
+
+void ShaderHelper::SetAmbientColor(QVector4D color)
+{
+	if (m_ambientColorLoc[m_shaderType] != -1) {
+		glUniform4f(m_ambientColorLoc[m_shaderType], color.x(), color.y(), color.z(), color.w());
+	}
+}
+
+void ShaderHelper::SetSpecularColor(QVector4D color)
+{
+	if (m_specularColorLoc[m_shaderType] != -1) {
+		glUniform4f(m_specularColorLoc[m_shaderType], color.x(), color.y(), color.z(), color.w());
+	}
+}
+
 GLuint ShaderHelper::GetProgram() const
 {
 	return m_programs[m_shaderType];
@@ -302,10 +337,18 @@ void ShaderHelper::Unuse()
 
 GLint ShaderHelper::GetAttriLocation(const GLchar *name)
 {
-	return glGetAttribLocation(m_programs[m_shaderType], name);
+	GLint res = glGetAttribLocation(m_programs[m_shaderType], name);
+	if (-1 == res) {
+		AddTipInfo(Q8("找不到Attrib:%1").arg(name));
+	}
+	return res;
 }
 
 GLint ShaderHelper::GetUniformLocation(const GLchar *name)
 {
-	return glGetUniformLocation(m_programs[m_shaderType], name);
+	GLint res = glGetUniformLocation(m_programs[m_shaderType], name);
+	if (-1 == res) {
+		AddTipInfo(Q8("找不到uniform:%1").arg(name));
+	}
+	return res;
 }

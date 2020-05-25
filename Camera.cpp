@@ -6,7 +6,7 @@ Camera::Camera()
 	:m_nearClip(2.03f), m_farClip(10000.0f)
 	, m_fov(60.0f), m_aspectRatio(1.0f), m_orthoSize(55.5f)
 	, m_camPos(0, 50, -200, 1), m_lookAtPos(0, 0, 0, 1), m_camUpDir(0, 1, 0)
-	, m_camMoveSpeed(0.2f), m_camRotateSpeed(0.03f), m_camRotateEnable(false)
+	, m_camMoveSpeed(0.2f), m_camRotateSpeed(0.03f), m_camRotateEnable(false), m_speedBoost(false)
 {
 }
 
@@ -14,12 +14,33 @@ Camera::~Camera()
 {
 }
 
+QMatrix4x4 Camera::GetLightViewMatrix() const
+{
+	QMatrix4x4 matView;
+	QVector4D lightPos(150, 150, 150, 1);
+
+	QVector3D axisZ = QVector3D(1, 1, 1).normalized();
+	QVector3D axisX = (QVector3D::crossProduct(m_camUpDir, axisZ)).normalized();
+	QVector3D axisY = QVector3D::crossProduct(axisZ, axisX);
+
+	// 必须用C到P的列主序形式实现，因为该矩阵不能直接转置成P到C
+	matView.setColumn(0, QVector4D(axisX, 0));
+	matView.setColumn(1, QVector4D(axisY, 0));
+	matView.setColumn(2, QVector4D(axisZ, 0));
+	matView.setColumn(3, lightPos);
+
+	static float rotate = 0.01f, rotate2 = 0.0001f;
+// 	matView.translate(QVector3D(qCos(rotate2), 0, qSin(M_PI - rotate2)) * 200);
+// 	matView.rotate(rotate, QVector3D(0, 1, 0));
+	rotate += 0.01f;
+	rotate2 += 0.0001f;
+
+	return matView.inverted();
+}
+
 QMatrix4x4 Camera::GetViewMatrix() const
 {
 	QMatrix4x4 matView;
-	
-// 	QMatrix4x4 matPose;
-// 	matPose.rotate(m_camWorldPose);
 
 	// 方法1：使用lookat方式，这种方式可以锁定看的地方
 	QVector3D axisZ = (m_camPos - m_lookAtPos).toVector3D().normalized();

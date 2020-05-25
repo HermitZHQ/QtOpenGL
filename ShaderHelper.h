@@ -44,6 +44,10 @@ public:
 	void SetProjMat(QMatrix4x4 &matProj);
 	void SetOrthoMat(QMatrix4x4 &matOrtho);
 	void SetViewMat(QMatrix4x4 &matView);
+	void SetLightVPMat(QMatrix4x4 &matLightVP);
+
+	void SetAmbientColor(QVector4D color);
+	void SetSpecularColor(QVector4D color);
 
 	GLuint GetProgram() const;
 	void Use();
@@ -79,5 +83,9 @@ private:
 	GLint					m_matProjLoc[maxShaderNum];
 	GLint					m_matOrthoLoc[maxShaderNum];
 	GLint					m_matViewLoc[maxShaderNum];
+	GLint					m_matLightVPLoc[maxShaderNum];
+
+	GLint					m_ambientColorLoc[maxShaderNum];
+	GLint					m_specularColorLoc[maxShaderNum];
 };
 

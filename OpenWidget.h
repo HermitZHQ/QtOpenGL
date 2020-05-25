@@ -31,8 +31,12 @@ protected:
 	void BeginGetOcclusionSampleNum();
 	void EndGetOcclusionSampleNum();
 
+	//---- frame buffer
 	void CreateOffScreenFrameBufferTexture();
 	void DrawOffScreenTexture();
+	void CreateShadowMapFrameBufferTexture();
+	void DrawShadowMapTexture_ForTest();
+	void DrawOriginalSceneWithShadow();
 
 	virtual void moveEvent(QMoveEvent *event) override;
 	virtual void keyPressEvent(QKeyEvent *event) override;
@@ -55,8 +59,14 @@ private:
 	QVector<Qt::Key>			m_pressedKeyVec;
 
 	// ----FrameBuffer
-	GLuint						m_fb;
-	GLint						m_oldFb;
-	GLuint						m_texOffscreenId;
+	GLint						m_originalFbo;
+
+	GLuint						m_offScreenFbo;
+	GLuint						m_offScreenTexId;
+
+	GLuint						m_shadowMapFbo;
+	GLuint						m_shadowMapTexId;
+	GLushort					m_shadowTexWidth;
+	GLushort					m_shadowTexHeight;
 };
 

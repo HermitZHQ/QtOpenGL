@@ -3,6 +3,7 @@
 layout (location = 0) out vec4 fColor;
 
 uniform samplerCube skybox;
+uniform vec4 ambientColor;
 
 //----in vars
 in Vertex {
@@ -16,6 +17,6 @@ in Vertex {
 
 void main()
 {
-	fColor = texture(skybox, skyboxUV);
+	fColor = texture(skybox, skyboxUV) * ambientColor;
 	//fColor = vec4(1, 0, 0, 1);
 }

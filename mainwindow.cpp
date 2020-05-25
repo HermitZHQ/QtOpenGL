@@ -13,11 +13,12 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 	, m_openWidgetPtr(Q_NULLPTR), m_layoutV(Q_NULLPTR)
+	, m_ambientColor(1, 1, 1, 1), m_specularColor(1, 1, 1, 1)
 {
 	ui->setupUi(this);
 
 	m_delayStartTimer = new QTimer(this);
-	connect(m_delayStartTimer, &QTimer::timeout, this, &MainWindow::OnBtnStartClicked);
+	connect(m_delayStartTimer, &QTimer::timeout, this, &MainWindow::Start);
 	m_delayStartTimer->setSingleShot(true);
 	m_delayStartTimer->start(500);
 }
@@ -38,24 +39,43 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 }
 
-void MainWindow::OnBtnReloadShaders()
+QVector4D MainWindow::GetAmbientColor()
 {
-	if (Q_NULLPTR == m_openWidgetPtr) {
-		return;
-	}
+	return m_ambientColor;
 }
 
-void MainWindow::OnBtnStartClicked()
+QVector4D MainWindow::GetSpecularColor()
+{
+	return m_specularColor;
+}
+
+void MainWindow::Start()
 {
 	m_openWidgetPtr = new OpenWidget();
 	m_openWidgetPtr->resize(800, 600);
-// 	m_openWidgetPtr->resize(580, 490);
-	m_openWidgetPtr->move(175, 55);
+	// 	m_openWidgetPtr->resize(580, 490);
+	m_openWidgetPtr->move(515, 108);
 	m_openWidgetPtr->SetMainWndObj(this);
 	m_openWidgetPtr->show();
 	auto geo = m_openWidgetPtr->geometry();
 
-	move(geo.x(), geo.y() + geo.height());
+	move(0, 0);
+}
+
+void MainWindow::OnBtnSetSpecular()
+{
+	m_specularColor[0] = ui->slid_R->value() / 255.0f;
+	m_specularColor[1] = ui->slid_G->value() / 255.0f;
+	m_specularColor[2] = ui->slid_B->value() / 255.0f;
+	m_specularColor[3] = ui->slid_A->value() / 255.0f;
+}
+
+void MainWindow::OnBtnSetAmbient()
+{
+	m_ambientColor[0] = ui->slid_R->value() / 255.0f;
+	m_ambientColor[1] = ui->slid_G->value() / 255.0f;
+	m_ambientColor[2] = ui->slid_B->value() / 255.0f;
+	m_ambientColor[3] = ui->slid_A->value() / 255.0f;
 }
 
 void MainWindow::OnSliderMouseSpeedChanged(int value)

@@ -6,6 +6,7 @@ uniform vec3 worldCamPos;
 
 uniform sampler2D tex;
 uniform sampler2D normalMap;
+uniform vec4 ambientColor;
 
 //----in vars
 in Vertex {
@@ -25,6 +26,7 @@ void main()
 
 	// assumption ambient light color
 	vec3 ambient = vec3(1, 1, 1);
+	ambient = ambientColor;
 	// assumption diffuse color
 	vec3 diffuseColor = vec3(1, 1, 1);
 	// assumption specular color

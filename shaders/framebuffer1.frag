@@ -4,6 +4,8 @@ out vec4 fColor;
 in vec2 uv;
 
 uniform sampler2D tex;
+uniform vec4 ambientColor;
+
 const float offset = 1.0 / 2000.0;
 
 void main()
@@ -48,4 +50,5 @@ void main()
         col += sampleTex[i] * kernel[i];
     
     fColor = vec4(col, 1.0);
+	fColor = vec4(texture(tex, uv.st));
 }

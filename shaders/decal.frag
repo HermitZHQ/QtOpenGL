@@ -5,6 +5,7 @@ layout (location = 0) out vec4 fColor;
 uniform mat4x4 projMat;
 uniform mat4x4 orthoMat;
 uniform mat4x4 viewMat;
+uniform vec4 ambientColor;
 
 uniform samplerCube skybox;
 
@@ -30,6 +31,6 @@ void main()
 	projUV = (projUV + 1.0) / 2.0;
 	projUV.y = 1.0 - projUV.y;
 
-	fColor = texture(projTex, projUV);
+	fColor = texture(projTex, projUV) * ambientColor;
 	//fColor = vec4(0, 1, 0, 1);
 }

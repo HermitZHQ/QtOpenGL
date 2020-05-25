@@ -6,54 +6,54 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>619</width>
-    <height>262</height>
+    <width>626</width>
+    <height>389</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="btn_reloadShader">
+   <widget class="QPushButton" name="btn_Specular">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>50</y>
+      <x>190</x>
+      <y>130</y>
       <width>111</width>
       <height>28</height>
      </rect>
     </property>
     <property name="text">
-     <string>ReloadShader</string>
+     <string>SetSpecular</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="btn_Start">
+   <widget class="QPushButton" name="btn_Ambient">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
+      <x>190</x>
+      <y>100</y>
       <width>111</width>
       <height>28</height>
      </rect>
     </property>
     <property name="text">
-     <string>Start</string>
+     <string>SetAmbient</string>
     </property>
    </widget>
    <widget class="QListWidget" name="list_info">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>90</y>
-      <width>621</width>
-      <height>171</height>
+      <x>310</x>
+      <y>0</y>
+      <width>321</width>
+      <height>391</height>
      </rect>
     </property>
    </widget>
-   <widget class="QSlider" name="horizontalSlider">
+   <widget class="QSlider" name="slid_MouseSpeed">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>10</x>
       <y>40</y>
       <width>160</width>
       <height>22</height>
@@ -75,7 +75,7 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>10</x>
       <y>10</y>
       <width>91</width>
       <height>21</height>
@@ -85,35 +85,120 @@
      <string>MouseSpeed</string>
     </property>
    </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>70</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Color</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="slid_R">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>160</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>0</number>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="value">
+     <number>230</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QSlider" name="slid_G">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>130</y>
+      <width>160</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>0</number>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="value">
+     <number>230</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QSlider" name="slid_B">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>160</y>
+      <width>160</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>0</number>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="value">
+     <number>230</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QSlider" name="slid_A">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>190</y>
+      <width>160</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>0</number>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="value">
+     <number>230</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>
  <connections>
   <connection>
-   <sender>btn_reloadShader</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>OnBtnReloadShaders()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>103</x>
-     <y>63</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>154</x>
-     <y>22</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSlider</sender>
+   <sender>slid_MouseSpeed</sender>
    <signal>valueChanged(int)</signal>
    <receiver>MainWindow</receiver>
    <slot>OnSliderMouseSpeedChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>62</x>
-     <y>132</y>
+     <x>10</x>
+     <y>61</y>
     </hint>
     <hint type="destinationlabel">
      <x>212</x>
@@ -122,25 +207,41 @@
    </hints>
   </connection>
   <connection>
-   <sender>btn_Start</sender>
+   <sender>btn_Ambient</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
-   <slot>OnBtnStartClicked()</slot>
+   <slot>OnBtnSetAmbient()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>90</x>
-     <y>17</y>
+     <x>264</x>
+     <y>109</y>
     </hint>
     <hint type="destinationlabel">
-     <x>126</x>
-     <y>9</y>
+     <x>224</x>
+     <y>86</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_Specular</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>OnBtnSetSpecular()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>219</x>
+     <y>147</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>224</x>
+     <y>188</y>
     </hint>
    </hints>
   </connection>
  </connections>
  <slots>
-  <slot>OnBtnReloadShaders()</slot>
   <slot>OnSliderMouseSpeedChanged(int)</slot>
-  <slot>OnBtnStartClicked()</slot>
+  <slot>OnBtnSetAmbient()</slot>
+  <slot>OnBtnSetSpecular()</slot>
  </slots>
 </ui>

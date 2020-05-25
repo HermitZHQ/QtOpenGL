@@ -2,6 +2,7 @@
 #include "Mesh.h"
 
 Model::Model()
+	:m_shaderType(ShaderHelper::Default)
 {
 	m_worldMat.setToIdentity();
 }
@@ -69,6 +70,11 @@ void Model::EnableProjTex()
 	}
 }
 
+void Model::SetShaderType(ShaderHelper::eShaderType type)
+{
+	m_shaderType = type;
+}
+
 void Model::SetDrawType(Mesh::eDrawType type)
 {
 	for (auto &mesh : m_meshes)
@@ -80,6 +86,7 @@ void Model::SetDrawType(Mesh::eDrawType type)
 void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 	QMatrix4x4 matOrtho)
 {
+	ShaderHelper::Instance().SetShaderType(m_shaderType);
 	auto meshNum = GetMeshNum();
 	for (int i = 0; i < meshNum; ++i)
 	{

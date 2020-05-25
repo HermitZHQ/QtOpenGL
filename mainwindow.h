@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "QVector4D"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,13 +19,16 @@ public:
 	~MainWindow();
 
 	Q_INVOKABLE void AddInfo(QString info);
+	QVector4D GetAmbientColor();
+	QVector4D GetSpecularColor();
 
 protected:
 	virtual void resizeEvent(QResizeEvent *event) override;
 
 public slots:
-	void OnBtnReloadShaders();
-	void OnBtnStartClicked();
+	void Start();
+	void OnBtnSetSpecular();
+	void OnBtnSetAmbient();
 	void OnSliderMouseSpeedChanged(int value);
 
 private:
@@ -32,6 +36,7 @@ private:
 	OpenWidget						*m_openWidgetPtr;
 	QLayout							*m_layoutV;
 	QTimer							*m_delayStartTimer;
-
+	QVector4D						m_ambientColor;
+	QVector4D						m_specularColor;
 };
 #endif // MAINWINDOW_H

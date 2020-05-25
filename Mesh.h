@@ -9,6 +9,7 @@
 #define MAX_SHADER_NUM 8
 
 class Texture;
+class MainWindow;
 class Mesh : public QOpenGLFunctions_4_5_Core
 {
 public:
@@ -103,6 +104,9 @@ private:
 	QVector<float>						m_binormals;
 	QVector<float>						m_uvs1;
 	QVector<VertInfo>					m_vertInfoVec;
+
+	ShaderHelper						&m_shader;
+	MainWindow							*m_mainWnd;
 
 	GLuint								m_diffuseTex1ID;
 	GLuint								m_specularTex1ID;

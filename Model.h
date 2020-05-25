@@ -2,6 +2,7 @@
 #include "QVector"
 #include "QMatrix4x4"
 #include "Mesh.h"
+#include "ShaderHelper.h"
 
 class Model
 {
@@ -22,6 +23,8 @@ public:
 
 	void EnableSkybox();
 	void EnableProjTex();
+
+	void SetShaderType(ShaderHelper::eShaderType type);
 	void SetDrawType(Mesh::eDrawType type);
 	void Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 		QMatrix4x4 matOrtho);
@@ -30,5 +33,6 @@ private:
 	QString								m_name;
 	QVector<Mesh*>						m_meshes;
 	QMatrix4x4							m_worldMat;
+	ShaderHelper::eShaderType			m_shaderType;
 };
 

@@ -22,6 +22,16 @@ public:
 	void SetMouseMoveSpeed(int value) {
 		m_camMoveSpeed = value / 10.0f;
 	}
+	void SetSpeedBoost(bool bBoost) {
+		if (!m_speedBoost && bBoost) {
+			m_speedBoost = true;
+			m_camMoveSpeed *= 10.0f;
+		}
+		else if (m_speedBoost && !bBoost) {
+			m_speedBoost = false;
+			m_camMoveSpeed /= 10.0f;
+		}
+	}
 
 	void SetCamPos(QVector3D pos) {
 		m_camPos = pos;
@@ -36,6 +46,8 @@ public:
 		m_camUpDir = upDir;
 	}
 
+	// hard code the light dir and postion
+	QMatrix4x4 GetLightViewMatrix() const;
 	QMatrix4x4 GetViewMatrix() const;
 	QMatrix4x4 GetProjectionMatrix() const;
 	QMatrix4x4 GetOrthographicMatrix() const;
@@ -81,6 +93,7 @@ private:
 	QQuaternion				m_camWorldPose;
 	float					m_camMoveSpeed;
 	float					m_camRotateSpeed;
+	bool					m_speedBoost;
 	bool					m_camRotateEnable;
 	QPoint					m_rotateStartPos;
 	QPoint					m_rotateCurPos;

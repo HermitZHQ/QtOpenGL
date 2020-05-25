@@ -6,6 +6,7 @@ uniform vec3 worldCamPos;
 
 uniform sampler2D tex;
 uniform sampler2D normalMap;
+uniform vec4 ambientColor;
 
 //----in vars
 in Vertex {
@@ -18,6 +19,6 @@ in Vertex {
 
 void main()
 {
-	fColor = texture(tex, gl_PointCoord);
+	fColor = texture(tex, gl_PointCoord) * ambiendColor;
 	//fColor = vec4(1, 0, 0, 1);
 }
