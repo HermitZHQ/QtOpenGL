@@ -4,6 +4,7 @@
 #include "Mesh.h"
 #include "ShaderHelper.h"
 
+class LightMgr;
 class Model
 {
 public:
@@ -34,5 +35,8 @@ private:
 	QVector<Mesh*>						m_meshes;
 	QMatrix4x4							m_worldMat;
 	ShaderHelper::eShaderType			m_shaderType;
+
+	ShaderHelper						*m_shaderHelperPtr;
+	LightMgr							*m_lightMgrPtr;
 };
 

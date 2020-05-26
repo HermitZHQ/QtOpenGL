@@ -44,6 +44,9 @@
     <Filter Include="AssetImport">
       <UniqueIdentifier>{1d54b3df-a9cc-42ba-bf15-ac5692dc0b12}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Light">
+      <UniqueIdentifier>{98be7122-0361-4fb1-a612-cbd7212f2b32}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -81,6 +84,9 @@
     </ClCompile>
     <ClCompile Include="TextureMgr.cpp">
       <Filter>AssetImport</Filter>
+    </ClCompile>
+    <ClCompile Include="LightMgr.cpp">
+      <Filter>Light</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -131,6 +137,9 @@
     </ClInclude>
     <ClInclude Include="TextureMgr.h">
       <Filter>AssetImport</Filter>
+    </ClInclude>
+    <ClInclude Include="LightMgr.h">
+      <Filter>Light</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

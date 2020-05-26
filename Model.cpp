@@ -1,10 +1,14 @@
 #include "Model.h"
 #include "Mesh.h"
+#include "LightMgr.h"
 
 Model::Model()
 	:m_shaderType(ShaderHelper::Default)
 {
 	m_worldMat.setToIdentity();
+
+	m_lightMgrPtr = &LightMgr::Instance();
+	m_shaderHelperPtr = &ShaderHelper::Instance();
 }
 
 Model::~Model()
@@ -86,7 +90,14 @@ void Model::SetDrawType(Mesh::eDrawType type)
 void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 	QMatrix4x4 matOrtho)
 {
-	ShaderHelper::Instance().SetShaderType(m_shaderType);
+	// switch the shader type and set the light data before we draw
+	m_shaderHelperPtr->SetShaderType(m_shaderType);
+	auto lightNum = m_lightMgrPtr->GetCurLightNum();
+	for (int i = 0; i < lightNum; ++i)
+	{
+		m_shaderHelperPtr->SetLightsInfo(m_lightMgrPtr->GetLightInfo(i), i);
+	}
+
 	auto meshNum = GetMeshNum();
 	for (int i = 0; i < meshNum; ++i)
 	{

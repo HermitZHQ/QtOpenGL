@@ -33,6 +33,33 @@ int AssetImport::LoadModel(const char *path)
 		m_prePath = m_prePath.left(index + 1);
 	}
 
+	m_matModel.setToIdentity();
+	m_shaderType = ShaderHelper::Default;
+	HandleChildNode(scene, scene->mRootNode);
+
+	return 0;
+}
+
+int AssetImport::LoadModelWithModelMatrixAndShaderType(const char *path, QMatrix4x4 &matModel, ShaderHelper::eShaderType type)
+{
+	Importer import;
+	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate
+		| aiProcess_FlipUVs
+		| aiProcess_CalcTangentSpace
+		| aiProcess_GenNormals);
+	if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		return -1;
+	}
+
+	m_prePath = path;
+	auto index = m_prePath.lastIndexOf("/");
+	if (-1 != index) {
+		m_prePath = m_prePath.left(index + 1);
+	}
+
+	m_matModel = matModel;
+	m_shaderType = type;
 	HandleChildNode(scene, scene->mRootNode);
 
 	return 0;
@@ -105,6 +132,9 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 			m->BindBuffer();
 			mod->AddMesh(m);
 		}
+
+		mod->SetWroldMat(m_matModel);
+		mod->SetShaderType(m_shaderType);
 	}
 
 	return 0;

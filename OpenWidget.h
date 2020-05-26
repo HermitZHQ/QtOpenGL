@@ -8,6 +8,9 @@
 
 class Camera;
 class Mesh;
+class AssetImport;
+class ModelMgr;
+class LightMgr;
 class OpenWidget : public QOpenGLWidget, public QOpenGLFunctions_4_5_Core
 {
 public:
@@ -51,6 +54,10 @@ private:
 	GLint						m_matWorldLoc;
 	GLint						m_worldCamPosLoc;
 	Camera						*m_cam;
+	AssetImport					*m_assimpPtr;
+	ModelMgr					*m_modelMgrPtr;
+	LightMgr					*m_lightMgrPtr;
+	ShaderHelper				*m_shaderHelperPtr;
 
 	GLuint						m_query;
 	GLuint						m_sampleNum;

@@ -360,15 +360,11 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	}
 	glBindVertexArray(GetVao());
 	matVP = matVP * matModel;
-	m_shader.SetMVPMatrix(matVP);
-	m_shader.SetWorldMatrix(matModel);
+	m_shader.SetMVPMatrix(matVP, matModel, matView, matProj);
 	m_shader.SetCamWorldPos(camPos);
-	m_shader.SetProjMat(matProj);
-	m_shader.SetViewMat(matView);
 	m_shader.SetOrthoMat(matOrtho);
 
-	m_shader.SetAmbientColor(m_mainWnd->GetAmbientColor());
-	m_shader.SetSpecularColor(m_mainWnd->GetSpecularColor());
+	m_shader.SetAmbientSpecularColor(m_mainWnd->GetAmbientColor(), m_mainWnd->GetSpecularColor());
 
 	// Draw element(with indices)
 	if (Triangle == m_drawType)	{

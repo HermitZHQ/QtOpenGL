@@ -8,6 +8,7 @@
 #include "Model.h"
 #include "ModelMgr.h"
 #include "TextureMgr.h"
+#include "LightMgr.h"
 
 
 OpenWidget::OpenWidget()
@@ -16,6 +17,10 @@ OpenWidget::OpenWidget()
 	, m_offScreenFbo(), m_shadowTexWidth(2048), m_shadowTexHeight(2048)
 {
 	m_cam = new Camera();
+
+	m_lightMgrPtr = &LightMgr::Instance();
+	m_assimpPtr = &AssetImport::Instance();
+	m_modelMgrPtr = &ModelMgr::Instance();
 
 	connect(&m_updateKeyTimer, &QTimer::timeout, this, &OpenWidget::UpdateKeys);
 	m_updateKeyTimer.setInterval(1);
@@ -87,16 +92,29 @@ void OpenWidget::initializeGL()
 
 	TextureMgr::Instance();
 
+	// load the light box
+	auto lightNum = LightMgr::Instance().GetCurLightNum();
+	for (int i = 0; i < lightNum; ++i)
+	{
+		auto lightInfo = LightMgr::Instance().GetLightInfo(i);
+		if (lightInfo.isEnabled) {
+			QMatrix4x4 matModel;
+			matModel.translate(lightInfo.pos);
+			matModel.scale(0.1f);
+			m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::Diffuse);
+		}
+	}
+
 	// test load model
-	AssetImport::Instance().LoadModel("./models/Box001.obj");
-	AssetImport::Instance().LoadModel("./models/Box002.obj");
-	AssetImport::Instance().LoadModel("./models/plane.obj");
-	AssetImport::Instance().LoadModel("./models/plane2.obj");
-	AssetImport::Instance().LoadModel("./models/plane3.obj");
-// 	AssetImport::Instance().LoadModel("./models/teapot.obj");
-	AssetImport::Instance().LoadModel("./models/skybox.obj");
-// 	AssetImport::Instance().LoadModel("./models/dva/001.obj");
-	Model *pMod = ModelMgr::Instance().FindModelByName("Plane001");
+	m_assimpPtr->LoadModel("./models/Box001.obj");
+	m_assimpPtr->LoadModel("./models/Box002.obj");
+	m_assimpPtr->LoadModel("./models/plane.obj");
+	m_assimpPtr->LoadModel("./models/plane2.obj");
+	m_assimpPtr->LoadModel("./models/plane3.obj");
+// 	m_assimpPtr->LoadModel("./models/teapot.obj");
+	m_assimpPtr->LoadModel("./models/skybox.obj");
+// 	m_assimpPtr->LoadModel("./models/dva/001.obj");
+	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
 // 		pMod->EnableProjTex();
 		QMatrix4x4 mat;
@@ -105,25 +123,25 @@ void OpenWidget::initializeGL()
 		mat.scale(20, 20, 20);
 		pMod->SetWroldMat(mat);
 	}
-	Model *pMod2 = ModelMgr::Instance().FindModelByName("Plane002");
+	Model *pMod2 = m_modelMgrPtr->FindModelByName("Plane002");
 	if (Q_NULLPTR != pMod2) {
 		QMatrix4x4 mat;
-		mat.translate(-50, 0, 0);
+		mat.translate(-90, 0, 0);
 		mat.rotate(90, QVector3D(0, 0, 1));
 		mat.scale(10, 10, 10);
 		pMod2->SetWroldMat(mat);
 	}
-	Model *pMod3 = ModelMgr::Instance().FindModelByName("Plane003");
+	Model *pMod3 = m_modelMgrPtr->FindModelByName("Plane003");
 	if (Q_NULLPTR != pMod3) {
 		QMatrix4x4 mat;
-		mat.translate(50, 0, 0);
+		mat.translate(90, 0, 0);
 		mat.rotate(270, QVector3D(0, 0, 1));
 		mat.scale(10, 10, 10);
 		pMod3->SetWroldMat(mat);
 	}
 
 
-	Model *pBox001 = ModelMgr::Instance().FindModelByName("Box001");
+	Model *pBox001 = m_modelMgrPtr->FindModelByName("Box001");
 	if (Q_NULLPTR != pBox001) {
 // 		pBox001->EnableProjTex();
 // 		pBox001->SetDrawType(Mesh::Point);
@@ -131,21 +149,21 @@ void OpenWidget::initializeGL()
 		mat.translate(0, 15, 0);
 		pBox001->SetWroldMat(mat);
 	}
-	Model *pBox002 = ModelMgr::Instance().FindModelByName("Box002");
+	Model *pBox002 = m_modelMgrPtr->FindModelByName("Box002");
 	if (Q_NULLPTR != pBox002) {
 		QMatrix4x4 mat;
 		mat.translate(0, -37, 0);
 		pBox002->SetWroldMat(mat);
 	}
 
-	Model *pTeapot = ModelMgr::Instance().FindModelByName("defaultobject");
+	Model *pTeapot = m_modelMgrPtr->FindModelByName("defaultobject");
 	if (Q_NULLPTR != pTeapot) {
 		QMatrix4x4 mat;
 		mat.translate(20, 0, 0);
 		mat.scale(5);
 		pTeapot->SetWroldMat(mat);
 	}	
-	Model *pSkybox = ModelMgr::Instance().FindModelByName("skybox");
+	Model *pSkybox = m_modelMgrPtr->FindModelByName("skybox");
 	if (Q_NULLPTR != pSkybox) {
 		pSkybox->EnableSkybox();
 

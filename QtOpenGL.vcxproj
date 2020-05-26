@@ -192,6 +192,7 @@
   <ItemGroup>
     <ClCompile Include="AssetImport.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="LightMgr.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainwindow.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -232,6 +233,7 @@
   <ItemGroup>
     <ClInclude Include="AssetImport.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="LightMgr.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelMgr.h" />

@@ -2,6 +2,23 @@
 
 layout (location = 0) out vec4 fColor;
 
+struct Light
+{
+	bool			isEnabled;
+	bool			isDirectional;
+	bool			isPoint;
+	vec3			dir;
+	vec3			pos;
+	vec4			color;
+	float			radius;
+	float			constant;
+	float			linear;
+	float			quadratic;
+	float			innerCutoff;
+	float			outerCutoff;
+};
+uniform Light lights[8];
+
 uniform sampler2D tex;
 uniform sampler2D normalMap;
 uniform sampler2D shadowMap;
@@ -23,7 +40,8 @@ in Vertex {
 	mat3x3 tangentToModelMat;
 };
 
-float CalculateTheShadowValue(){	
+float CalculateTheShadowValue()
+{	
 	vec4 posInLightSpace = lightVPMat * vec4(worldPos, 1);
 	posInLightSpace = posInLightSpace / posInLightSpace.w;
 	posInLightSpace = (posInLightSpace + 1.0) / 2.0;
@@ -32,47 +50,114 @@ float CalculateTheShadowValue(){
 
 	float bias = 0.000001;
 	//float bias = max(0.000005 * (1.0 - dot(worldNormal, vec3(1, 1, 1))), 0.000001);
-	return (depth < vertexDepth - bias ? 0.2 : 1);
+	return (depth < vertexDepth - bias ? 0.05 : 1);
 }
 
-void main()
+vec4 CalculateDirLight(Light light)
 {
-	// assumption directional light color and dir
-	vec3 worldLightColor = vec3(1, 1, 1);
-	vec3 worldLightDir = vec3(1, 1, 1);
-	worldLightDir = normalize(worldLightDir);
+	light.dir = normalize(light.dir);
 
-	// assumption ambient light color
-	vec3 ambient = vec3(1, 1, 1);
-	ambient = ambientColor.rgb;
-	// assumption diffuse color
-	vec3 diffuseColor = vec3(1, 1, 1);
-	// assumption specular color
-	vec3 specular = vec3(1, 1, 1);
-	specular = specularColor.rgb;
+	float shadowValue = CalculateTheShadowValue();
 
 	// Get "normal" from the normalmap
 	vec3 normal = texture(normalMap, uv).rgb;
 	normal = normal * 2 - 1;
 	normal = normalize(tangentToModelMat * normal);
-	//normal = normalize(mat3(worldMat) * normal);//not for method 1
 
-	// Get depth from the shadowmap
-	float shadowValue = CalculateTheShadowValue();
+	vec3 ambient = ambientColor.rgb;
+	vec4 albedo = texture(tex, uv);
+	//vec4 albedo = texture(tex, uv) * 0.5 + texture(skybox, skyboxUV) * 0.5;
+	ambient = ambient * 0.15 * albedo.rgb;
 
 	vec3 viewDir = normalize(camPosWorld - worldPos);
-	vec3 halfDir = normalize(viewDir + worldLightDir);
-
-	vec4 albedo = texture(tex, uv) * 0.5 + texture(skybox, skyboxUV) * 0.5;
-	//albedo = texture(skybox, skyboxUV);
-	ambient = ambient * 0.75 * albedo.rgb;
-	vec3 diffuse = worldLightColor * ambient.rgb * clamp(dot(worldLightDir, normal), 0.0, 1.0);
+	vec3 halfDir = normalize(viewDir + light.dir);
+	vec3 diffuse = light.color.rgb * ambient.rgb * clamp(dot(light.dir, normal), 0.0, 1.0);
 
 	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
-	vec3 specularRes = worldLightColor * specular.rgb * spec;
+	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
 
-	fColor = vec4((ambient + diffuse + specularRes) * shadowValue, 1);
-	//fColor = vec4(albedo.rgb, 1);
-	//fColor = albedo;
-	//fColor = vec4(vertexDepth, depth, vertexDepth, 1);
+	//return vec4(1, 0, 0, 1);
+	return vec4(ambient + (diffuse + specularRes) * shadowValue, 1);
+}
+
+vec4 CalculatePointLight(Light light)
+{
+	vec3 pointLightDir = light.pos - worldPos;
+	float len = length(pointLightDir);
+	pointLightDir = normalize(pointLightDir);
+
+	float attenuation = 1.0;
+	// calculate the attenuation of point light
+	//attenuation = 1.0 / (light.constant + light.linear * len);
+	if (len > light.radius){
+		attenuation = 0.0;
+	}
+
+	// Get "normal" from the normalmap
+	vec3 normal = texture(normalMap, uv).rgb;
+	normal = normal * 2 - 1;
+	normal = normalize(tangentToModelMat * normal);
+
+	vec4 albedo = texture(tex, uv);
+
+	vec3 viewDir = normalize(camPosWorld - worldPos);
+	vec3 halfDir = normalize(viewDir + pointLightDir);
+	vec3 diffuse = light.color.rgb * albedo.rgb * clamp(dot(pointLightDir, normal), 0.0, 1.0);
+
+	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
+	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
+
+	//return vec4(attenuation, 0, 0, 1);
+	return vec4(diffuse * attenuation, 1);
+}
+
+vec4 CalculateSpotLight(Light light)
+{
+	vec3 spotLightDir = light.pos - worldPos;
+	float len = length(spotLightDir);
+	spotLightDir = normalize(spotLightDir);
+	light.dir = normalize(light.dir);
+	float vertexRadian = dot(light.dir, spotLightDir);
+
+	float attenuation = 1.0;
+	// calculate the attenuation of point light
+	
+	if (vertexRadian < light.innerCutoff || len > light.radius){
+		attenuation = 0.0;
+	}
+
+	// Get "normal" from the normalmap
+	//vec3 normal = texture(normalMap, uv).rgb;
+	//normal = normal * 2 - 1;
+	//normal = normalize(tangentToModelMat * normal);
+
+	vec4 albedo = texture(tex, uv);
+
+	vec3 viewDir = normalize(camPosWorld - worldPos);
+	vec3 halfDir = normalize(viewDir + spotLightDir);
+	vec3 diffuse = light.color.rgb * albedo.rgb * clamp(dot(spotLightDir, worldNormal), 0.0, 1.0);
+
+	float spec = pow(max(dot(halfDir, worldNormal), 0.0), 512);
+	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
+
+	//return vec4(vertexRadian / 255.0, vertexRadian / 255.0, vertexRadian / 255.0, 1);
+	return vec4(diffuse * attenuation, 1);
+}
+
+void main()
+{
+	fColor =  vec4(0, 0, 0, 0);
+	for(int i = 0; i < 8; ++i){
+		if (lights[i].isEnabled && lights[i].isDirectional){
+			fColor += CalculateDirLight(lights[i]);
+		}
+		else if (lights[i].isEnabled && lights[i].isPoint){
+			fColor += CalculatePointLight(lights[i]);
+		}
+		else if (lights[i].isEnabled && !lights[i].isPoint && !lights[i].isDirectional){
+			fColor += CalculateSpotLight(lights[i]);
+		}
+	}
+
+	//fColor = vec4(lights[0].color);
 }
