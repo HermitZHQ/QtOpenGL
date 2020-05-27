@@ -52,6 +52,7 @@ public:
 	QMatrix4x4 GetProjectionMatrix() const;
 	QMatrix4x4 GetOrthographicMatrix() const;
 	QMatrix4x4 GetVPMatrix() const;
+	QVector3D GetViewDir() const;
 
 	// camera move
 	void MoveForward();

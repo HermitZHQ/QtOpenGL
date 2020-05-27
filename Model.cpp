@@ -95,7 +95,8 @@ void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatri
 	auto lightNum = m_lightMgrPtr->GetCurLightNum();
 	for (int i = 0; i < lightNum; ++i)
 	{
-		m_shaderHelperPtr->SetLightsInfo(m_lightMgrPtr->GetLightInfo(i), i);
+		auto &lightInfo = m_lightMgrPtr->GetLightInfo(i);
+		m_shaderHelperPtr->SetLightsInfo(lightInfo, i);
 	}
 
 	auto meshNum = GetMeshNum();

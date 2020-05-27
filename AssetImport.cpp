@@ -8,6 +8,7 @@
 using namespace Assimp;
 
 AssetImport::AssetImport()
+	:m_model(nullptr)
 {
 }
 
@@ -40,7 +41,7 @@ int AssetImport::LoadModel(const char *path)
 	return 0;
 }
 
-int AssetImport::LoadModelWithModelMatrixAndShaderType(const char *path, QMatrix4x4 &matModel, ShaderHelper::eShaderType type)
+Model* AssetImport::LoadModelWithModelMatrixAndShaderType(const char *path, QMatrix4x4 &matModel, ShaderHelper::eShaderType type)
 {
 	Importer import;
 	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate
@@ -49,7 +50,7 @@ int AssetImport::LoadModelWithModelMatrixAndShaderType(const char *path, QMatrix
 		| aiProcess_GenNormals);
 	if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
-		return -1;
+		return nullptr;
 	}
 
 	m_prePath = path;
@@ -62,7 +63,7 @@ int AssetImport::LoadModelWithModelMatrixAndShaderType(const char *path, QMatrix
 	m_shaderType = type;
 	HandleChildNode(scene, scene->mRootNode);
 
-	return 0;
+	return m_model;
 }
 
 int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
@@ -135,6 +136,7 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 
 		mod->SetWroldMat(m_matModel);
 		mod->SetShaderType(m_shaderType);
+		m_model = mod;
 	}
 
 	return 0;

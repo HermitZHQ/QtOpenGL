@@ -4,6 +4,7 @@
 #include "QVector4D"
 #include "qmath.h"
 
+class Model;
 class LightMgr
 {
 public:
@@ -24,22 +25,23 @@ public:
 
 		bool				needDynamicUpdate;
 		bool				alreadySetFlag;
+		Model				*model;
 
 		LightInfo()
 			: isEnabled(false), isDirectional(true), isPoint(false)
 			, dir(1, 1, 1), pos(0, 0, 0), color(1, 1, 1, 1)
-			, radius(10.0f), constant(1.0f), linear(0.09f), quadratic(0.032f)
+			, radius(10.0f), constant(1.0f), linear(0.045f), quadratic(0.0075f)
 			, innerCutoff(qCos(qDegreesToRadians(12.5f))), outerCutoff(qCos(qDegreesToRadians(17.5f)))
-			, needDynamicUpdate(false), alreadySetFlag(false)
+			, needDynamicUpdate(false), alreadySetFlag(false), model(nullptr)
 		{}
 
 		LightInfo(bool enable, bool directional, bool point, QVector3D _dir, QVector3D _pos, QVector4D _color
-			, float r, float _innerCutoff = 12.5f, float _outerCutoff = 17.5f)
+			, float r, float _innerCutoff = 7.5f, float _outerCutoff = 12.5f)
 			: isEnabled(enable), isDirectional(directional), isPoint(point)
 			, dir(_dir), pos(_pos), color(_color)
-			, radius(r), constant(1.0f), linear(0.09f), quadratic(0.032f)
+			, radius(r), constant(1.0f), linear(0.01f), quadratic(0.007f)
 			, innerCutoff(qCos(qDegreesToRadians(_innerCutoff))), outerCutoff(qCos(qDegreesToRadians(_outerCutoff)))
-			, needDynamicUpdate(false), alreadySetFlag(false)
+			, needDynamicUpdate(false), alreadySetFlag(false), model(nullptr)
 		{}
 
 		void EnableDynamicUpdate() {
@@ -47,6 +49,9 @@ public:
 		}
 		void DisableDynamicUpdate() {
 			needDynamicUpdate = false;
+		}
+		void SetModel(Model *mod) {
+			model = mod;
 		}
 	};
 	~LightMgr();

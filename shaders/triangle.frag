@@ -83,14 +83,14 @@ vec4 CalculateDirLight(Light light)
 vec4 CalculatePointLight(Light light)
 {
 	vec3 pointLightDir = light.pos - worldPos;
-	float len = length(pointLightDir);
+	float len = length(light.pos - worldPos);
 	pointLightDir = normalize(pointLightDir);
 
 	float attenuation = 1.0;
 	// calculate the attenuation of point light
-	//attenuation = 1.0 / (light.constant + light.linear * len);
+	attenuation = 1 / (light.constant + light.linear * len + light.quadratic * (len * len));
 	if (len > light.radius){
-		attenuation = 0.0;
+		//attenuation = 0.0;
 	}
 
 	// Get "normal" from the normalmap
@@ -108,7 +108,7 @@ vec4 CalculatePointLight(Light light)
 	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
 
 	//return vec4(attenuation, 0, 0, 1);
-	return vec4(diffuse * attenuation, 1);
+	return vec4((diffuse + specularRes) * attenuation, 1);
 }
 
 vec4 CalculateSpotLight(Light light)
@@ -121,27 +121,29 @@ vec4 CalculateSpotLight(Light light)
 
 	float attenuation = 1.0;
 	// calculate the attenuation of point light
-	
-	if (vertexRadian < light.innerCutoff || len > light.radius){
-		attenuation = 0.0;
+	float phi = light.innerCutoff - light.outerCutoff;
+	float theta = vertexRadian - light.outerCutoff;
+	attenuation = clamp((theta / phi), 0.0, 1.0);
+	if (vertexRadian < light.outerCutoff){
+		//attenuation = 0.0;
 	}
 
 	// Get "normal" from the normalmap
-	//vec3 normal = texture(normalMap, uv).rgb;
-	//normal = normal * 2 - 1;
-	//normal = normalize(tangentToModelMat * normal);
+	vec3 normal = texture(normalMap, uv).rgb;
+	normal = normal * 2 - 1;
+	normal = normalize(tangentToModelMat * normal);
 
 	vec4 albedo = texture(tex, uv);
 
 	vec3 viewDir = normalize(camPosWorld - worldPos);
 	vec3 halfDir = normalize(viewDir + spotLightDir);
-	vec3 diffuse = light.color.rgb * albedo.rgb * clamp(dot(spotLightDir, worldNormal), 0.0, 1.0);
+	vec3 diffuse = light.color.rgb * albedo.rgb * clamp(dot(spotLightDir, normal), 0.0, 1.0);
 
-	float spec = pow(max(dot(halfDir, worldNormal), 0.0), 512);
+	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
 	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
 
 	//return vec4(vertexRadian / 255.0, vertexRadian / 255.0, vertexRadian / 255.0, 1);
-	return vec4(diffuse * attenuation, 1);
+	return vec4((diffuse + specularRes) * attenuation, 1);
 }
 
 void main()

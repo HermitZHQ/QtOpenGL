@@ -15,6 +15,7 @@ OpenWidget::OpenWidget()
 	:m_mainObj(Q_NULLPTR), m_cam(Q_NULLPTR)
 	, m_matWorldLoc(0), m_worldCamPosLoc(0), m_query(0), m_sampleNum(0)
 	, m_offScreenFbo(), m_shadowTexWidth(2048), m_shadowTexHeight(2048)
+	, m_shaderHelperPtr(nullptr)
 {
 	m_cam = new Camera();
 
@@ -40,6 +41,7 @@ void OpenWidget::initializeGL()
 {
 	initializeOpenGLFunctions();
 
+	m_shaderHelperPtr = &ShaderHelper::Instance();
 	// test for a quad
 	{
 // 		const GLfloat g_vertices[6][2] = {
@@ -96,12 +98,13 @@ void OpenWidget::initializeGL()
 	auto lightNum = LightMgr::Instance().GetCurLightNum();
 	for (int i = 0; i < lightNum; ++i)
 	{
-		auto lightInfo = LightMgr::Instance().GetLightInfo(i);
+		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
 		if (lightInfo.isEnabled) {
 			QMatrix4x4 matModel;
 			matModel.translate(lightInfo.pos);
 			matModel.scale(0.1f);
-			m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::Diffuse);
+			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::Diffuse);
+			lightInfo.SetModel(mod);
 		}
 	}
 
@@ -120,7 +123,7 @@ void OpenWidget::initializeGL()
 		QMatrix4x4 mat;
 // 		mat.translate(0, 30, 0);
 // 		mat.rotate(180, QVector3D(0, 0, 1));
-		mat.scale(20, 20, 20);
+		mat.scale(40, 40, 40);
 		pMod->SetWroldMat(mat);
 	}
 	Model *pMod2 = m_modelMgrPtr->FindModelByName("Plane002");
@@ -232,6 +235,32 @@ void OpenWidget::paintGL()
 	//for light view
 	matVP = matProj * m_cam->GetLightViewMatrix();
 	matView = m_cam->GetLightViewMatrix();
+
+	// update light info dynamicly
+	auto lightNum = m_lightMgrPtr->GetCurLightNum();
+	float radius = 20.0f;
+	static float radian = 0.1f;
+	for (int i = 0; i < lightNum; ++i)
+	{
+		auto &lightInfo = m_lightMgrPtr->GetLightInfo(i);
+		if (!lightInfo.isDirectional && !lightInfo.isPoint) {
+			lightInfo.pos = camPos;
+			lightInfo.dir = m_cam->GetViewDir();
+			m_shaderHelperPtr->SetLightsInfo(lightInfo, i);
+		}
+		else if (!lightInfo.isDirectional && lightInfo.isPoint) {
+// 			lightInfo.pos = QVector3D(qCos(radian) * radius, 0, qSin(radian) * radius);
+// 			m_shaderHelperPtr->SetLightsInfo(lightInfo, i);
+// 
+// 			QMatrix4x4 matWorld;
+// 			matWorld.translate(lightInfo.pos);
+// 			matWorld.scale(0.1f);
+// 			lightInfo.model->SetWroldMat(matWorld);
+// 
+// 			radius += 30.0f;
+		}
+	}
+	radian += 0.01f;
 
 // 	glCullFace(GL_FRONT);
 	auto modelNum = ModelMgr::Instance().GetModelNum();

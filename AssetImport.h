@@ -9,6 +9,7 @@
 #pragma comment(lib, "assimp-vc141-mtd.lib")
 
 class Mesh;
+class Model;
 class AssetImport
 {
 public:
@@ -20,7 +21,7 @@ public:
 	}
 
 	int LoadModel(const char *path);
-	int LoadModelWithModelMatrixAndShaderType(const char *path, QMatrix4x4 &matModel, ShaderHelper::eShaderType type);
+	Model* LoadModelWithModelMatrixAndShaderType(const char *path, QMatrix4x4 &matModel, ShaderHelper::eShaderType type);
 	int HandleChildNode(const aiScene *scene, aiNode *node);
 	int HandleMeshMaterial(aiMaterial *mat, Mesh *mesh);
 
@@ -30,5 +31,6 @@ private:
 	QString						m_prePath;
 	QMatrix4x4					m_matModel;
 	ShaderHelper::eShaderType	m_shaderType;
+	Model						*m_model;
 };
 

@@ -6,7 +6,7 @@ Camera::Camera()
 	:m_nearClip(2.03f), m_farClip(10000.0f)
 	, m_fov(60.0f), m_aspectRatio(1.0f), m_orthoSize(55.5f)
 	, m_camPos(0, 50, -200, 1), m_lookAtPos(0, 0, 0, 1), m_camUpDir(0, 1, 0)
-	, m_camMoveSpeed(0.2f), m_camRotateSpeed(0.03f), m_camRotateEnable(false), m_speedBoost(false)
+	, m_camMoveSpeed(0.3f), m_camRotateSpeed(0.05f), m_camRotateEnable(false), m_speedBoost(false)
 {
 }
 
@@ -109,6 +109,13 @@ QMatrix4x4 Camera::GetOrthographicMatrix() const
 QMatrix4x4 Camera::GetVPMatrix() const
 {
 	return (GetProjectionMatrix() * GetViewMatrix());
+}
+
+QVector3D Camera::GetViewDir() const
+{
+	QVector3D axisZ = (m_camPos - m_lookAtPos).toVector3D().normalized();
+
+	return axisZ;
 }
 
 void Camera::MoveForward()
