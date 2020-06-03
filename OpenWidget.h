@@ -29,6 +29,7 @@ protected:
 
 	void SwitchShader(ShaderHelper::eShaderType type);
 	void paintClearAndReset();
+	void UpdateLightsInfo(const QVector3D &camPos);
 	virtual void paintGL() override;
 
 	void BeginGetOcclusionSampleNum();
@@ -37,6 +38,9 @@ protected:
 	//---- frame buffer
 	void CreateOffScreenFrameBufferTexture();
 	void DrawOffScreenTexture();
+
+	void DrawWaterWaveWithOffScreenTexture();
+
 	void CreateShadowMapFrameBufferTexture();
 	void DrawShadowMapTexture_ForTest();
 	void DrawOriginalSceneWithShadow();

@@ -22,12 +22,15 @@ uniform Light lights[8];
 uniform sampler2D tex;
 uniform sampler2D normalMap;
 uniform sampler2D shadowMap;
+uniform sampler2D offScreenTex;
 uniform samplerCube skybox;
 
 uniform mat4x4 lightVPMat;
 
 uniform vec4 ambientColor;
 uniform vec4 specularColor;
+
+uniform uint time;
 
 //----in vars
 in Vertex {
@@ -38,6 +41,7 @@ in Vertex {
 	mat4x4 worldMat;
 	vec3 camPosWorld;
 	mat3x3 tangentToModelMat;
+	vec4 scrPos;
 };
 
 float CalculateTheShadowValue()
@@ -59,25 +63,46 @@ vec4 CalculateDirLight(Light light)
 
 	float shadowValue = CalculateTheShadowValue();
 
+	// use this speed to get bump uv
+	vec2 speed = time * vec2(0.00001, 0.00001);
+
 	// Get "normal" from the normalmap
-	vec3 normal = texture(normalMap, uv).rgb;
+	float scale = 12.0;
+	vec3 normal1 = texture(normalMap, uv + speed * scale).rgb;
+	vec3 normal2 = texture(normalMap, uv - speed * scale).rgb;
+	vec3 normal = (normal1 + normal2);
 	normal = normal * 2 - 1;
 	normal = normalize(tangentToModelMat * normal);
 
+	// get the distortion refraction image
 	vec3 ambient = ambientColor.rgb;
-	vec4 albedo = texture(tex, uv);
+	vec2 uv2 = scrPos.xy / scrPos.w;
+	uv2 = uv2 * 0.5 + 0.5;
+	vec2 offsetUV = uv2 + normal.xy * 0.01;
+
+	vec4 albedo = texture(offScreenTex, offsetUV) * texture(tex, uv + normal.xy * 0.01);
+	//vec4 albedo = texture(tex, uv) * 0.2 + texture(offScreenTex, scrPos) * 0.8;
 	//vec4 albedo = texture(tex, uv) * 0.5 + texture(skybox, skyboxUV) * 0.5;
-	ambient = ambient * 0.75 * albedo.rgb;
+
+	ambient = ambient * 0.95 * albedo.rgb;
 
 	vec3 viewDir = normalize(camPosWorld - worldPos);
 	vec3 halfDir = normalize(viewDir + light.dir);
 	vec3 diffuse = light.color.rgb * ambient.rgb * clamp(dot(light.dir, normal), 0.0, 1.0);
 
-	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
-	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
+	vec3 skyUV = reflect(-viewDir, normal);
+	vec3 reflColor = texture(skybox, skyUV).rgb;
 
-	//return vec4(1, 0, 0, 1);
-	return vec4(ambient + (diffuse + specularRes) * shadowValue, 1);
+	float fresnel = pow(1 - clamp(dot(viewDir, normal), 0.0, 1.0), 4);
+	vec3 finalColor = reflColor * fresnel + ambient * (1 - fresnel);
+	//finalColor = ambient * (1 - fresnel);
+
+	//float spec = pow(max(dot(halfDir, normal), 0.0), 512);
+	//vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
+
+	//return vec4(uv2.x, uv2.y, 0, 1);
+	return vec4(finalColor, 1);
+	return vec4(ambient + (diffuse) * shadowValue, 1);
 }
 
 vec4 CalculatePointLight(Light light)

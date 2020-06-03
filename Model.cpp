@@ -87,6 +87,14 @@ void Model::SetDrawType(Mesh::eDrawType type)
 	}
 }
 
+void Model::SetNormalMapTexture(const QString &path)
+{
+	for (auto &mesh : m_meshes)
+	{
+		mesh->SetNormalMapTexture(path);
+	}
+}
+
 void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 	QMatrix4x4 matOrtho)
 {

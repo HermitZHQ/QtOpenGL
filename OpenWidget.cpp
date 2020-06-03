@@ -35,7 +35,7 @@ OpenWidget::~OpenWidget()
 	}
 }
 
-GLuint vao = 0;
+GLuint vao_quad = 0;
 GLuint texId = 0;
 void OpenWidget::initializeGL()
 {
@@ -44,22 +44,22 @@ void OpenWidget::initializeGL()
 	m_shaderHelperPtr = &ShaderHelper::Instance();
 	// test for a quad
 	{
-// 		const GLfloat g_vertices[6][2] = {
-// 			{-0.9f, -0.9f}, {0.85f, -0.9f}, {-0.9f, 0.85f}, // first triangle
-// 			{0.9f, -0.85f}, {0.9f, 0.9f}, {-0.85f, 0.9f}, // second triangle
-// 		};
 		const GLfloat g_vertices[6][2] = {
-			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
-			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+			{-0.9f, -0.9f}, {0.85f, -0.9f}, {-0.9f, 0.85f}, // first triangle
+			{0.9f, -0.85f}, {0.9f, 0.9f}, {-0.85f, 0.9f}, // second triangle
 		};
+// 		const GLfloat g_vertices[6][2] = {
+// 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
+// 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+// 		};
 
 		const GLfloat g_uvs[6][2] = {
 			{0, 1}, {1, 1}, {0, 0}, //
 			{1, 1}, {1, 0}, {0, 0}
 		};
 
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
+		glGenVertexArrays(1, &vao_quad);
+		glBindVertexArray(vao_quad);
 
 		texId = TextureMgr::Instance().LoadTexture("./textures/container.jpg");
 		SwitchShader(ShaderHelper::FrameBuffer1);
@@ -111,7 +111,7 @@ void OpenWidget::initializeGL()
 	// test load model
 	m_assimpPtr->LoadModel("./models/Box001.obj");
 	m_assimpPtr->LoadModel("./models/Box002.obj");
-	m_assimpPtr->LoadModel("./models/plane.obj");
+	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
 	m_assimpPtr->LoadModel("./models/plane2.obj");
 	m_assimpPtr->LoadModel("./models/plane3.obj");
 // 	m_assimpPtr->LoadModel("./models/teapot.obj");
@@ -122,10 +122,21 @@ void OpenWidget::initializeGL()
 // 		pMod->EnableProjTex();
 		QMatrix4x4 mat;
 // 		mat.translate(0, 30, 0);
-// 		mat.rotate(180, QVector3D(0, 0, 1));
+// 		mat.rotate(90, QVector3D(0, 0, 1));
 		mat.scale(40, 40, 40);
 		pMod->SetWroldMat(mat);
 	}
+	else {
+		pMod = m_modelMgrPtr->FindModelByName("water");
+		if (Q_NULLPTR != pMod)
+		{
+			pMod->SetNormalMapTexture("./textures/waterNormal.jpg");
+			QMatrix4x4 mat;
+			mat.scale(40, 40, 40);
+			pMod->SetWroldMat(mat);
+		}
+	}
+
 	Model *pMod2 = m_modelMgrPtr->FindModelByName("Plane002");
 	if (Q_NULLPTR != pMod2) {
 		QMatrix4x4 mat;
@@ -207,36 +218,8 @@ void OpenWidget::paintClearAndReset()
 	}
 }
 
-void OpenWidget::paintGL()
+void OpenWidget::UpdateLightsInfo(const QVector3D &camPos)
 {
-	static int i = 0;
-	if (0 == i){
-		++i;
-		CreateOffScreenFrameBufferTexture();
-		CreateShadowMapFrameBufferTexture();
-	}
-
-// 	glBindFramebuffer(GL_FRAMEBUFFER, m_offScreenFbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
-// 	glDrawBuffer(GL_NONE);
-// 	glReadBuffer(GL_NONE);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		return;
-	}
-	paintClearAndReset();
-	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
-
-	QMatrix4x4 matVP = m_cam->GetVPMatrix();
-	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
-	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
-	QMatrix4x4 matView = m_cam->GetViewMatrix();
-	QVector3D camPos = m_cam->GetCamPos().toVector3D();
-
-	//for light view
-	matVP = matProj * m_cam->GetLightViewMatrix();
-	matView = m_cam->GetLightViewMatrix();
-
-	// update light info dynamicly
 	auto lightNum = m_lightMgrPtr->GetCurLightNum();
 	float radius = 20.0f;
 	static float radian = 0.1f;
@@ -249,36 +232,73 @@ void OpenWidget::paintGL()
 			m_shaderHelperPtr->SetLightsInfo(lightInfo, i);
 		}
 		else if (!lightInfo.isDirectional && lightInfo.isPoint) {
-// 			lightInfo.pos = QVector3D(qCos(radian) * radius, 0, qSin(radian) * radius);
-// 			m_shaderHelperPtr->SetLightsInfo(lightInfo, i);
-// 
-// 			QMatrix4x4 matWorld;
-// 			matWorld.translate(lightInfo.pos);
-// 			matWorld.scale(0.1f);
-// 			lightInfo.model->SetWroldMat(matWorld);
-// 
-// 			radius += 30.0f;
+			// 			lightInfo.pos = QVector3D(qCos(radian) * radius, 0, qSin(radian) * radius);
+			// 			m_shaderHelperPtr->SetLightsInfo(lightInfo, i);
+			// 
+			// 			QMatrix4x4 matWorld;
+			// 			matWorld.translate(lightInfo.pos);
+			// 			matWorld.scale(0.1f);
+			// 			lightInfo.model->SetWroldMat(matWorld);
+			// 
+			// 			radius += 30.0f;
 		}
 	}
 	radian += 0.01f;
+}
 
-// 	glCullFace(GL_FRONT);
+void OpenWidget::paintGL()
+{
+	static int i = 0;
+	if (0 == i){
+		++i;
+		CreateOffScreenFrameBufferTexture();
+		CreateShadowMapFrameBufferTexture();
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_offScreenFbo);
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
+// 	glDrawBuffer(GL_NONE);
+// 	glReadBuffer(GL_NONE);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return;
+	}
+	paintClearAndReset();
+
+	QMatrix4x4 matVP = m_cam->GetVPMatrix();
+	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
+	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
+	QMatrix4x4 matView = m_cam->GetViewMatrix();
+	QVector3D camPos = m_cam->GetCamPos().toVector3D();
+
+	//for light view---------shadow handle
+// 	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
+// 	matVP = matProj * m_cam->GetLightViewMatrix();
+// 	matView = m_cam->GetLightViewMatrix();
+
+	// update light info dynamicly
+	UpdateLightsInfo(camPos);
+
 	auto modelNum = ModelMgr::Instance().GetModelNum();
 	for (unsigned int i = 0; i < modelNum; ++i)
 	{
 		Model *mod = ModelMgr::Instance().GetModel(i);
 
+		if (mod->GetModelName().compare("water") == 0) {
+			continue;
+		}
 		QMatrix4x4 matModel = mod->GetWorldMat();
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
-// 	glCullFace(GL_BACK);
 
 	//-----------------------------------------------
 	// test the frame buffer
-// 	DrawOffScreenTexture();
-// 	DrawShadowMapTexture_ForTest();
 	glViewport(0, 0, size().width(), size().height());
-	DrawOriginalSceneWithShadow();
+
+// 	DrawOffScreenTexture();
+	DrawWaterWaveWithOffScreenTexture();
+
+// 	DrawShadowMapTexture_ForTest();
+// 	DrawOriginalSceneWithShadow();
 }
 
 void OpenWidget::SwitchShader(ShaderHelper::eShaderType type)
@@ -329,8 +349,11 @@ void OpenWidget::CreateOffScreenFrameBufferTexture()
 	glBindTexture(GL_TEXTURE_2D, m_offScreenTexId);
 	auto wndSize = this->size();
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wndSize.width(), wndSize.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 	// bind texture to framebuffer
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_offScreenTexId, 0);
@@ -363,13 +386,50 @@ void OpenWidget::DrawOffScreenTexture()
 
 // 	glDisable(GL_DEPTH_TEST);
 	SwitchShader(ShaderHelper::FrameBuffer1);
-	glBindVertexArray(vao);
+	glBindVertexArray(vao_quad);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_offScreenTexId);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	glBindVertexArray(0);
 // 	glEnable(GL_DEPTH_TEST);
+}
+
+void OpenWidget::DrawWaterWaveWithOffScreenTexture()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+
+	// check if we are good to go
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return;
+	}
+
+	// clear the framebuffer
+	static const GLfloat black[] = { 0.278f, 0.278f, 0.278f, 1.0f };
+	glClearBufferfv(GL_COLOR, 0, black);
+	paintClearAndReset();
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_offScreenTexId);
+
+	QMatrix4x4 matVP = m_cam->GetVPMatrix();
+	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
+	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
+	QMatrix4x4 matView = m_cam->GetViewMatrix();
+	QVector3D camPos = m_cam->GetCamPos().toVector3D();
+	auto modelNum = ModelMgr::Instance().GetModelNum();
+	for (unsigned int i = 0; i < modelNum; ++i)
+	{
+		Model *mod = ModelMgr::Instance().GetModel(i);
+
+		if (mod->GetModelName().compare("water") == 0) {
+			mod->SetShaderType(ShaderHelper::Water);
+		}
+		QMatrix4x4 matModel = mod->GetWorldMat();
+		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+	}
+
+	glBindVertexArray(0);
 }
 
 void OpenWidget::CreateShadowMapFrameBufferTexture()
@@ -416,7 +476,7 @@ void OpenWidget::DrawShadowMapTexture_ForTest()
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	SwitchShader(ShaderHelper::FrameBuffer1);
-	glBindVertexArray(vao);
+	glBindVertexArray(vao_quad);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
 	glDrawArrays(GL_TRIANGLES, 0, 6);

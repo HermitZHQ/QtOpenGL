@@ -310,6 +310,11 @@ void Mesh::AddSpecularTexture(GLuint id)
 	m_specularTex1ID = id;
 }
 
+void Mesh::SetNormalMapTexture(const QString &path)
+{
+	m_normalmapTexID = TextureMgr::Instance().LoadTexture(path);
+}
+
 GLuint Mesh::GetTextureBuffer1() const
 {
 	return m_tbo1;
@@ -365,6 +370,8 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	m_shader.SetOrthoMat(matOrtho);
 
 	m_shader.SetAmbientSpecularColor(m_mainWnd->GetAmbientColor(), m_mainWnd->GetSpecularColor());
+
+	m_shader.SetTime(GetTickCount());
 
 	// Draw element(with indices)
 	if (Triangle == m_drawType)	{

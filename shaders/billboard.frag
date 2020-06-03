@@ -67,7 +67,7 @@ vec4 CalculateDirLight(Light light)
 	vec3 ambient = ambientColor.rgb;
 	vec4 albedo = texture(tex, uv);
 	//vec4 albedo = texture(tex, uv) * 0.5 + texture(skybox, skyboxUV) * 0.5;
-	ambient = ambient * 0.75 * albedo.rgb;
+	ambient = ambient * 0.15 * albedo.rgb;
 
 	vec3 viewDir = normalize(camPosWorld - worldPos);
 	vec3 halfDir = normalize(viewDir + light.dir);

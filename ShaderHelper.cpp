@@ -86,6 +86,9 @@ void ShaderHelper::GetCommonUniformLocation()
 	m_ambientColorLoc[m_shaderType] = GetUniformLocation("ambientColor");
 	m_specularColorLoc[m_shaderType] = GetUniformLocation("specularColor");
 
+	//----time
+	m_timeLoc[m_shaderType] = GetUniformLocation("time");
+
 	//----light
 	QString strTmp;
 	for (int i = 0; i < maxLightNum; ++i)
@@ -127,25 +130,25 @@ void ShaderHelper::GetCommonUniformLocation()
 	if (-1 != texId) {
 		glUniform1i(texId, 0);
 	}
-
 	auto normalMapId = GetUniformLocation("normalMap");
 	if (-1 != normalMapId) {
 		glUniform1i(normalMapId, 1);
 	}
-
 	auto projTexId = GetUniformLocation("projTex");
 	if (-1 != projTexId) {
 		glUniform1i(projTexId, 10);
 	}
-
 	auto shadowMapId = GetUniformLocation("shadowMap");
 	if (-1 != shadowMapId) {
 		glUniform1i(shadowMapId, 2);
 	}
-
 	auto skyboxId = GetUniformLocation("skybox");
 	if (-1 != skyboxId)	{
 		glUniform1i(skyboxId, 30);// why I should set it 2?? I don't understand here.....
+	}
+	auto offScreenTexId = GetUniformLocation("offScreenTex");
+	if (-1 != offScreenTexId) {
+		glUniform1i(offScreenTexId, 3);
 	}
 
 	Unuse();
@@ -255,6 +258,32 @@ void ShaderHelper::InitFrameBuffer1Shader()
 	GetCommonUniformLocation();
 }
 
+void ShaderHelper::InitBillBoardShader()
+{
+	m_shaderType = BillBoard;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/billboard.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/billboard.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
+void ShaderHelper::InitWaterShader()
+{
+	m_shaderType = Water;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/water.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/water.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
 void ShaderHelper::Init()
 {
 	initializeOpenGLFunctions();
@@ -269,6 +298,7 @@ void ShaderHelper::Init()
 	memset(m_ambientColorLoc, -1, sizeof(m_ambientColorLoc));
 	memset(m_specularColorLoc, -1, sizeof(m_specularColorLoc));
 	memset(m_matLightVPLoc, -1, sizeof(m_matLightVPLoc));
+	memset(m_timeLoc, -1, sizeof(m_timeLoc));
 
 	//----light relevant
 	memset(m_lightEnableLoc, -1, sizeof(m_lightEnableLoc));
@@ -292,6 +322,8 @@ void ShaderHelper::Init()
 	InitSkyboxShader();
 	InitDecalShader();
 	InitFrameBuffer1Shader();
+	InitBillBoardShader();
+	InitWaterShader();
 
 	m_shaderType = Default;
 	Use();
@@ -345,6 +377,16 @@ void ShaderHelper::SetLightVPMat(QMatrix4x4 &matLightVP)
 	if (m_matLightVPLoc[m_shaderType] != -1)
 	{
 		glUniformMatrix4fv(m_matLightVPLoc[m_shaderType], 1, GL_FALSE, matLightVP.data());
+	}
+}
+
+void ShaderHelper::SetTime(unsigned int time)
+{
+	static unsigned int t = 0;
+	if (m_timeLoc[m_shaderType] != -1)
+	{
+		glUniform1ui(m_timeLoc[m_shaderType], t);
+		++t;
 	}
 }
 

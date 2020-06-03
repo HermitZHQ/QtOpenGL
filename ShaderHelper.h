@@ -17,6 +17,8 @@ public:
 		Skybox,
 		Decal,
 		FrameBuffer1,
+		BillBoard,
+		Water,
 	};
 
 	struct ShaderInfo 
@@ -44,6 +46,8 @@ public:
 	void SetOrthoMat(QMatrix4x4 &matOrtho);
 	void SetLightVPMat(QMatrix4x4 &matLightVP);
 
+	void SetTime(unsigned int time);
+
 	//----Light relevant
 	void SetAmbientSpecularColor(QVector4D ambient, QVector4D specular);
 	void SetLightsInfo(const LightMgr::LightInfo &info, int index);
@@ -68,6 +72,8 @@ protected:
 	void InitSkyboxShader();
 	void InitDecalShader();
 	void InitFrameBuffer1Shader();
+	void InitBillBoardShader();
+	void InitWaterShader();
 
 private:
 	ShaderHelper();
@@ -89,6 +95,8 @@ private:
 
 	GLint					m_ambientColorLoc[maxShaderNum];
 	GLint					m_specularColorLoc[maxShaderNum];
+
+	GLint					m_timeLoc[maxShaderNum];
 
 	// uniform struct for light info
 	const static int		maxLightNum = LightMgr::m_maxLightNum;
