@@ -142,13 +142,30 @@ void ShaderHelper::GetCommonUniformLocation()
 	if (-1 != shadowMapId) {
 		glUniform1i(shadowMapId, 2);
 	}
-	auto skyboxId = GetUniformLocation("skybox");
-	if (-1 != skyboxId)	{
-		glUniform1i(skyboxId, 30);// why I should set it 2?? I don't understand here.....
-	}
 	auto offScreenTexId = GetUniformLocation("offScreenTex");
 	if (-1 != offScreenTexId) {
 		glUniform1i(offScreenTexId, 3);
+	}
+	auto gBufferPosTexId = GetUniformLocation("gBufferPosTex");
+	if (-1 != gBufferPosTexId) {
+		glUniform1i(gBufferPosTexId, 4);
+	}
+	auto gBufferNormalTexId = GetUniformLocation("gBufferNormalTex");
+	if (-1 != gBufferNormalTexId) {
+		glUniform1i(gBufferNormalTexId, 5);
+	}
+	auto gBufferAlbedoTexId = GetUniformLocation("gBufferAlbedoTex");
+	if (-1 != gBufferAlbedoTexId) {
+		glUniform1i(gBufferAlbedoTexId, 6);
+	}
+	auto gBufferSkyboxTexId = GetUniformLocation("gBufferSkyboxTex");
+	if (-1 != gBufferSkyboxTexId) {
+		glUniform1i(gBufferSkyboxTexId, 7);
+	}
+
+	auto skyboxId = GetUniformLocation("skybox");// put skybox unit far away.....
+	if (-1 != skyboxId) {
+		glUniform1i(skyboxId, 30);// why I should set it 2?? I don't understand here.....
 	}
 
 	Unuse();
@@ -284,6 +301,45 @@ void ShaderHelper::InitWaterShader()
 	GetCommonUniformLocation();
 }
 
+void ShaderHelper::InitGBufferGeometryShader()
+{
+	m_shaderType = GBufferGeometry;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/gBufferGeometry.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/gBufferGeometry.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
+void ShaderHelper::InitDeferredRenderingShader()
+{
+	m_shaderType = DefferredRendering;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/deferredRendering.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/deferredRendering.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
+void ShaderHelper::InitSkyboxGBufferShader()
+{
+	m_shaderType = SkyboxGBuffer;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/skyboxGBuffer.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/skyboxGBuffer.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
 void ShaderHelper::Init()
 {
 	initializeOpenGLFunctions();
@@ -324,6 +380,9 @@ void ShaderHelper::Init()
 	InitFrameBuffer1Shader();
 	InitBillBoardShader();
 	InitWaterShader();
+	InitGBufferGeometryShader();
+	InitDeferredRenderingShader();
+	InitSkyboxGBufferShader();
 
 	m_shaderType = Default;
 	Use();

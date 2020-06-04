@@ -338,7 +338,6 @@ void Mesh::SetDrawType(eDrawType type)
 void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 	QMatrix4x4 matOrtho)
 {
-
 	if (0 != m_diffuseTex1ID) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_diffuseTex1ID);
@@ -349,14 +348,13 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 		glBindTexture(GL_TEXTURE_2D, m_normalmapTexID);
 	}
 
-
 	if (0 != m_skyboxTexID) {
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexID);
 		matModel.translate(camPos);
 		matModel.scale(10000);
 		glCullFace(GL_FRONT);
 		glDepthMask(0);
-		m_shader.SetShaderType(ShaderHelper::Skybox);
+		m_shader.SetShaderType(ShaderHelper::SkyboxGBuffer);
 	}
 	else if (0 != m_projTexID) {
 		glActiveTexture(GL_TEXTURE10);

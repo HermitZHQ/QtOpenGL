@@ -29,7 +29,8 @@ protected:
 
 	void SwitchShader(ShaderHelper::eShaderType type);
 	void paintClearAndReset();
-	void UpdateLightsInfo(const QVector3D &camPos);
+	void UpdateDynamicLightsInfo();
+	void UpdateAllLightsInfo();
 	virtual void paintGL() override;
 
 	void BeginGetOcclusionSampleNum();
@@ -38,8 +39,10 @@ protected:
 	//---- frame buffer
 	void CreateOffScreenFrameBufferTexture();
 	void DrawOffScreenTexture();
-
 	void DrawWaterWaveWithOffScreenTexture();
+
+	void CreateGBufferFrameBufferTextures();
+	void DrawDeferredShading();
 
 	void CreateShadowMapFrameBufferTexture();
 	void DrawShadowMapTexture_ForTest();
@@ -79,5 +82,11 @@ private:
 	GLuint						m_shadowMapTexId;
 	GLushort					m_shadowTexWidth;
 	GLushort					m_shadowTexHeight;
+
+	GLuint						m_gBufferFbo;
+	GLuint						m_gBufferPosTex;
+	GLuint						m_gBufferNormalTex;
+	GLuint						m_gBufferAlbedoTex;
+	GLuint						m_gBufferSkyboxTex;
 };
 

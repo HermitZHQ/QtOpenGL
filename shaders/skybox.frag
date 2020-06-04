@@ -18,5 +18,4 @@ in Vertex {
 void main()
 {
 	fColor = texture(skybox, skyboxUV) * ambientColor;
-	//fColor = vec4(1, 0, 0, 1);
 }

@@ -14,8 +14,9 @@
 OpenWidget::OpenWidget()
 	:m_mainObj(Q_NULLPTR), m_cam(Q_NULLPTR)
 	, m_matWorldLoc(0), m_worldCamPosLoc(0), m_query(0), m_sampleNum(0)
-	, m_offScreenFbo(), m_shadowTexWidth(2048), m_shadowTexHeight(2048)
+	, m_offScreenFbo(0), m_shadowMapFbo(0), m_shadowTexWidth(2048), m_shadowTexHeight(2048)
 	, m_shaderHelperPtr(nullptr)
+	, m_gBufferFbo(0), m_gBufferPosTex(0), m_gBufferNormalTex(0), m_gBufferAlbedoTex(0), m_gBufferSkyboxTex(0)
 {
 	m_cam = new Camera();
 
@@ -44,14 +45,14 @@ void OpenWidget::initializeGL()
 	m_shaderHelperPtr = &ShaderHelper::Instance();
 	// test for a quad
 	{
-		const GLfloat g_vertices[6][2] = {
-			{-0.9f, -0.9f}, {0.85f, -0.9f}, {-0.9f, 0.85f}, // first triangle
-			{0.9f, -0.85f}, {0.9f, 0.9f}, {-0.85f, 0.9f}, // second triangle
-		};
 // 		const GLfloat g_vertices[6][2] = {
-// 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
-// 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+// 			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
+// 			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
 // 		};
+		const GLfloat g_vertices[6][2] = {
+			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
+			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+		};
 
 		const GLfloat g_uvs[6][2] = {
 			{0, 1}, {1, 1}, {0, 0}, //
@@ -117,6 +118,7 @@ void OpenWidget::initializeGL()
 // 	m_assimpPtr->LoadModel("./models/teapot.obj");
 	m_assimpPtr->LoadModel("./models/skybox.obj");
 // 	m_assimpPtr->LoadModel("./models/dva/001.obj");
+
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
 // 		pMod->EnableProjTex();
@@ -206,8 +208,12 @@ void OpenWidget::paintClearAndReset()
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 
-	static const GLfloat black[] = { 0.278f, 0.278f, 0.278f, 0.0f };
+// 	static const GLfloat black[] = { 0.278f, 0.278f, 0.278f, 0.0f };
+	static const GLfloat black[] = { 0, 0, 0, 0 };
 	glClearBufferfv(GL_COLOR, 0, black);
+	glClearBufferfv(GL_COLOR, 1, black);
+	glClearBufferfv(GL_COLOR, 2, black);
+	glClearBufferfv(GL_COLOR, 3, black);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	++fps;
@@ -218,8 +224,10 @@ void OpenWidget::paintClearAndReset()
 	}
 }
 
-void OpenWidget::UpdateLightsInfo(const QVector3D &camPos)
+void OpenWidget::UpdateDynamicLightsInfo()
 {
+	QVector3D camPos = m_cam->GetCamPos().toVector3D();
+
 	auto lightNum = m_lightMgrPtr->GetCurLightNum();
 	float radius = 20.0f;
 	static float radian = 0.1f;
@@ -246,20 +254,24 @@ void OpenWidget::UpdateLightsInfo(const QVector3D &camPos)
 	radian += 0.01f;
 }
 
+void OpenWidget::UpdateAllLightsInfo()
+{
+	auto lightNum = m_lightMgrPtr->GetCurLightNum();
+	for (int i = 0; i < lightNum; ++i)
+	{
+		auto &lightInfo = m_lightMgrPtr->GetLightInfo(i);
+		m_shaderHelperPtr->SetLightsInfo(lightInfo, i);
+	}
+}
+
 void OpenWidget::paintGL()
 {
-	static int i = 0;
-	if (0 == i){
-		++i;
-		CreateOffScreenFrameBufferTexture();
-		CreateShadowMapFrameBufferTexture();
-	}
+// 	CreateShadowMapFrameBufferTexture();
+// 	CreateOffScreenFrameBufferTexture();
+	CreateGBufferFrameBufferTextures();
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_offScreenFbo);
-// 	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
-// 	glDrawBuffer(GL_NONE);
-// 	glReadBuffer(GL_NONE);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		qDebug() << "check frame buffer failed";
 		return;
 	}
 	paintClearAndReset();
@@ -276,13 +288,14 @@ void OpenWidget::paintGL()
 // 	matView = m_cam->GetLightViewMatrix();
 
 	// update light info dynamicly
-	UpdateLightsInfo(camPos);
+	UpdateDynamicLightsInfo();
 
 	auto modelNum = ModelMgr::Instance().GetModelNum();
 	for (unsigned int i = 0; i < modelNum; ++i)
 	{
 		Model *mod = ModelMgr::Instance().GetModel(i);
 
+		mod->SetShaderType(ShaderHelper::GBufferGeometry);
 		if (mod->GetModelName().compare("water") == 0) {
 			continue;
 		}
@@ -290,15 +303,28 @@ void OpenWidget::paintGL()
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
 
+	//----test add water wave during the deferred rendering g-buffer phase
+	Model *pWater = ModelMgr::Instance().FindModelByName("water");
+	if (Q_NULLPTR != pWater) {
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+
+		pWater->SetShaderType(ShaderHelper::Water);
+		QMatrix4x4 matModel = pWater->GetWorldMat();
+		pWater->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+	}
+
 	//-----------------------------------------------
 	// test the frame buffer
 	glViewport(0, 0, size().width(), size().height());
 
 // 	DrawOffScreenTexture();
-	DrawWaterWaveWithOffScreenTexture();
+// 	DrawWaterWaveWithOffScreenTexture();
 
 // 	DrawShadowMapTexture_ForTest();
 // 	DrawOriginalSceneWithShadow();
+
+	DrawDeferredShading();
 }
 
 void OpenWidget::SwitchShader(ShaderHelper::eShaderType type)
@@ -338,36 +364,40 @@ void OpenWidget::EndGetOcclusionSampleNum()
 
 void OpenWidget::CreateOffScreenFrameBufferTexture()
 {
-	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
-	if (m_originalFbo != 1) {
-		AddTipInfo(Q8("OffScreen帧缓存创建错误，应该在主窗口创建之后再创建"));
+	if (0 == m_offScreenFbo)
+	{
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
+		if (m_originalFbo != 1) {
+			AddTipInfo(Q8("OffScreen帧缓存创建错误，应该在主窗口创建之后再创建"));
+		}
+		glCreateFramebuffers(1, &m_offScreenFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_offScreenFbo);
+	
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_offScreenTexId);
+		glBindTexture(GL_TEXTURE_2D, m_offScreenTexId);
+		auto wndSize = this->size();
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wndSize.width(), wndSize.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		glTextureParameteri(m_offScreenTexId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(m_offScreenTexId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
+		glTextureParameteri(m_offScreenTexId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTextureParameteri(m_offScreenTexId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	
+		// bind texture to framebuffer
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_offScreenTexId, 0);
+	
+		// bind render buffer for depth test and stencil test
+		GLuint rb = 0;
+		glGenRenderbuffers(1, &rb);
+		glBindRenderbuffer(GL_RENDERBUFFER, rb);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, wndSize.width(), wndSize.height());
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rb);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 	}
-	glCreateFramebuffers(1, &m_offScreenFbo);
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, m_offScreenFbo);
-
-	glCreateTextures(GL_TEXTURE_2D, 1, &m_offScreenTexId);
-	glBindTexture(GL_TEXTURE_2D, m_offScreenTexId);
-	auto wndSize = this->size();
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wndSize.width(), wndSize.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTextureParameteri(m_offScreenTexId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-	// bind texture to framebuffer
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_offScreenTexId, 0);
-
-	// bind render buffer for depth test and stencil test
-	GLuint rb = 0;
-	glGenRenderbuffers(1, &rb);
-	glBindRenderbuffer(GL_RENDERBUFFER, rb);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, wndSize.width(), wndSize.height());
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rb);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 }
 
 void OpenWidget::DrawOffScreenTexture()
@@ -405,8 +435,6 @@ void OpenWidget::DrawWaterWaveWithOffScreenTexture()
 	}
 
 	// clear the framebuffer
-	static const GLfloat black[] = { 0.278f, 0.278f, 0.278f, 1.0f };
-	glClearBufferfv(GL_COLOR, 0, black);
 	paintClearAndReset();
 
 	glActiveTexture(GL_TEXTURE3);
@@ -434,31 +462,162 @@ void OpenWidget::DrawWaterWaveWithOffScreenTexture()
 
 void OpenWidget::CreateShadowMapFrameBufferTexture()
 {
-	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
-	if (m_originalFbo != 1) {
-		AddTipInfo(Q8("ShadowMap帧缓存创建错误，应该在主窗口创建之后再创建"));
+	if (0 == m_shadowMapFbo)
+	{
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
+		if (m_originalFbo != 1) {
+			AddTipInfo(Q8("ShadowMap帧缓存创建错误，应该在主窗口创建之后再创建"));
+		}
+		glCreateFramebuffers(1, &m_shadowMapFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
+	
+		auto wndSize = size();
+		glGenTextures(1, &m_shadowMapTexId);
+		glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_shadowTexWidth, m_shadowTexHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+// 		static float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+// 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+	
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMapTexId, 0);
+	// 	glDrawBuffer(GL_NONE);
+	// 	glReadBuffer(GL_NONE);
+	
+		glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 	}
-	glCreateFramebuffers(1, &m_shadowMapFbo);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+}
 
-	auto wndSize = size();
-	glGenTextures(1, &m_shadowMapTexId);
-	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_shadowTexWidth, m_shadowTexHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	static float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+void OpenWidget::CreateGBufferFrameBufferTextures()
+{
+	if (0 == m_gBufferFbo) {
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
+		if (m_originalFbo != 1) {
+			AddTipInfo(Q8("ShadowMap帧缓存创建错误，应该在主窗口创建之后再创建"));
+		}
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMapTexId, 0);
-// 	glDrawBuffer(GL_NONE);
-// 	glReadBuffer(GL_NONE);
+		glCreateFramebuffers(1, &m_gBufferFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_gBufferFbo);
 
+		auto wndSize = size();
+		glGenTextures(1, &m_gBufferPosTex);
+		glBindTexture(GL_TEXTURE_2D, m_gBufferPosTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBufferPosTex, 0);
+
+		glGenTextures(1, &m_gBufferNormalTex);
+		glBindTexture(GL_TEXTURE_2D, m_gBufferNormalTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gBufferNormalTex, 0);
+
+		glGenTextures(1, &m_gBufferAlbedoTex);
+		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gBufferAlbedoTex, 0);
+
+		glGenTextures(1, &m_gBufferSkyboxTex);
+		glBindTexture(GL_TEXTURE_2D, m_gBufferSkyboxTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_gBufferSkyboxTex, 0);
+
+		// tell opengl which color attachments we'll use(of the framebuffer) for rendering
+		unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+		glDrawBuffers(4, attachments);
+
+		//----render buffer for depth
+// 		GLuint rb;
+// 		glGenRenderbuffers(1, &rb);
+// 		glBindRenderbuffer(GL_RENDERBUFFER, rb);
+// 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, wndSize.width(), wndSize.height());
+// 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rb);
+// 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+		glGenTextures(1, &m_shadowMapTexId);
+		glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, wndSize.width(), wndSize.height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMapTexId, 0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_gBufferFbo);
+}
+
+void OpenWidget::DrawDeferredShading()
+{
 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+
+	// check if we are good to go
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return;
+	}
+
+	// clear the framebuffer
+	paintClearAndReset();
+
+	SwitchShader(ShaderHelper::DefferredRendering);
+	// update light info dynamicly
+	UpdateAllLightsInfo();
+	UpdateDynamicLightsInfo();
+	m_shaderHelperPtr->SetAmbientSpecularColor(QVector3D(1, 1, 1), QVector3D(1, 1, 1));
+	auto camPos = m_cam->GetCamPos().toVector3D();
+	m_shaderHelperPtr->SetCamWorldPos(camPos);
+
+	glBindVertexArray(vao_quad);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, m_gBufferPosTex);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, m_gBufferNormalTex);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, m_gBufferSkyboxTex);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	//----Test draw water wave effect after deferred rendering
+// 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_gBufferFbo);
+// 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_originalFbo);
+// 	auto s = size();
+// 	int w = s.width(), h = s.height();
+// 	glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+// 
+// 	glActiveTexture(GL_TEXTURE3);
+// 	glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+// 	QMatrix4x4 matVP = m_cam->GetVPMatrix();
+// 	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
+// 	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
+// 	QMatrix4x4 matView = m_cam->GetViewMatrix();
+// 	auto modelNum = ModelMgr::Instance().GetModelNum();
+// 	for (unsigned int i = 0; i < modelNum; ++i)
+// 	{
+// 		Model *mod = ModelMgr::Instance().GetModel(i);
+// 
+// 		if (mod->GetModelName().compare("water") != 0) {
+// 			continue;
+// 		}
+// 		mod->SetShaderType(ShaderHelper::Water);
+// 		QMatrix4x4 matModel = mod->GetWorldMat();
+// 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+// 	}
+
+	glBindVertexArray(0);
 }
 
 void OpenWidget::DrawShadowMapTexture_ForTest()

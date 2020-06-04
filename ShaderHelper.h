@@ -15,10 +15,13 @@ public:
 		PlaneClip,
 		PointSprite,
 		Skybox,
+		SkyboxGBuffer,
 		Decal,
 		FrameBuffer1,
 		BillBoard,
 		Water,
+		GBufferGeometry,
+		DefferredRendering,
 	};
 
 	struct ShaderInfo 
@@ -74,6 +77,9 @@ protected:
 	void InitFrameBuffer1Shader();
 	void InitBillBoardShader();
 	void InitWaterShader();
+	void InitGBufferGeometryShader();
+	void InitDeferredRenderingShader();
+	void InitSkyboxGBufferShader();
 
 private:
 	ShaderHelper();

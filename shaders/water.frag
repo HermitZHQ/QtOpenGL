@@ -1,6 +1,11 @@
 #version 450 core
 
-layout (location = 0) out vec4 fColor;
+//layout (location = 0) out vec4 fColor;
+/**/
+layout (location = 0) out vec3 gPosition;
+layout (location = 1) out vec3 gNormal;
+layout (location = 2) out vec3 gAlbedo;
+
 
 struct Light
 {
@@ -78,7 +83,7 @@ vec4 CalculateDirLight(Light light)
 	vec3 ambient = ambientColor.rgb;
 	vec2 uv2 = scrPos.xy / scrPos.w;
 	uv2 = uv2 * 0.5 + 0.5;
-	vec2 offsetUV = uv2 + normal.xy * 0.01;
+	vec2 offsetUV = uv2 + normal.xy * 0.013;
 
 	vec4 albedo = texture(offScreenTex, offsetUV) * texture(tex, uv + normal.xy * 0.01);
 	//vec4 albedo = texture(tex, uv) * 0.2 + texture(offScreenTex, scrPos) * 0.8;
@@ -173,6 +178,7 @@ vec4 CalculateSpotLight(Light light)
 
 void main()
 {
+	/*
 	fColor =  vec4(0, 0, 0, 0);
 	for(int i = 0; i < 8; ++i){
 		if (lights[i].isEnabled && lights[i].isDirectional){
@@ -184,7 +190,29 @@ void main()
 		else if (lights[i].isEnabled && !lights[i].isPoint && !lights[i].isDirectional){
 			fColor += CalculateSpotLight(lights[i]);
 		}
-	}
+	}*/
 
-	//fColor = vec4(lights[0].color);
+	/**/
+	// use this speed to get bump uv
+	vec2 speed = time * vec2(0.00001, 0.00001);
+
+	// Get "normal" from the normalmap
+	float scale = 12.0;
+	vec3 normal1 = texture(normalMap, uv + speed * scale).rgb;
+	vec3 normal2 = texture(normalMap, uv - speed * scale).rgb;
+	vec3 normal = (normal1 + normal2);
+	normal = normal * 2 - 1;
+	normal = normalize(tangentToModelMat * normal);
+
+	// get the distortion refraction image
+	vec3 ambient = ambientColor.rgb;
+	vec2 uv2 = scrPos.xy / scrPos.w;
+	uv2 = uv2 * 0.5 + 0.5;
+	vec2 offsetUV = uv2 + normal.xy * 0.03;
+
+	vec4 albedo = texture(offScreenTex, offsetUV) * texture(tex, uv + normal.xy * 0.01);
+
+	gPosition = worldPos;
+	gNormal = normal;
+	gAlbedo = texture(tex, uv + normal.xy * 0.01).rgb;
 }
