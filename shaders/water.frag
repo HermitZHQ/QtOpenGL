@@ -200,19 +200,32 @@ void main()
 	float scale = 12.0;
 	vec3 normal1 = texture(normalMap, uv + speed * scale).rgb;
 	vec3 normal2 = texture(normalMap, uv - speed * scale).rgb;
+	normal1 = normal1 * 2 - 1;
+	normal2 = normal2 * 2 - 1;
+
 	vec3 normal = (normal1 + normal2);
-	normal = normal * 2 - 1;
 	normal = normalize(tangentToModelMat * normal);
 
 	// get the distortion refraction image
 	vec3 ambient = ambientColor.rgb;
 	vec2 uv2 = scrPos.xy / scrPos.w;
 	uv2 = uv2 * 0.5 + 0.5;
-	vec2 offsetUV = uv2 + normal.xy * 0.03;
+	vec2 offsetUV = uv2 + normal.xy * 0.015;
 
-	vec4 albedo = texture(offScreenTex, offsetUV) * texture(tex, uv + normal.xy * 0.01);
+	vec3 albedo = texture(offScreenTex, offsetUV).rgb;
+	vec3 refrColor = ambient * albedo.rgb * 0.8;
+
+	vec3 viewDir = normalize(camPosWorld - worldPos);
+	vec3 halfDir = normalize(viewDir + lights[0].dir);
+	vec3 diffuse = lights[0].color.rgb * ambient.rgb * clamp(dot(lights[0].dir, normal), 0.0, 1.0);
+
+	vec3 skyUV = reflect(-viewDir, normal);
+	vec3 reflColor = texture(skybox, skyUV).rgb * texture(tex, uv).rgb;
+
+	float fresnel = pow(1 - clamp(dot(viewDir, normal), 0.0, 1.0), 4);
+	vec3 finalColor = reflColor * fresnel + refrColor * (1 - fresnel);
 
 	gPosition = worldPos;
 	gNormal = normal;
-	gAlbedo = texture(tex, uv + normal.xy * 0.01).rgb;
+	gAlbedo = finalColor;
 }

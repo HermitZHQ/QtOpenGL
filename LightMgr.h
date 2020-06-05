@@ -62,7 +62,7 @@ public:
 	int GetCurLightNum() const;
 	LightInfo& GetLightInfo(int index);
 
-	const static int				m_maxLightNum = 8;
+	const static int				m_maxLightNum = 100;
 protected:
 	void Init();
 

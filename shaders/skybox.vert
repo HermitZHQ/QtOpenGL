@@ -23,7 +23,7 @@ out Vertex {
 
 void main()
 {
-	gl_Position = mat_mvp * vec4(vPosition, 1);
+	gl_Position = (mat_mvp * vec4(vPosition, 1));
 	
 	worldPos = (mat_world * vec4(vPosition, 1)).xyz;
 	worldNormal = normalize(vNormal * inverse(mat3(mat_world)));

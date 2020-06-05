@@ -28,7 +28,7 @@ protected:
 	virtual void resizeGL(int w, int h) override;
 
 	void SwitchShader(ShaderHelper::eShaderType type);
-	void paintClearAndReset();
+	void ClearAndReset();
 	void UpdateDynamicLightsInfo();
 	void UpdateAllLightsInfo();
 	virtual void paintGL() override;
@@ -88,5 +88,6 @@ private:
 	GLuint						m_gBufferNormalTex;
 	GLuint						m_gBufferAlbedoTex;
 	GLuint						m_gBufferSkyboxTex;
+	GLuint						m_gBufferDepthTex;
 };
 

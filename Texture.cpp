@@ -50,6 +50,12 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_texId);
 	glTextureStorage2D(m_texId, 10, GL_BGRA, 2048, 2048);
 
+// 	glGenTextures(1, &m_texId);
+// 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_texId);
+
+// 	glGenTextures(1, &m_texId);
+// 	glBindTexture(GL_TEXTURE_2D_ARRAY, m_texId);
+
 	QVector<QImage> imgVec;
 	for (int face = 0; face < 6; ++face)
 	{
@@ -74,15 +80,6 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 		if (0 != err) {
 			AddTipInfo(Q8("Éú³ÉcubeÎÆÀí´íÎó"));
 		}
-// 		glTextureSubImage3D(m_skyboxId,
-// 			10,
-// 			0, 0,
-// 			face,
-// 			w, h,
-// 			1,
-// 			GL_BGRA,
-// 			GL_UNSIGNED_BYTE,
-// 			tex);
 	}
 	
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

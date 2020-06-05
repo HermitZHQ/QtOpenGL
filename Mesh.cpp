@@ -180,14 +180,16 @@ void Mesh::BindVertexRelevantBuffer()
 	const GLfloat *vertex_bitangents = GetBitangents();
 	const GLfloat *vertex_normals = GetNormals();
 
+	//--------------------------You must gen and bind the VAO first, the after operations all depends on it!!!!!!
+	// set vertex array object
+	glGenVertexArrays(1, &m_vao);
+	glBindVertexArray(m_vao);
+
 	// set element array(index array) buffer
 	glGenBuffers(1, &m_vaeo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vaeo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, GetIndicesMemSize(), vertex_indices, GL_STATIC_DRAW);
 
-	// set vertex array object
-	glGenVertexArrays(1, &m_vao);
-	glBindVertexArray(m_vao);
 	glVertexArrayElementBuffer(m_vao, m_vaeo);
 
 	glGenBuffers(1, &m_vbo);
@@ -226,37 +228,39 @@ void Mesh::BindVertexRelevantBuffer()
 	glEnableVertexAttribArray(normalLoc);
 
 	// multi instances model matrix
-	if (-1 != modelMatLoc) {
-		// generate the new buffer for instances
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glGenBuffers(1, &m_instanceBufferId);
-		glBindBuffer(GL_ARRAY_BUFFER, m_instanceBufferId);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * 10, nullptr, GL_STATIC_DRAW);
-
-		// 		m_instanceBufferId = m_vbo;
-
-		// mat4 type take space of 4 vec4, so we should circle 4 times
-		for (int i = 0; i < 4; ++i)
-		{
-			glVertexAttribPointer(modelMatLoc + i, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 16,
-				(void*)(/*GetVerticesMemSize() + GetUvs1MemSize() + GetTangentsMemSize() + GetBitangentsMemSize() + GetNormalsMemSize() +*/ sizeof(GLfloat) * 4 * i));
-			glEnableVertexAttribArray(modelMatLoc + i);
-			// implement the multi instances
-			glVertexAttribDivisor(modelMatLoc + i, 1);
-		}
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
+// 	if (-1 != modelMatLoc) {
+// 		// generate the new buffer for instances
+// 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+// 		glGenBuffers(1, &m_instanceBufferId);
+// 		glBindBuffer(GL_ARRAY_BUFFER, m_instanceBufferId);
+// 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * 10, nullptr, GL_STATIC_DRAW);
+// 
+// 		// 		m_instanceBufferId = m_vbo;
+// 
+// 		// mat4 type take space of 4 vec4, so we should circle 4 times
+// 		for (int i = 0; i < 4; ++i)
+// 		{
+// 			glVertexAttribPointer(modelMatLoc + i, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 16,
+// 				(void*)(/*GetVerticesMemSize() + GetUvs1MemSize() + GetTangentsMemSize() + GetBitangentsMemSize() + GetNormalsMemSize() +*/ sizeof(GLfloat) * 4 * i));
+// 			glEnableVertexAttribArray(modelMatLoc + i);
+// 			// implement the multi instances
+// 			glVertexAttribDivisor(modelMatLoc + i, 1);
+// 		}
+// 
+// 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+// 	}
 
 	// sampler buffer bind
-	glGenBuffers(1, &m_tbo1);
-	glBindBuffer(GL_TEXTURE_BUFFER, m_tbo1);
-	glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 16 * 10, nullptr, GL_STATIC_DRAW);
-	GLuint tex1;
-	glCreateTextures(GL_TEXTURE_BUFFER, 1, &tex1);
-	glTextureBuffer(tex1, GL_RGBA32F, m_tbo1);
-	glBindTextureUnit(0, m_tbo1);
-	glBindBuffer(GL_TEXTURE_BUFFER, 0);
+// 	glGenBuffers(1, &m_tbo1);
+// 	glBindBuffer(GL_TEXTURE_BUFFER, m_tbo1);
+// 	glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 16 * 10, nullptr, GL_STATIC_DRAW);
+// 	GLuint tex1;
+// 	glCreateTextures(GL_TEXTURE_BUFFER, 1, &tex1);
+// 	glTextureBuffer(tex1, GL_RGBA32F, m_tbo1);
+// 	glBindTextureUnit(0, m_tbo1);
+// 	glBindBuffer(GL_TEXTURE_BUFFER, 0);
+
+	glBindVertexArray(0);
 }
 
 GLuint Mesh::GetVao()
@@ -338,50 +342,53 @@ void Mesh::SetDrawType(eDrawType type)
 void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 	QMatrix4x4 matOrtho)
 {
-	if (0 != m_diffuseTex1ID) {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_diffuseTex1ID);
-	}
-
-	if (0 != m_normalmapTexID) {
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_normalmapTexID);
-	}
+	glBindVertexArray(GetVao());
 
 	if (0 != m_skyboxTexID) {
+		m_shader.SetShaderType(ShaderHelper::SkyboxGBuffer);
+		glActiveTexture(GL_TEXTURE8);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexID);
 		matModel.translate(camPos);
 		matModel.scale(10000);
 		glCullFace(GL_FRONT);
 		glDepthMask(0);
-		m_shader.SetShaderType(ShaderHelper::SkyboxGBuffer);
 	}
 	else if (0 != m_projTexID) {
 		glActiveTexture(GL_TEXTURE10);
 		glBindTexture(GL_TEXTURE_2D, m_projTexID);
 		ShaderHelper::Instance().SetShaderType(ShaderHelper::Decal);
 	}
-	glBindVertexArray(GetVao());
+
+	if (0 != m_diffuseTex1ID) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_diffuseTex1ID);
+	}
+
+	if (0 != m_normalmapTexID && 0 == m_skyboxTexID) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_normalmapTexID);
+	}
+
 	matVP = matVP * matModel;
 	m_shader.SetMVPMatrix(matVP, matModel, matView, matProj);
 	m_shader.SetCamWorldPos(camPos);
 	m_shader.SetOrthoMat(matOrtho);
 
 	m_shader.SetAmbientSpecularColor(m_mainWnd->GetAmbientColor(), m_mainWnd->GetSpecularColor());
-
 	m_shader.SetTime(GetTickCount());
 
 	// Draw element(with indices)
-	if (Triangle == m_drawType)	{
+	if (Triangle == m_drawType) {
 		glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, 0);
-	} 
+	}
 	else if (Point == m_drawType) {
-		glDrawArrays(GL_POINTS, 0, GetVerticesNum());
+		glDrawArrays(GL_TRIANGLES, 0, GetVerticesNum());
 	}
 
 	if (0 != m_skyboxTexID) {
 		glCullFace(GL_BACK);
 		glDepthMask(1);
 	}
+
 	glBindVertexArray(0);
 }

@@ -54,9 +54,9 @@ float CalculateTheShadowValue()
 	float vertexDepth = posInLightSpace.z;
 	float depth = texture(shadowMap, posInLightSpace.xy).x;
 
-	float bias = 0.000001;
+	float bias = 0.0001;
 	//float bias = max(0.000005 * (1.0 - dot(normal, vec3(1, 1, 1))), 0.000001);
-	return (depth < vertexDepth - bias ? 0.05 : 1);
+	return (depth < vertexDepth - bias ? 0 : 1);
 }
 
 vec4 CalculateDirLight(Light light)
@@ -70,18 +70,28 @@ vec4 CalculateDirLight(Light light)
 
 	vec3 ambient = ambientColor.rgb;
 	vec3 albedo = texture(gBufferAlbedoTex, uv).rgb;
-	ambient = ambient * 0.35 * albedo;
+	ambient = ambient * albedo * 0.75;
 
 	vec3 viewDir = normalize(camPosWorld - wPos);
 	vec3 halfDir = normalize(viewDir + light.dir);
 	vec3 diffuse = light.color.rgb * ambient.rgb * clamp(dot(light.dir, normal), 0.0, 1.0);
-	diffuse += texture(gBufferSkyboxTex, uv).rgb;
+
+	vec3 skyboxColor = texture(gBufferSkyboxTex, uv).rgb;
+	float threshold = 0.2;
+	if (skyboxColor.r < threshold && skyboxColor.r > -threshold 
+	&& skyboxColor.g < threshold && skyboxColor.g > -threshold
+	&& skyboxColor.b < threshold && skyboxColor.b > -threshold){
+	}
+	else{
+		//diffuse += skyboxColor;
+	}
+	//diffuse += skyboxColor;
 
 	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
 	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
 
-	//return vec4(texture(gBufferSkyboxTex, uv).rgb, 1);
-	return vec4(ambient + diffuse + specularRes, 1);
+	//return vec4(shadowValue, shadowValue, shadowValue, 1);
+	return vec4(skyboxColor + specularRes + (ambient + diffuse) * shadowValue, 1);
 }
 
 vec4 CalculatePointLight(Light light)

@@ -34,6 +34,7 @@ int AssetImport::LoadModel(const char *path)
 		m_prePath = m_prePath.left(index + 1);
 	}
 
+	m_model = nullptr;
 	m_matModel.setToIdentity();
 	m_shaderType = ShaderHelper::Default;
 	HandleChildNode(scene, scene->mRootNode);
@@ -59,6 +60,7 @@ Model* AssetImport::LoadModelWithModelMatrixAndShaderType(const char *path, QMat
 		m_prePath = m_prePath.left(index + 1);
 	}
 
+	m_model = nullptr;
 	m_matModel = matModel;
 	m_shaderType = type;
 	HandleChildNode(scene, scene->mRootNode);
@@ -74,10 +76,6 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 		auto child = node->mChildren[a];
 		if (child->mNumChildren > 0) {
 			HandleChildNode(scene, child);
-		}
-
-		if (0) {
-			continue;
 		}
 
 		// create a new model for a child

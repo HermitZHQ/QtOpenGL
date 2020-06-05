@@ -14,9 +14,10 @@
 OpenWidget::OpenWidget()
 	:m_mainObj(Q_NULLPTR), m_cam(Q_NULLPTR)
 	, m_matWorldLoc(0), m_worldCamPosLoc(0), m_query(0), m_sampleNum(0)
-	, m_offScreenFbo(0), m_shadowMapFbo(0), m_shadowTexWidth(2048), m_shadowTexHeight(2048)
+	, m_offScreenFbo(0), m_shadowMapFbo(0), m_shadowTexWidth(4096), m_shadowTexHeight(4096)
 	, m_shaderHelperPtr(nullptr)
 	, m_gBufferFbo(0), m_gBufferPosTex(0), m_gBufferNormalTex(0), m_gBufferAlbedoTex(0), m_gBufferSkyboxTex(0)
+	, m_gBufferDepthTex(0)
 {
 	m_cam = new Camera();
 
@@ -110,14 +111,15 @@ void OpenWidget::initializeGL()
 	}
 
 	// test load model
-	m_assimpPtr->LoadModel("./models/Box001.obj");
-	m_assimpPtr->LoadModel("./models/Box002.obj");
+// 	m_assimpPtr->LoadModel("./models/Box001.obj");
 	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
 	m_assimpPtr->LoadModel("./models/plane2.obj");
 	m_assimpPtr->LoadModel("./models/plane3.obj");
-// 	m_assimpPtr->LoadModel("./models/teapot.obj");
+	m_assimpPtr->LoadModel("./models/teapot.obj");
+	m_assimpPtr->LoadModel("./models/dva/001.obj");
+
 	m_assimpPtr->LoadModel("./models/skybox.obj");
-// 	m_assimpPtr->LoadModel("./models/dva/001.obj");
+	m_assimpPtr->LoadModel("./models/Box002.obj");
 
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
@@ -178,14 +180,32 @@ void OpenWidget::initializeGL()
 		mat.translate(20, 0, 0);
 		mat.scale(5);
 		pTeapot->SetWroldMat(mat);
-	}	
+	}
+
 	Model *pSkybox = m_modelMgrPtr->FindModelByName("skybox");
 	if (Q_NULLPTR != pSkybox) {
 		pSkybox->EnableSkybox();
+	}
 
-		QMatrix4x4 mat;
-// 		mat.scale(500);
-		pSkybox->SetWroldMat(mat);
+	// toufa body shitimoface eye
+	Model *pToufa = m_modelMgrPtr->FindModelByName("toufa");
+	if (Q_NULLPTR != pToufa) {
+		pToufa->SetNormalMapTexture("./models/dva/Standard_8_Normal_DirectX.png");
+	}
+
+	Model *pBody = m_modelMgrPtr->FindModelByName("body");
+	if (Q_NULLPTR != pBody) {
+		pBody->SetNormalMapTexture("./models/dva/Material__169_Normal_DirectX.png");
+	}
+
+	Model *pFace = m_modelMgrPtr->FindModelByName("shitimoface");
+	if (Q_NULLPTR != pFace) {
+		pFace->SetNormalMapTexture("./models/dva/Material__170_Normal_DirectX.png");
+	}
+
+	Model *pEye = m_modelMgrPtr->FindModelByName("eye");
+	if (Q_NULLPTR != pEye) {
+		pEye->SetNormalMapTexture("./models/dva/Standard_23_Normal_DirectX.png");
 	}
 }
 
@@ -195,7 +215,7 @@ void OpenWidget::resizeGL(int w, int h)
 	m_cam->SetAspectRatio((float)w / (float)h);
 }
 
-void OpenWidget::paintClearAndReset()
+void OpenWidget::ClearAndReset()
 {
 	static GLuint fps = 0;
 	static GLuint time = GetTickCount();
@@ -214,6 +234,8 @@ void OpenWidget::paintClearAndReset()
 	glClearBufferfv(GL_COLOR, 1, black);
 	glClearBufferfv(GL_COLOR, 2, black);
 	glClearBufferfv(GL_COLOR, 3, black);
+	glClearBufferfv(GL_COLOR, 4, black);
+	glClearBufferfv(GL_COLOR, 5, black);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	++fps;
@@ -266,21 +288,36 @@ void OpenWidget::UpdateAllLightsInfo()
 
 void OpenWidget::paintGL()
 {
-// 	CreateShadowMapFrameBufferTexture();
-// 	CreateOffScreenFrameBufferTexture();
-	CreateGBufferFrameBufferTextures();
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		qDebug() << "check frame buffer failed";
-		return;
-	}
-	paintClearAndReset();
-
+	auto modelNum = ModelMgr::Instance().GetModelNum();
 	QMatrix4x4 matVP = m_cam->GetVPMatrix();
 	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
 	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
 	QMatrix4x4 matView = m_cam->GetViewMatrix();
 	QVector3D camPos = m_cam->GetCamPos().toVector3D();
+	matVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
+
+	CreateShadowMapFrameBufferTexture();
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		qDebug() << "check frame buffer failed";
+		return;
+	}
+	ClearAndReset();
+	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
+
+	for (unsigned int i = 0; i < modelNum; ++i)	{
+		Model *mod = ModelMgr::Instance().GetModel(i);
+		QMatrix4x4 matModel = mod->GetWorldMat();
+		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
+
+	CreateGBufferFrameBufferTextures();
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		qDebug() << "check frame buffer failed";
+		return;
+	}
+	ClearAndReset();
+	glViewport(0, 0, size().width(), size().height());
 
 	//for light view---------shadow handle
 // 	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
@@ -289,8 +326,7 @@ void OpenWidget::paintGL()
 
 	// update light info dynamicly
 	UpdateDynamicLightsInfo();
-
-	auto modelNum = ModelMgr::Instance().GetModelNum();
+	matVP = m_cam->GetVPMatrix();
 	for (unsigned int i = 0; i < modelNum; ++i)
 	{
 		Model *mod = ModelMgr::Instance().GetModel(i);
@@ -306,12 +342,13 @@ void OpenWidget::paintGL()
 	//----test add water wave during the deferred rendering g-buffer phase
 	Model *pWater = ModelMgr::Instance().FindModelByName("water");
 	if (Q_NULLPTR != pWater) {
+		pWater->SetShaderType(ShaderHelper::Water);
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
 
-		pWater->SetShaderType(ShaderHelper::Water);
 		QMatrix4x4 matModel = pWater->GetWorldMat();
 		pWater->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+		SwitchShader(ShaderHelper::GBufferGeometry);
 	}
 
 	//-----------------------------------------------
@@ -435,7 +472,7 @@ void OpenWidget::DrawWaterWaveWithOffScreenTexture()
 	}
 
 	// clear the framebuffer
-	paintClearAndReset();
+	ClearAndReset();
 
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, m_offScreenTexId);
@@ -477,10 +514,10 @@ void OpenWidget::CreateShadowMapFrameBufferTexture()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_shadowTexWidth, m_shadowTexHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-// 		static float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-// 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		static float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
 	
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMapTexId, 0);
 	// 	glDrawBuffer(GL_NONE);
@@ -534,10 +571,6 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_gBufferSkyboxTex, 0);
 
-		// tell opengl which color attachments we'll use(of the framebuffer) for rendering
-		unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-		glDrawBuffers(4, attachments);
-
 		//----render buffer for depth
 // 		GLuint rb;
 // 		glGenRenderbuffers(1, &rb);
@@ -546,17 +579,21 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 // 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rb);
 // 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-		glGenTextures(1, &m_shadowMapTexId);
-		glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+		glGenTextures(1, &m_gBufferDepthTex);
+		glBindTexture(GL_TEXTURE_2D, m_gBufferDepthTex);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, wndSize.width(), wndSize.height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMapTexId, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_gBufferDepthTex, 0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBufferFbo);
+
+	// tell opengl which color attachments we'll use(of the framebuffer) for rendering
+	unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+	glDrawBuffers(4, attachments);
 }
 
 void OpenWidget::DrawDeferredShading()
@@ -569,7 +606,7 @@ void OpenWidget::DrawDeferredShading()
 	}
 
 	// clear the framebuffer
-	paintClearAndReset();
+	ClearAndReset();
 
 	SwitchShader(ShaderHelper::DefferredRendering);
 	// update light info dynamicly
@@ -578,8 +615,15 @@ void OpenWidget::DrawDeferredShading()
 	m_shaderHelperPtr->SetAmbientSpecularColor(QVector3D(1, 1, 1), QVector3D(1, 1, 1));
 	auto camPos = m_cam->GetCamPos().toVector3D();
 	m_shaderHelperPtr->SetCamWorldPos(camPos);
+	QMatrix4x4 matLightVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
+	m_shaderHelperPtr->SetLightVPMat(matLightVP);
 
 	glBindVertexArray(vao_quad);
+// 	glActiveTexture(GL_TEXTURE0);
+// 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, m_gBufferPosTex);
 	glActiveTexture(GL_TEXTURE5);
@@ -588,6 +632,7 @@ void OpenWidget::DrawDeferredShading()
 	glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
 	glActiveTexture(GL_TEXTURE7);
 	glBindTexture(GL_TEXTURE_2D, m_gBufferSkyboxTex);
+
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	//----Test draw water wave effect after deferred rendering
@@ -652,7 +697,7 @@ void OpenWidget::DrawOriginalSceneWithShadow()
 		return;
 	}
 
-	paintClearAndReset();
+	ClearAndReset();
 	glDrawBuffer(GL_FRONT);
 	glReadBuffer(GL_FRONT);
 

@@ -1,6 +1,6 @@
 #version 450 core
 
-//layout (location = 0) out vec4 fColor;
+layout (location = 0) out vec4 fColor;
 layout (location = 3) out vec3 gSkybox;
 
 uniform samplerCube skybox;
