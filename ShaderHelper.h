@@ -7,6 +7,7 @@ class QObject;
 class ShaderHelper : public QOpenGLFunctions_4_5_Core
 {
 public:
+	const static int		ssaoSampleNum = 32;
 	enum eShaderType
 	{
 		Default,
@@ -22,6 +23,8 @@ public:
 		Water,
 		GBufferGeometry,
 		DefferredRendering,
+		SSAO,
+		SSAOBlur,
 	};
 
 	struct ShaderInfo 
@@ -55,6 +58,9 @@ public:
 	void SetAmbientSpecularColor(QVector4D ambient, QVector4D specular);
 	void SetLightsInfo(const LightMgr::LightInfo &info, int index);
 
+	//----SSAO relevant
+	void SetSSAOSamples(QVector<QVector3D> &sampleVec);
+
 	//----Shader relevant
 	GLuint GetProgram() const;
 	void Use();
@@ -80,6 +86,8 @@ protected:
 	void InitGBufferGeometryShader();
 	void InitDeferredRenderingShader();
 	void InitSkyboxGBufferShader();
+	void InitSSAOShader();
+	void InitSSAOBlurShader();
 
 private:
 	ShaderHelper();
@@ -118,5 +126,8 @@ private:
 	GLint					m_coefficientQuadratic[maxShaderNum][maxLightNum];
 	GLint					m_spotLightInnerCutoff[maxShaderNum][maxLightNum];
 	GLint					m_spotLightOuterCutoff[maxShaderNum][maxLightNum];
+
+	// uniform for the SSAO samples
+	GLint					m_ssaoSamples[maxShaderNum][ssaoSampleNum];
 };
 

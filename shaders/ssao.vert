@@ -11,7 +11,6 @@ layout (location = 5) in mat4 model_matrix;
 uniform mat4x4 mat_mvp;
 uniform mat4x4 mat_world;
 uniform vec3 worldCamPos;
-uniform mat4x4 viewMat;
 
 //----out vars
 out Vertex {
@@ -19,7 +18,6 @@ out Vertex {
 	vec3 skyboxUV;
 	vec3 worldNormal;
 	vec3 worldPos;
-	vec3 viewPos;
 	mat4x4 worldMat;
 	vec3 camPosWorld;
 	mat3x3 tangentToModelMat;
@@ -27,10 +25,9 @@ out Vertex {
 
 void main()
 {
-	gl_Position = mat_mvp * vec4(vPosition, 1);
+	gl_Position = vec4(vPosition, 1);
 	
 	worldPos = (mat_world * vec4(vPosition, 1)).xyz;
-	viewPos = (viewMat * vec4(worldPos, 1)).xyz;
 
 	tangentToModelMat[0] = vTangent;
 	tangentToModelMat[1] = vBitangent;
@@ -45,5 +42,6 @@ void main()
 	skyboxUV = worldView - 2 * dot(worldNormal, worldView) * worldNormal;
 
 	uv = vUV;
+	uv.y = 1.0 - uv.y;
 	worldMat = mat_world;
 }

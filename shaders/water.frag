@@ -213,7 +213,7 @@ void main()
 	vec2 offsetUV = uv2 + normal.xy * 0.015;
 
 	vec3 albedo = texture(offScreenTex, offsetUV).rgb;
-	vec3 refrColor = ambient * albedo.rgb * 0.8;
+	vec3 refrColor = ambient * albedo.rgb * 0.3; // the color below the water should more darker
 
 	vec3 viewDir = normalize(camPosWorld - worldPos);
 	vec3 halfDir = normalize(viewDir + lights[0].dir);

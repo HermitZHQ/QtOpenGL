@@ -1,5 +1,6 @@
 #include "OpenWidget.h"
 #include "QResizeEvent"
+#include "QRandomGenerator"
 #include "ShaderHelper.h"
 #include "PreDef.h"
 #include "Camera.h"
@@ -18,6 +19,8 @@ OpenWidget::OpenWidget()
 	, m_shaderHelperPtr(nullptr)
 	, m_gBufferFbo(0), m_gBufferPosTex(0), m_gBufferNormalTex(0), m_gBufferAlbedoTex(0), m_gBufferSkyboxTex(0)
 	, m_gBufferDepthTex(0)
+	, m_ssaoFbo(0), m_ssaoTex(0)
+	, m_ssaoBlurFbo(0), m_ssaoBlurTex(0)
 {
 	m_cam = new Camera();
 
@@ -83,7 +86,7 @@ void OpenWidget::initializeGL()
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	glEnable(GL_CULL_FACE);
+// 	glEnable(GL_CULL_FACE);
 // 	glCullFace(GL_BACK);
 // 	glFrontFace(GL_CW);
 
@@ -190,22 +193,22 @@ void OpenWidget::initializeGL()
 	// toufa body shitimoface eye
 	Model *pToufa = m_modelMgrPtr->FindModelByName("toufa");
 	if (Q_NULLPTR != pToufa) {
-		pToufa->SetNormalMapTexture("./models/dva/Standard_8_Normal_DirectX.png");
+		pToufa->SetNormalMapTexture("./models/dva/Map__11_Normal_Bump.png");
 	}
 
 	Model *pBody = m_modelMgrPtr->FindModelByName("body");
 	if (Q_NULLPTR != pBody) {
-		pBody->SetNormalMapTexture("./models/dva/Material__169_Normal_DirectX.png");
+		pBody->SetNormalMapTexture("./models/dva/Map__15_Normal_Bump.png");
 	}
 
 	Model *pFace = m_modelMgrPtr->FindModelByName("shitimoface");
 	if (Q_NULLPTR != pFace) {
-		pFace->SetNormalMapTexture("./models/dva/Material__170_Normal_DirectX.png");
+		pFace->SetNormalMapTexture("./models/dva/Map__13_Normal_Bump.png");
 	}
 
 	Model *pEye = m_modelMgrPtr->FindModelByName("eye");
 	if (Q_NULLPTR != pEye) {
-		pEye->SetNormalMapTexture("./models/dva/Standard_23_Normal_DirectX.png");
+		pEye->SetNormalMapTexture("./models/dva/Map__18_Normal_Bump.png");
 	}
 }
 
@@ -296,6 +299,7 @@ void OpenWidget::paintGL()
 	QVector3D camPos = m_cam->GetCamPos().toVector3D();
 	matVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
 
+	//-----Shadow render pass
 	CreateShadowMapFrameBufferTexture();
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		qDebug() << "check frame buffer failed";
@@ -311,6 +315,7 @@ void OpenWidget::paintGL()
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
+	//--------Deferred rendering g-buffer handle pass
 	CreateGBufferFrameBufferTextures();
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		qDebug() << "check frame buffer failed";
@@ -318,11 +323,6 @@ void OpenWidget::paintGL()
 	}
 	ClearAndReset();
 	glViewport(0, 0, size().width(), size().height());
-
-	//for light view---------shadow handle
-// 	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
-// 	matVP = matProj * m_cam->GetLightViewMatrix();
-// 	matView = m_cam->GetLightViewMatrix();
 
 	// update light info dynamicly
 	UpdateDynamicLightsInfo();
@@ -350,10 +350,50 @@ void OpenWidget::paintGL()
 		pWater->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 		SwitchShader(ShaderHelper::GBufferGeometry);
 	}
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
 
-	//-----------------------------------------------
-	// test the frame buffer
+	//--------SSAO buffer handle pass
+	CreateSSAOFrameBufferTextures();
+	SwitchShader(ShaderHelper::SSAO);
+	ClearAndReset();
+
+	glBindVertexArray(vao_quad);
+	m_shaderHelperPtr->SetSSAOSamples(m_ssaoSampleVec);
+	m_shaderHelperPtr->SetMVPMatrix(matVP, matVP, matView, matProj);
+
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, m_gBufferPosTex);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, m_gBufferNormalTex);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+	glActiveTexture(GL_TEXTURE8);
+	glBindTexture(GL_TEXTURE_2D, m_ssaoNoiseTex);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
+
+	//--------SSAO blur pass
+	CreateSSAOBlurFrameBufferTextures();
+	SwitchShader(ShaderHelper::SSAOBlur);
+	ClearAndReset();
+	glBindVertexArray(vao_quad);
+
+	glActiveTexture(GL_TEXTURE9);
+	glBindTexture(GL_TEXTURE_2D, m_ssaoTex);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
+
+	//-------Final draw pass
 	glViewport(0, 0, size().width(), size().height());
+
+	SwitchShader(ShaderHelper::FrameBuffer1);
+	glBindVertexArray(vao_quad);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_ssaoBlurTex);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 
 // 	DrawOffScreenTexture();
 // 	DrawWaterWaveWithOffScreenTexture();
@@ -361,7 +401,58 @@ void OpenWidget::paintGL()
 // 	DrawShadowMapTexture_ForTest();
 // 	DrawOriginalSceneWithShadow();
 
-	DrawDeferredShading();
+	//--------Deferred rendering(last pass)
+// 	DrawDeferredShading();
+}
+
+float OpenWidget::lerp(float a, float b, float f)
+{
+	return a + f * (b - a);
+}
+
+void OpenWidget::GenerateHemisphereSamplers()
+{
+	m_ssaoSampleVec.clear();
+	m_noiseVec.clear();
+	QRandomGenerator rand;
+	rand.bounded(1.0);
+
+	for (unsigned int i = 0; i < ShaderHelper::ssaoSampleNum; ++i)
+	{
+		float x = float(rand.generateDouble() * 2.0 - 1.0);
+		float y = float(rand.generateDouble() * 2.0 - 1.0);
+		float z = float(rand.generateDouble());
+
+		float scale = (qAbs(x) + qAbs(y)) / 2.0 / z;
+// 		while (scale > 1)
+// 		{
+// 			x = float(rand.generateDouble() * 2.0 - 1.0);
+// 			y = float(rand.generateDouble() * 2.0 - 1.0);
+// 			z = float(rand.generateDouble());
+// 
+// 			scale = (qAbs(x) + qAbs(y)) / 2.0 / z;
+// 		}
+
+		QVector3D sample = {
+			x,// [-1, 1]
+			y,
+			z,// [0, 1], only generate the normal oriented dir sample vec
+		};
+
+		scale = (float)i / ShaderHelper::ssaoSampleNum;
+		scale = lerp(0.1f, 1.0f, scale * scale);
+		sample *= scale;// use the scale to focus more vecs near the original area
+		m_ssaoSampleVec.append(sample);
+	}
+
+	int w = size().width(), h = size().height();
+	static const int noiseNum = 4 * 4;
+	for (unsigned int i = 0; i < noiseNum; ++i)
+	{
+		m_noiseVec.append(float(rand.generateDouble() * 2.0 - 1.0));
+		m_noiseVec.append(float(rand.generateDouble() * 2.0 - 1.0));
+		m_noiseVec.append(0);// rotate with z(normal)
+	}
 }
 
 void OpenWidget::SwitchShader(ShaderHelper::eShaderType type)
@@ -536,7 +627,7 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 	if (0 == m_gBufferFbo) {
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
 		if (m_originalFbo != 1) {
-			AddTipInfo(Q8("ShadowMap帧缓存创建错误，应该在主窗口创建之后再创建"));
+			AddTipInfo(Q8("GBuffer帧缓存创建错误，应该在主窗口创建之后再创建"));
 		}
 
 		glCreateFramebuffers(1, &m_gBufferFbo);
@@ -548,6 +639,9 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		// This ensures we don't accidentally oversample position/depth values in screen-space outside the texture's default coordinate region
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBufferPosTex, 0);
 
 		glGenTextures(1, &m_gBufferNormalTex);
@@ -557,16 +651,17 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gBufferNormalTex, 0);
 
+		//----Use GL_RGBA16F to enable the HDR effect with albedo and skybox
 		glGenTextures(1, &m_gBufferAlbedoTex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gBufferAlbedoTex, 0);
 
 		glGenTextures(1, &m_gBufferSkyboxTex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferSkyboxTex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_gBufferSkyboxTex, 0);
@@ -633,6 +728,11 @@ void OpenWidget::DrawDeferredShading()
 	glActiveTexture(GL_TEXTURE7);
 	glBindTexture(GL_TEXTURE_2D, m_gBufferSkyboxTex);
 
+	glActiveTexture(GL_TEXTURE9);
+	glBindTexture(GL_TEXTURE_2D, m_ssaoTex);
+	glActiveTexture(GL_TEXTURE10);
+	glBindTexture(GL_TEXTURE_2D, m_ssaoBlurTex);
+
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	//----Test draw water wave effect after deferred rendering
@@ -663,6 +763,65 @@ void OpenWidget::DrawDeferredShading()
 // 	}
 
 	glBindVertexArray(0);
+}
+
+void OpenWidget::CreateSSAOFrameBufferTextures()
+{
+	if (0 == m_ssaoFbo) {
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
+		if (m_originalFbo != 1) {
+			AddTipInfo(Q8("SSAO帧缓存创建错误，应该在主窗口创建之后再创建"));
+		}
+
+		auto s = size();
+		GLuint w = s.width(), h = s.height();
+		glCreateFramebuffers(1, &m_ssaoFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoFbo);
+
+		glGenTextures(1, &m_ssaoTex);
+		glBindTexture(GL_TEXTURE_2D, m_ssaoTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RED, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoTex, 0);
+
+		// create the noise texture for ssao frame buffer
+		GenerateHemisphereSamplers();
+
+		glGenTextures(1, &m_ssaoNoiseTex);
+		glBindTexture(GL_TEXTURE_2D, m_ssaoNoiseTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGB, GL_FLOAT, m_noiseVec.data());
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoFbo);
+}
+
+void OpenWidget::CreateSSAOBlurFrameBufferTextures()
+{
+	if (0 == m_ssaoBlurFbo) {
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
+		if (m_originalFbo != 1) {
+			AddTipInfo(Q8("SSAO帧缓存创建错误，应该在主窗口创建之后再创建"));
+		}
+
+		auto s = size();
+		GLuint w = s.width(), h = s.height();
+		glCreateFramebuffers(1, &m_ssaoBlurFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoBlurFbo);
+
+		glGenTextures(1, &m_ssaoBlurTex);
+		glBindTexture(GL_TEXTURE_2D, m_ssaoBlurTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoBlurTex, 0);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoBlurFbo);
 }
 
 void OpenWidget::DrawShadowMapTexture_ForTest()

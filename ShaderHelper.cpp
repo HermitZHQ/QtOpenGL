@@ -118,12 +118,13 @@ void ShaderHelper::GetCommonUniformLocation()
 		strTmp = QString("lights[%1].outerCutoff").arg(i);
 		m_spotLightOuterCutoff[m_shaderType][i] = GetUniformLocation(strTmp.toLocal8Bit());
 	}
-	//----set the static light data
-// 	auto lightNum = m_lightMgrPtr->GetCurLightNum();
-// 	for (int i = 0; i < lightNum; ++i)
-// 	{
-// 		SetLightsInfo(m_lightMgrPtr->GetLightInfo(i), i);
-// 	}
+
+	//----SSAO samples
+	for (int i = 0; i < ShaderHelper::ssaoSampleNum; ++i)
+	{
+		strTmp = QString("ssaoSamples[%1]").arg(i);
+		m_ssaoSamples[m_shaderType][i] = GetUniformLocation(strTmp.toLocal8Bit());
+	}
 
 	//----texture
 	auto texId = GetUniformLocation("tex");
@@ -161,6 +162,18 @@ void ShaderHelper::GetCommonUniformLocation()
 	auto gBufferSkyboxTexId = GetUniformLocation("gBufferSkyboxTex");
 	if (-1 != gBufferSkyboxTexId) {
 		glUniform1i(gBufferSkyboxTexId, 7);
+	}
+	auto ssaoNoiseTexId = GetUniformLocation("texNoise");
+	if (-1 != ssaoNoiseTexId) {
+		glUniform1i(ssaoNoiseTexId, 8);
+	}
+	auto ssaoTexId = GetUniformLocation("ssaoTex");
+	if (-1 != ssaoTexId) {
+		glUniform1i(ssaoTexId, 9);
+	}
+	auto ssaoBlurTexId = GetUniformLocation("ssaoBlurTex");
+	if (-1 != ssaoBlurTexId) {
+		glUniform1i(ssaoBlurTexId, 10);
 	}
 
 	auto skyboxId = GetUniformLocation("skybox");// put skybox unit far away.....
@@ -340,6 +353,32 @@ void ShaderHelper::InitSkyboxGBufferShader()
 	GetCommonUniformLocation();
 }
 
+void ShaderHelper::InitSSAOShader()
+{
+	m_shaderType = SSAO;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/ssao.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/ssao.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
+void ShaderHelper::InitSSAOBlurShader()
+{
+	m_shaderType = SSAOBlur;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/ssaoBlur.vert"},
+		{GL_FRAGMENT_SHADER, "./shaders/ssaoBlur.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
 void ShaderHelper::Init()
 {
 	initializeOpenGLFunctions();
@@ -370,6 +409,9 @@ void ShaderHelper::Init()
 	memset(m_spotLightInnerCutoff, -1, sizeof(m_spotLightInnerCutoff));
 	memset(m_spotLightOuterCutoff, -1, sizeof(m_spotLightOuterCutoff));
 
+	//----ssao samples
+	memset(m_ssaoSamples, -1, sizeof(m_ssaoSamples));
+
 	InitDefaultShader();
 	InitPureColorShader();
 	InitDiffuseShader();
@@ -383,6 +425,8 @@ void ShaderHelper::Init()
 	InitGBufferGeometryShader();
 	InitDeferredRenderingShader();
 	InitSkyboxGBufferShader();
+	InitSSAOShader();
+	InitSSAOBlurShader();
 
 	m_shaderType = Default;
 	Use();
@@ -501,6 +545,21 @@ void ShaderHelper::SetLightsInfo(const LightMgr::LightInfo &info, int index)
 	}
 	if (m_spotLightOuterCutoff[m_shaderType][index] != -1) {
 		glUniform1f(m_spotLightOuterCutoff[m_shaderType][index], info.outerCutoff);
+	}
+}
+
+void ShaderHelper::SetSSAOSamples(QVector<QVector3D> &sampleVec)
+{
+	if (sampleVec.size() != ShaderHelper::ssaoSampleNum) {
+		AddTipInfo(Q8("error with ssao samples num, for now is 32"));
+		return;
+	}
+
+	for (int i = 0; i < ShaderHelper::ssaoSampleNum; ++i)
+	{
+		if (-1 != m_ssaoSamples[m_shaderType][i]) {
+			glUniform3f(m_ssaoSamples[m_shaderType][i], sampleVec[i].x(), sampleVec[i].y(), sampleVec[i].z());
+		}
 	}
 }
 

@@ -32,6 +32,8 @@ protected:
 	void UpdateDynamicLightsInfo();
 	void UpdateAllLightsInfo();
 	virtual void paintGL() override;
+	float lerp(float a, float b, float f);
+	void GenerateHemisphereSamplers();
 
 	void BeginGetOcclusionSampleNum();
 	void EndGetOcclusionSampleNum();
@@ -41,12 +43,15 @@ protected:
 	void DrawOffScreenTexture();
 	void DrawWaterWaveWithOffScreenTexture();
 
-	void CreateGBufferFrameBufferTextures();
-	void DrawDeferredShading();
-
 	void CreateShadowMapFrameBufferTexture();
 	void DrawShadowMapTexture_ForTest();
 	void DrawOriginalSceneWithShadow();
+
+	void CreateGBufferFrameBufferTextures();
+	void DrawDeferredShading();
+
+	void CreateSSAOFrameBufferTextures();
+	void CreateSSAOBlurFrameBufferTextures();
 
 	virtual void moveEvent(QMoveEvent *event) override;
 	virtual void keyPressEvent(QKeyEvent *event) override;
@@ -89,5 +94,14 @@ private:
 	GLuint						m_gBufferAlbedoTex;
 	GLuint						m_gBufferSkyboxTex;
 	GLuint						m_gBufferDepthTex;
+
+	GLuint						m_ssaoFbo;
+	GLuint						m_ssaoTex;
+	GLuint						m_ssaoNoiseTex;
+	QVector<GLfloat>			m_noiseVec;
+	QVector<QVector3D>			m_ssaoSampleVec;
+
+	GLuint						m_ssaoBlurFbo;
+	GLuint						m_ssaoBlurTex;
 };
 

@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 	, m_openWidgetPtr(Q_NULLPTR), m_layoutV(Q_NULLPTR)
-	, m_ambientColor(1, 1, 1, 1), m_specularColor(1, 1, 1, 1)
+	, m_ambientColor(5, 5, 5, 1), m_specularColor(1, 1, 1, 1)
 {
 	ui->setupUi(this);
 

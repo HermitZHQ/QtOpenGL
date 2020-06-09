@@ -30,9 +30,14 @@ uniform sampler2D gBufferNormalTex;
 uniform sampler2D gBufferAlbedoTex;
 uniform sampler2D gBufferSkyboxTex;
 
+//9, 10
+uniform sampler2D ssaoTex;
+uniform sampler2D ssaoBlurTex;
+
 uniform samplerCube skybox;
 
 uniform mat4x4 lightVPMat;
+uniform mat4x4 viewMat;
 
 uniform vec4 ambientColor;
 uniform vec4 specularColor;
@@ -47,6 +52,8 @@ float CalculateTheShadowValue()
 {	
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
+	//normal = normalize((vec4(normal, 1) * inverse(viewMat)).xyz);
+	//wPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
 
 	vec4 posInLightSpace = lightVPMat * vec4(wPos, 1);
 	posInLightSpace = posInLightSpace / posInLightSpace.w;
@@ -54,9 +61,9 @@ float CalculateTheShadowValue()
 	float vertexDepth = posInLightSpace.z;
 	float depth = texture(shadowMap, posInLightSpace.xy).x;
 
-	float bias = 0.0001;
+	float bias = 0.00015;
 	//float bias = max(0.000005 * (1.0 - dot(normal, vec3(1, 1, 1))), 0.000001);
-	return (depth < vertexDepth - bias ? 0 : 1);
+	return (depth < vertexDepth - bias ? 0.05 : 1);
 }
 
 vec4 CalculateDirLight(Light light)
@@ -67,6 +74,8 @@ vec4 CalculateDirLight(Light light)
 
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
+	//normal = normalize((vec4(normal, 1) * inverse(viewMat)).xyz);
+	//wPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
 
 	vec3 ambient = ambientColor.rgb;
 	vec3 albedo = texture(gBufferAlbedoTex, uv).rgb;
@@ -90,8 +99,15 @@ vec4 CalculateDirLight(Light light)
 	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
 	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
 
+	// exposure tone mapping
+	//float exposure = 3;
+    //diffuse = vec3(1.0) - exp(-diffuse * exposure);
+
+    // SSAO
+	float occlusion = texture(ssaoBlurTex, uv).r;
+
 	//return vec4(shadowValue, shadowValue, shadowValue, 1);
-	return vec4(skyboxColor + specularRes + (ambient + diffuse) * shadowValue, 1);
+	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse, 1);
 }
 
 vec4 CalculatePointLight(Light light)
