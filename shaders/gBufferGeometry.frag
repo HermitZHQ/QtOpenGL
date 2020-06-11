@@ -33,8 +33,9 @@ void main()
 	normal = normalize(tangentToModelMat * normal);
 	//normal = normalize((viewMat * vec4(normal, 1)).xyz);// View space for SSAO
 
-	normal = normalize((viewMat * vec4(worldNormal, 1)).xyz);
-	gNormal = normalize(normal);
+	normal = normalize((transpose(inverse(viewMat)) * vec4(worldNormal, 0)).xyz);
+	//normal = normalize((viewMat * vec4(worldNormal, 0)).xyz);
+	gNormal = normal;
 
 	gAlbedo = texture(tex, uv).rgb;
 }

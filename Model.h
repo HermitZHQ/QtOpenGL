@@ -24,6 +24,7 @@ public:
 
 	void EnableSkybox();
 	void EnableProjTex();
+	void SetNormalDebugEnable(bool bEnable);
 
 	void SetShaderType(ShaderHelper::eShaderType type);
 	void SetDrawType(Mesh::eDrawType type);
@@ -39,5 +40,7 @@ private:
 
 	ShaderHelper						*m_shaderHelperPtr;
 	LightMgr							*m_lightMgrPtr;
+
+	bool								m_enableNormalDebug;
 };
 

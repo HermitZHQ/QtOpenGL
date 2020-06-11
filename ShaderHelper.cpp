@@ -379,6 +379,20 @@ void ShaderHelper::InitSSAOBlurShader()
 	GetCommonUniformLocation();
 }
 
+void ShaderHelper::InitGeometryShader()
+{
+	m_shaderType = Geometry;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_VERTEX_SHADER, "./shaders/geometry.vert"},
+		{GL_GEOMETRY_SHADER, "./shaders/geometry.geom"},
+		{GL_FRAGMENT_SHADER, "./shaders/geometry.frag"}
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
 void ShaderHelper::Init()
 {
 	initializeOpenGLFunctions();
@@ -427,6 +441,7 @@ void ShaderHelper::Init()
 	InitSkyboxGBufferShader();
 	InitSSAOShader();
 	InitSSAOBlurShader();
+	InitGeometryShader();
 
 	m_shaderType = Default;
 	Use();
@@ -436,6 +451,11 @@ void ShaderHelper::SetShaderType(eShaderType type)
 {
 	m_shaderType = type;
 	Use();
+}
+
+ShaderHelper::eShaderType ShaderHelper::GetShaderType() const
+{
+	return m_shaderType;
 }
 
 void ShaderHelper::SetMVPMatrix(QMatrix4x4 &matMVP, QMatrix4x4 &matWorld, QMatrix4x4 &matView, QMatrix4x4 &matProj)

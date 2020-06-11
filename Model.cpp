@@ -4,6 +4,7 @@
 
 Model::Model()
 	:m_shaderType(ShaderHelper::Default)
+	, m_enableNormalDebug(false)
 {
 	m_worldMat.setToIdentity();
 
@@ -74,6 +75,11 @@ void Model::EnableProjTex()
 	}
 }
 
+void Model::SetNormalDebugEnable(bool bEnable)
+{
+	m_enableNormalDebug = bEnable;
+}
+
 void Model::SetShaderType(ShaderHelper::eShaderType type)
 {
 	m_shaderType = type;
@@ -112,5 +118,10 @@ void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatri
 	{
 		auto mesh = GetMesh(i);
 		mesh->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+		if (m_enableNormalDebug) {
+			m_shaderHelperPtr->SetShaderType(ShaderHelper::Geometry);
+			mesh->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+			m_shaderHelperPtr->SetShaderType(m_shaderType);
+		}
 	}
 }

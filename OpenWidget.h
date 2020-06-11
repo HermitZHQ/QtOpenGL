@@ -24,6 +24,7 @@ public:
 	void UpdateKeys();
 
 protected:
+	void TestGeometryPoints();
 	virtual void initializeGL() override;
 	virtual void resizeGL(int w, int h) override;
 

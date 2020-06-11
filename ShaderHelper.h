@@ -25,6 +25,7 @@ public:
 		DefferredRendering,
 		SSAO,
 		SSAOBlur,
+		Geometry,
 	};
 
 	struct ShaderInfo 
@@ -47,6 +48,7 @@ public:
 	}
 
 	void SetShaderType(eShaderType type);
+	eShaderType GetShaderType() const;
 	void SetMVPMatrix(QMatrix4x4 &matMVP, QMatrix4x4 &matWorld, QMatrix4x4 &matView, QMatrix4x4 &matProj);
 	void SetCamWorldPos(QVector3D &camPos);
 	void SetOrthoMat(QMatrix4x4 &matOrtho);
@@ -88,6 +90,7 @@ protected:
 	void InitSkyboxGBufferShader();
 	void InitSSAOShader();
 	void InitSSAOBlurShader();
+	void InitGeometryShader();
 
 private:
 	ShaderHelper();

@@ -46,7 +46,7 @@ void main()
 
 	float occlusion = 0.0;
 	int kernelSize = 32;
-	float radius = 0.25;
+	float radius = 2.25;
 	float bias = 0.025;
 	//FragColor = 0;
 	for(int i = 0; i < kernelSize; ++i)

@@ -40,6 +40,38 @@ OpenWidget::~OpenWidget()
 	}
 }
 
+GLuint vao_geom;
+void OpenWidget::TestGeometryPoints()
+{
+	glGenVertexArrays(1, &vao_geom);
+	glBindVertexArray(vao_geom);
+
+	const float vertices[4][2] = {
+		{-0.5f, 0.5f}, {0.5f, 0.5f},
+		{-0.5f, -0.5f}, {0.5f, -0.5f}
+	};
+
+	const float colors[4][3] = {
+		{1, 0, 0}, {0, 1, 0},
+		{1, 1, 0}, {1, 1, 1},
+	};
+
+	GLuint vbo = 0;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) + sizeof(colors), nullptr, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(colors), colors);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)sizeof(vertices));
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
 GLuint vao_quad = 0;
 GLuint texId = 0;
 void OpenWidget::initializeGL()
@@ -47,6 +79,7 @@ void OpenWidget::initializeGL()
 	initializeOpenGLFunctions();
 
 	m_shaderHelperPtr = &ShaderHelper::Instance();
+	TestGeometryPoints();
 	// test for a quad
 	{
 // 		const GLfloat g_vertices[6][2] = {
@@ -194,21 +227,25 @@ void OpenWidget::initializeGL()
 	Model *pToufa = m_modelMgrPtr->FindModelByName("toufa");
 	if (Q_NULLPTR != pToufa) {
 		pToufa->SetNormalMapTexture("./models/dva/Map__11_Normal_Bump.png");
+// 		pToufa->SetNormalDebugEnable(true);
 	}
 
 	Model *pBody = m_modelMgrPtr->FindModelByName("body");
 	if (Q_NULLPTR != pBody) {
 		pBody->SetNormalMapTexture("./models/dva/Map__15_Normal_Bump.png");
+// 		pBody->SetNormalDebugEnable(true);
 	}
 
 	Model *pFace = m_modelMgrPtr->FindModelByName("shitimoface");
 	if (Q_NULLPTR != pFace) {
 		pFace->SetNormalMapTexture("./models/dva/Map__13_Normal_Bump.png");
+// 		pFace->SetNormalDebugEnable(true);
 	}
 
 	Model *pEye = m_modelMgrPtr->FindModelByName("eye");
 	if (Q_NULLPTR != pEye) {
 		pEye->SetNormalMapTexture("./models/dva/Map__18_Normal_Bump.png");
+// 		pEye->SetNormalDebugEnable(true);
 	}
 }
 
@@ -291,6 +328,22 @@ void OpenWidget::UpdateAllLightsInfo()
 
 void OpenWidget::paintGL()
 {
+	//----test geometry shader
+// 	QMatrix4x4 matVP = m_cam->GetVPMatrix();
+// 	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
+// 	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
+// 	QMatrix4x4 matView = m_cam->GetViewMatrix();
+// 	QVector3D camPos = m_cam->GetCamPos().toVector3D();
+// 	Model *pMode = m_modelMgrPtr->FindModelByName("body");
+// 	if (nullptr != pMode) {
+// 		ClearAndReset();
+// 		pMode->SetShaderType(ShaderHelper::Default);
+// 		pMode->Draw(matVP, pMode->GetWorldMat(), camPos, matProj, matView, matOrtho);
+// 		pMode->SetShaderType(ShaderHelper::Geometry);
+// 		pMode->Draw(matVP, pMode->GetWorldMat(), camPos, matProj, matView, matOrtho);
+// 	}
+// 	return;
+
 	auto modelNum = ModelMgr::Instance().GetModelNum();
 	QMatrix4x4 matVP = m_cam->GetVPMatrix();
 	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
@@ -385,15 +438,24 @@ void OpenWidget::paintGL()
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
 
+	//-------Draw normal debug after blur
+	CreateGBufferFrameBufferTextures();
+	Model *pMode = m_modelMgrPtr->FindModelByName("body");
+	if (nullptr != pMode) {
+		pMode->SetShaderType(ShaderHelper::Geometry);
+		pMode->Draw(matVP, pMode->GetWorldMat(), camPos, matProj, matView, matOrtho);
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
+
 	//-------Final draw pass
 	glViewport(0, 0, size().width(), size().height());
 
-	SwitchShader(ShaderHelper::FrameBuffer1);
-	glBindVertexArray(vao_quad);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_ssaoBlurTex);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+// 	SwitchShader(ShaderHelper::FrameBuffer1);
+// 	glBindVertexArray(vao_quad);
+// 	glActiveTexture(GL_TEXTURE0);
+// 	glBindTexture(GL_TEXTURE_2D, m_ssaoBlurTex);
+// 	glDrawArrays(GL_TRIANGLES, 0, 6);
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 
 // 	DrawOffScreenTexture();
 // 	DrawWaterWaveWithOffScreenTexture();
@@ -402,7 +464,7 @@ void OpenWidget::paintGL()
 // 	DrawOriginalSceneWithShadow();
 
 	//--------Deferred rendering(last pass)
-// 	DrawDeferredShading();
+	DrawDeferredShading();
 }
 
 float OpenWidget::lerp(float a, float b, float f)
