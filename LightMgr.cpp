@@ -44,7 +44,7 @@ LightMgr::LightInfo& LightMgr::GetLightInfo(int index)
 void LightMgr::Init()
 {
 	LightInfo dirLightInfo(true, true, false, 
-		QVector3D(1, 1, 1), QVector3D(150, 150, 150), QVector4D(1, 1, 1, 1), 0);
+		QVector3D(1, 1, 1), QVector3D(150, 150, 150), QVector4D(2, 2, 2, 1), 0);
 	AddLight(dirLightInfo);
 
 	LightInfo dirLightInfo2(true, false, true,

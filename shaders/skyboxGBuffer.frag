@@ -1,10 +1,11 @@
 #version 450 core
 
-layout (location = 0) out vec4 fColor;
+layout (location = 0) out vec3 gPosition;
 layout (location = 3) out vec3 gSkybox;
 
 uniform samplerCube skybox;
 uniform vec4 ambientColor;
+uniform mat4x4 viewMat;
 
 //----in vars
 in Vertex {
@@ -18,7 +19,7 @@ in Vertex {
 
 void main()
 {
-	//fColor = texture(skybox, skyboxUV);// output the color by default shader(only one color buffer)
+	gPosition = (viewMat * vec4(worldPos, 1)).xyz;
 	gSkybox = texture(skybox, skyboxUV).rgb;
 	//gSkybox = vec3(1, 1, 0);
 }

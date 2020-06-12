@@ -147,8 +147,8 @@ void OpenWidget::initializeGL()
 	}
 
 	// test load model
-// 	m_assimpPtr->LoadModel("./models/Box001.obj");
 	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+	m_assimpPtr->LoadModel("./models/Box001.obj");
 	m_assimpPtr->LoadModel("./models/plane2.obj");
 	m_assimpPtr->LoadModel("./models/plane3.obj");
 	m_assimpPtr->LoadModel("./models/teapot.obj");
@@ -200,7 +200,8 @@ void OpenWidget::initializeGL()
 // 		pBox001->EnableProjTex();
 // 		pBox001->SetDrawType(Mesh::Point);
 		QMatrix4x4 mat;
-		mat.translate(0, 15, 0);
+		mat.translate(60, 96, 0);
+// 		mat.scale(2, 2, 2);
 		pBox001->SetWroldMat(mat);
 	}
 	Model *pBox002 = m_modelMgrPtr->FindModelByName("Box002");
@@ -774,6 +775,13 @@ void OpenWidget::DrawDeferredShading()
 	m_shaderHelperPtr->SetCamWorldPos(camPos);
 	QMatrix4x4 matLightVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
 	m_shaderHelperPtr->SetLightVPMat(matLightVP);
+	QMatrix4x4 matVP = m_cam->GetVPMatrix();
+	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
+	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
+	QMatrix4x4 matView = m_cam->GetViewMatrix();
+	m_shaderHelperPtr->SetMVPMatrix(matLightVP, matLightVP, matView, matProj);
+	m_shaderHelperPtr->SetAmbientSpecularColor(((MainWindow*)m_mainObj)->GetAmbientColor(), ((MainWindow*)m_mainObj)->GetSpecularColor());
+
 
 	glBindVertexArray(vao_quad);
 // 	glActiveTexture(GL_TEXTURE0);

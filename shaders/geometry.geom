@@ -39,10 +39,10 @@ void GenerateLine(int index)
 
 void main()
 {
-	fColor = vec3(1, 1, 0);
+	fColor = vec3(1, 0, 0);
     GenerateLine(0); // first vertex normal
 	fColor = vec3(1, 1, 0);
     GenerateLine(1); // second vertex normal
-	fColor = vec3(1, 1, 0);
+	fColor = vec3(0, 0, 1);
     GenerateLine(2); // third vertex normal
 }  

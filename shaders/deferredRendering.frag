@@ -53,7 +53,7 @@ float CalculateTheShadowValue()
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
 	//normal = normalize((vec4(normal, 1) * inverse(viewMat)).xyz);
-	//wPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
+	wPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
 
 	vec4 posInLightSpace = lightVPMat * vec4(wPos, 1);
 	posInLightSpace = posInLightSpace / posInLightSpace.w;
@@ -66,6 +66,29 @@ float CalculateTheShadowValue()
 	return (depth < vertexDepth - bias ? 0.05 : 1);
 }
 
+float CalculateTheShadowValueWithWorldPos(vec3 worldPos)
+{	
+	vec4 posInLightSpace = lightVPMat * vec4(worldPos, 1);
+	posInLightSpace = posInLightSpace / posInLightSpace.w;
+	posInLightSpace = (posInLightSpace + 1.0) / 2.0;
+	float vertexDepth = posInLightSpace.z;
+	float depth = texture(shadowMap, posInLightSpace.xy).x;
+
+	float bias = 0.00015;
+	//float bias = max(0.000005 * (1.0 - dot(normal, vec3(1, 1, 1))), 0.000001);
+	return (depth < vertexDepth - bias ? 0.05 : 1);
+}
+
+// Mie scaterring approximated with Henyey-Greenstein phase function.
+float ComputeScattering(float lightDotView)
+{
+	float G_SCATTERING = 0.2;
+	float PI = 3.1415926;
+	float result = 1.0f - G_SCATTERING * G_SCATTERING;
+	result /= (4.0f * PI * pow(1.0f + G_SCATTERING * G_SCATTERING - (2.0f * G_SCATTERING) * lightDotView, 1.5f));
+	return result;
+}
+
 vec4 CalculateDirLight(Light light)
 {
 	light.dir = normalize(light.dir);
@@ -75,7 +98,32 @@ vec4 CalculateDirLight(Light light)
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
 	//normal = normalize((vec4(normal, 1) * inverse(viewMat)).xyz);
-	//wPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
+
+	//----test volumetric light
+	vec3 worldPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
+
+	vec3 ray = worldPos - camPosWorld;
+	float rayLen = length(ray);
+	vec3 rayDir = normalize(ray);
+
+	const int steps = 40;
+	float stepLen = rayLen / steps;
+
+	vec3 step = rayDir * stepLen;
+	vec3 curPos = camPosWorld;
+
+	vec3 accumulateFog = vec3(0, 0, 0);
+	for(int i = 0; i < steps; ++i){
+		shadowValue = CalculateTheShadowValueWithWorldPos(curPos);
+		if (shadowValue > 0.99){
+			accumulateFog += ComputeScattering(dot(rayDir, light.dir)) * vec3(1, 1, 0.3);
+		}
+		curPos += step;
+	}
+	accumulateFog /= steps;
+	//accumulateFog = rayDir;
+	//----test end
+
 
 	vec3 ambient = ambientColor.rgb;
 	vec3 albedo = texture(gBufferAlbedoTex, uv).rgb;
@@ -106,8 +154,8 @@ vec4 CalculateDirLight(Light light)
     // SSAO
 	float occlusion = texture(ssaoBlurTex, uv).r;
 
-	//return vec4(shadowValue, shadowValue, shadowValue, 1);
-	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse, 1);
+	return vec4(accumulateFog, 1);
+	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + accumulateFog, 1);
 }
 
 vec4 CalculatePointLight(Light light)
@@ -181,7 +229,7 @@ void main()
 			fColor += CalculateDirLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && lights[i].isPoint){
-			fColor += CalculatePointLight(lights[i]);
+			//fColor += CalculatePointLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && !lights[i].isPoint && !lights[i].isDirectional){
 			fColor += CalculateSpotLight(lights[i]);
