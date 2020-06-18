@@ -7,6 +7,8 @@ layout (location = 2) in vec3 vTangent;
 layout (location = 3) in vec3 vBitangent;
 layout (location = 4) in vec3 vNormal;
 layout (location = 5) in mat4 model_matrix;
+layout (location = 6) in ivec4 boneIds;
+layout (location = 7) in ivec4 boneWeights;
 
 uniform mat4x4 mat_mvp;
 uniform mat4x4 mat_world;

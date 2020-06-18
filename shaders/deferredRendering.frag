@@ -154,7 +154,7 @@ vec4 CalculateDirLight(Light light)
     // SSAO
 	float occlusion = texture(ssaoBlurTex, uv).r;
 
-	return vec4(accumulateFog, 1);
+	//return vec4(accumulateFog, 1);
 	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + accumulateFog, 1);
 }
 

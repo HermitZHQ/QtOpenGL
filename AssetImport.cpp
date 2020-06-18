@@ -27,6 +27,8 @@ int AssetImport::LoadModel(const char *path)
 	{
 		return -1;
 	}
+	m_matRootInverse = scene->mRootNode->mTransformation;
+	m_matRootInverse.Inverse();
 
 	m_prePath = path;
 	auto index = m_prePath.lastIndexOf("/");
@@ -53,6 +55,8 @@ Model* AssetImport::LoadModelWithModelMatrixAndShaderType(const char *path, QMat
 	{
 		return nullptr;
 	}
+	m_matRootInverse = scene->mRootNode->mTransformation;
+	m_matRootInverse.Inverse();
 
 	m_prePath = path;
 	auto index = m_prePath.lastIndexOf("/");
@@ -125,6 +129,33 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 				for (unsigned int k = 0; k < face.mNumIndices; ++k)
 				{
 					m->AddIndex(face.mIndices[k]);
+				}
+			}
+
+			// add bone info
+			int m_NumBones = 0;
+			for (unsigned int j = 0; j < mesh->mNumBones; ++j)
+			{
+				uint BoneIndex = 0;
+				std::string boneName(mesh->mBones[j]->mName.data);
+
+				if (m_boneMap.find(boneName) == m_boneMap.end()) {
+					BoneIndex = m_NumBones;
+					m_NumBones++;
+// 					BoneInfo bi;
+// 					m_BoneInfo.push_back(bi);
+				}
+				else {
+					BoneIndex = m_boneMap[boneName];
+				}
+
+				m_boneMap[boneName] = BoneIndex;
+// 				m_BoneInfo[BoneIndex].BoneOffset = mesh->mBones[j]->mOffsetMatrix;
+
+				for (uint k = 0; k < mesh->mBones[j]->mNumWeights; k++) {
+// 					uint VertexID = m_Entries[MeshIndex].BaseVertex + mesh->mBones[j]->mWeights[k].mVertexId;
+					float Weight = mesh->mBones[j]->mWeights[k].mWeight;
+// 					Bones[VertexID].AddBoneData(BoneIndex, Weight);
 				}
 			}
 

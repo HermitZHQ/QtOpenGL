@@ -2,9 +2,11 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "assimp/matrix4x4.h"
 #include "QString"
 #include "QMatrix4x4"
 #include "ShaderHelper.h"
+#include <map>
 
 #pragma comment(lib, "assimp-vc141-mtd.lib")
 
@@ -32,5 +34,8 @@ private:
 	QMatrix4x4					m_matModel;
 	ShaderHelper::eShaderType	m_shaderType;
 	Model						*m_model;
+	aiMatrix4x4t<float>			m_matRootInverse;
+	typedef std::map<std::string, GLuint> BoneMap;
+	BoneMap						m_boneMap;
 };
 

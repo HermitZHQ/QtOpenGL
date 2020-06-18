@@ -179,6 +179,8 @@ void Mesh::BindVertexRelevantBuffer()
 	const GLfloat *vertex_tangents = GetTangents();
 	const GLfloat *vertex_bitangents = GetBitangents();
 	const GLfloat *vertex_normals = GetNormals();
+	const GLuint *vertex_boneIds = GetBoneIds();// id 6
+	const GLfloat *vertex_boneWeights = GetBoneWeights();// id 7
 
 	//--------------------------You must gen and bind the VAO first, the after operations all depends on it!!!!!!
 	// set vertex array object
@@ -195,7 +197,8 @@ void Mesh::BindVertexRelevantBuffer()
 	glGenBuffers(1, &m_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 	glBufferData(GL_ARRAY_BUFFER, GetVerticesMemSize() + GetUvs1MemSize()
-		+ GetTangentsMemSize() + GetBitangentsMemSize() + GetNormalsMemSize() /*+ 16 * sizeof(GLfloat) * 10*/, NULL, GL_STATIC_DRAW);
+		+ GetTangentsMemSize() + GetBitangentsMemSize() + GetNormalsMemSize()
+		+ GetBoneIdsMemSize() + GetBoneWeightsMemSize(), NULL, GL_STATIC_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, GetVerticesMemSize(), vertex_positions);
 	glBufferSubData(GL_ARRAY_BUFFER, GetVerticesMemSize(), GetUvs1MemSize(), vertex_uvs);
 	glBufferSubData(GL_ARRAY_BUFFER, GetVerticesMemSize() + GetUvs1MemSize(), GetTangentsMemSize(), vertex_tangents);
@@ -204,6 +207,12 @@ void Mesh::BindVertexRelevantBuffer()
 	glBufferSubData(GL_ARRAY_BUFFER, GetVerticesMemSize() + GetUvs1MemSize()
 		+ GetTangentsMemSize() + GetBitangentsMemSize(),
 		GetNormalsMemSize(), vertex_normals);
+	glBufferSubData(GL_ARRAY_BUFFER, GetVerticesMemSize() + GetUvs1MemSize()
+		+ GetTangentsMemSize() + GetBitangentsMemSize() + GetNormalsMemSize(),
+		GetBoneIdsMemSize(), vertex_boneIds);
+	glBufferSubData(GL_ARRAY_BUFFER, GetVerticesMemSize() + GetUvs1MemSize()
+		+ GetTangentsMemSize() + GetBitangentsMemSize() + GetNormalsMemSize() + GetBoneIdsMemSize(),
+		GetBoneWeightsMemSize(), vertex_boneWeights);
 
 	GLint positionLoc = 0;
 	GLint uvLoc = 1;
@@ -211,6 +220,8 @@ void Mesh::BindVertexRelevantBuffer()
 	GLint bitangentLoc = 3;
 	GLint normalLoc = 4;
 	GLint modelMatLoc = -1;
+	GLint boneIdsLoc = 6;
+	GLint boneWeightsLoc = 7;
 
 	glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 0, (0));
 	glEnableVertexAttribArray(positionLoc);
@@ -226,6 +237,18 @@ void Mesh::BindVertexRelevantBuffer()
 	glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, 0,
 		(void*)(GetVerticesMemSize() + GetUvs1MemSize() + GetTangentsMemSize() + GetBitangentsMemSize()));
 	glEnableVertexAttribArray(normalLoc);
+
+	glVertexAttribLPointer(boneIdsLoc, 4, GL_UNSIGNED_INT, 0,
+		(void*)(GetVerticesMemSize() + GetUvs1MemSize()
+			+ GetTangentsMemSize() + GetBitangentsMemSize()
+			+ GetNormalsMemSize()));
+	glEnableVertexAttribArray(boneIdsLoc);
+
+	glVertexAttribPointer(boneWeightsLoc, 4, GL_FLOAT, GL_FALSE, 0,
+		(void*)(GetVerticesMemSize() + GetUvs1MemSize()
+			+ GetTangentsMemSize() + GetBitangentsMemSize()
+			+ GetNormalsMemSize() + GetBoneIdsMemSize()));
+	glEnableVertexAttribArray(boneWeightsLoc);
 
 	// multi instances model matrix
 // 	if (-1 != modelMatLoc) {
@@ -291,6 +314,46 @@ int Mesh::GetIndicesMemSize() const
 int Mesh::GetIndicesNum() const
 {
 	return m_indices.size();
+}
+
+void Mesh::AddBoneId(GLuint id)
+{
+	m_boneIds.append(id);
+}
+
+const GLuint* Mesh::GetBoneIds() const
+{
+	return m_boneIds.data();
+}
+
+int Mesh::GetBoneIdsMemSize() const
+{
+	return m_boneIds.size() * sizeof(GLuint);
+}
+
+int Mesh::GetBoneIdsNum() const
+{
+	return m_boneIds.size() / NUM_BONES_PER_VEREX;
+}
+
+void Mesh::AddBoneWeight(GLfloat weight)
+{
+	m_boneWeights.append(weight);
+}
+
+const GLfloat* Mesh::GetBoneWeights() const
+{
+	return m_boneWeights.data();
+}
+
+int Mesh::GetBoneWeightsMemSize() const
+{
+	return m_boneWeights.size() * sizeof(GLfloat);
+}
+
+int Mesh::GetBoneWeightsNum() const
+{
+	return m_boneWeights.size() / NUM_BONES_PER_VEREX;
 }
 
 GLuint Mesh::GetMultiInstanceModelMatrixOffset() const
