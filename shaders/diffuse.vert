@@ -14,7 +14,7 @@ uniform mat4x4 mat_mvp;
 uniform mat4x4 mat_world;
 uniform samplerBuffer sb1;
 
-uniform mat4 gBones[100];
+uniform mat4 gBones[60];
 
 //----out vars
 out Vertex {
@@ -43,5 +43,5 @@ void main()
 
 	uv = vUV;
 	worldMat = mat_world;
-	testIds = boneWeights;
+	testIds = weights;
 }

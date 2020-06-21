@@ -88,7 +88,7 @@ void AnimationMgr::ReadNodeHeirarchy(AnimInfo &info, float frameRate, NodeAnim *
 		int i = 5;
 		i += 2;
 	}
-	QMatrix4x4 NodeTransformation(node->globalTransform);
+// 	QMatrix4x4 NodeTransformation(node->globalTransform);
 
 	if (-1 != node->channelId) {
 		if (nodeName.compare("Bip001 L Forearm") == 0) {
@@ -115,12 +115,11 @@ void AnimationMgr::ReadNodeHeirarchy(AnimInfo &info, float frameRate, NodeAnim *
 		ScalingM.scale(Scaling);
 
 		// Combine the above transformations
-		NodeTransformation = TranslationM * RotationM * ScalingM;
-		node->localTransform = NodeTransformation;
-		GetGlobalTransform(node);
+		node->localTransform = TranslationM * RotationM * ScalingM;
 	}
+	GetGlobalTransform(node);
 
-	QMatrix4x4 GlobalTransformation = /*matParent **/ NodeTransformation;
+// 	QMatrix4x4 GlobalTransformation = matParent * NodeTransformation;
 
 	// ------ Get all bones final transform
 	if (info.bonesMap.find(nodeName) != info.bonesMap.end()) {
@@ -133,7 +132,7 @@ void AnimationMgr::ReadNodeHeirarchy(AnimInfo &info, float frameRate, NodeAnim *
 	}
 
 	for (uint i = 0; i < node->childs.size(); i++) {
-		ReadNodeHeirarchy(info, frameRate, node->childs[i], GlobalTransformation);
+		ReadNodeHeirarchy(info, frameRate, node->childs[i], node->globalTransform);
 	}
 }
 
@@ -390,10 +389,7 @@ void AnimationMgr::GetAllBonesInfo(const aiScene *scene, AnimInfo &info)
 		for (int j = 0; j < numBones; ++j)
 		{
 			auto bone = mesh->mBones[j];
-			if (info.bonesMap.find(bone->mName.data) != info.bonesMap.end()) {
-
-			}
-			else {
+			if (info.bonesMap.find(bone->mName.data) == info.bonesMap.end()) {
 				info.bonesMap[bone->mName.data] = boneIndex;
 
 				BoneInfo bi;
