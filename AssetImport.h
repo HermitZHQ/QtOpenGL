@@ -12,6 +12,7 @@
 
 class Mesh;
 class Model;
+class Assimp::Importer;
 class AssetImport
 {
 public:
@@ -27,15 +28,20 @@ public:
 	int HandleChildNode(const aiScene *scene, aiNode *node);
 	int HandleMeshMaterial(aiMaterial *mat, Mesh *mesh);
 
+protected:
+	void InitScene(const char *path);
+
 private:
 	AssetImport();
 
+	const aiScene				*m_scene;
+	Assimp::Importer			*m_importer;
 	QString						m_prePath;
 	QMatrix4x4					m_matModel;
 	ShaderHelper::eShaderType	m_shaderType;
 	Model						*m_model;
 	aiMatrix4x4t<float>			m_matRootInverse;
-	typedef std::map<std::string, GLuint> BoneMap;
-	BoneMap						m_boneMap;
+	typedef std::vector<std::vector<aiVertexWeight> > WeightsPerVertexVec;
+	WeightsPerVertexVec			m_weightsPerVertexVec;
 };
 

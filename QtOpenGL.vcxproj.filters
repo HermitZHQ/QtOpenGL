@@ -47,6 +47,9 @@
     <Filter Include="Light">
       <UniqueIdentifier>{98be7122-0361-4fb1-a612-cbd7212f2b32}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Animation">
+      <UniqueIdentifier>{b9215516-827e-498e-9b61-a66ab54f5fb9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -87,6 +90,9 @@
     </ClCompile>
     <ClCompile Include="LightMgr.cpp">
       <Filter>Light</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationMgr.cpp">
+      <Filter>Animation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -140,6 +146,9 @@
     </ClInclude>
     <ClInclude Include="LightMgr.h">
       <Filter>Light</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationMgr.h">
+      <Filter>Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

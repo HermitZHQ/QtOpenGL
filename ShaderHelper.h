@@ -54,6 +54,9 @@ public:
 	void SetOrthoMat(QMatrix4x4 &matOrtho);
 	void SetLightVPMat(QMatrix4x4 &matLightVP);
 
+	//----Bones relevant
+	void SetBonesInfo(QVector<QMatrix4x4> &bonesInfoVec);
+
 	void SetTime(unsigned int time);
 
 	//----Light relevant
@@ -96,6 +99,7 @@ private:
 	ShaderHelper();
 
 	const static int		maxShaderNum = 20;
+	const static int		maxBoneNum = 100;
 	GLuint					m_programs[maxShaderNum];
 	eShaderType				m_shaderType;
 
@@ -109,6 +113,9 @@ private:
 	GLint					m_matOrthoLoc[maxShaderNum];
 	GLint					m_matViewLoc[maxShaderNum];
 	GLint					m_matLightVPLoc[maxShaderNum];
+
+	// bones location
+	GLint					m_bonesLoc[maxShaderNum][maxBoneNum];
 
 	GLint					m_ambientColorLoc[maxShaderNum];
 	GLint					m_specularColorLoc[maxShaderNum];

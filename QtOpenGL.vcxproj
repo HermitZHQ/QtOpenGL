@@ -190,6 +190,7 @@
     </QtUic>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AnimationMgr.cpp" />
     <ClCompile Include="AssetImport.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="LightMgr.cpp" />
@@ -231,6 +232,7 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnimationMgr.h" />
     <ClInclude Include="AssetImport.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="LightMgr.h" />

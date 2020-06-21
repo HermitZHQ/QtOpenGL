@@ -15,6 +15,7 @@ in Vertex {
 	vec3 worldPos;
 	mat4x4 worldMat;
 	mat3x3 tangentToModelMat;
+	vec4 testIds;
 };
 
 void main()

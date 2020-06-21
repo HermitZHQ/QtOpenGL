@@ -32,7 +32,9 @@ protected:
 	void ClearAndReset();
 	void UpdateDynamicLightsInfo();
 	void UpdateAllLightsInfo();
+	void UpdateAnimTime();
 	virtual void paintGL() override;
+
 	float lerp(float a, float b, float f);
 	void GenerateHemisphereSamplers();
 
@@ -74,6 +76,9 @@ private:
 
 	GLuint						m_query;
 	GLuint						m_sampleNum;
+
+	//----animation time
+	GLuint						m_animTime;
 
 	QTimer						m_updateKeyTimer;
 	QVector<Qt::Key>			m_pressedKeyVec;

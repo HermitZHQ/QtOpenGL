@@ -5,6 +5,7 @@
 #include "ShaderHelper.h"
 
 class LightMgr;
+class AnimationMgr;
 class Model
 {
 public:
@@ -22,6 +23,9 @@ public:
 	void SetModelName(QString str);
 	QString GetModelName() const;
 
+	void SetAnimId(unsigned int id);
+	unsigned int GetAnimId() const;
+
 	void EnableSkybox();
 	void EnableProjTex();
 	void SetNormalDebugEnable(bool bEnable);
@@ -32,11 +36,17 @@ public:
 	void Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 		QMatrix4x4 matOrtho);
 
+	//----animation
+	void UpdateAnimation(float second);
+
 private:
 	QString								m_name;
 	QVector<Mesh*>						m_meshes;
 	QMatrix4x4							m_worldMat;
 	ShaderHelper::eShaderType			m_shaderType;
+
+	unsigned int						m_animId;
+	AnimationMgr						*m_animationMgrPtr;
 
 	ShaderHelper						*m_shaderHelperPtr;
 	LightMgr							*m_lightMgrPtr;

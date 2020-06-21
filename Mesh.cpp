@@ -223,6 +223,11 @@ void Mesh::BindVertexRelevantBuffer()
 	GLint boneIdsLoc = 6;
 	GLint boneWeightsLoc = 7;
 
+	auto boneIdSize = GetBoneIdsMemSize();
+	auto boneNum = GetBoneIdsNum();
+	auto boneWeightSize = GetBoneWeightsMemSize();
+	auto boneWeightNum = GetBoneWeightsNum();
+
 	glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 0, (0));
 	glEnableVertexAttribArray(positionLoc);
 	glVertexAttribPointer(uvLoc, 2, GL_FLOAT, GL_FALSE, 0, (void*)(GetVerticesMemSize()));

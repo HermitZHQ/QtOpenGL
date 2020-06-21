@@ -82,6 +82,14 @@ void ShaderHelper::GetCommonUniformLocation()
 	m_matViewLoc[m_shaderType] = GetUniformLocation("viewMat");
 	m_matLightVPLoc[m_shaderType] = GetUniformLocation("lightVPMat");
 
+	//----bones
+	QString strTmp;
+	for (int i = 0; i < maxBoneNum; ++i)
+	{
+		strTmp = QString("gBones[%1]").arg(i);
+		m_bonesLoc[m_shaderType][i] = GetUniformLocation(strTmp.toLocal8Bit());
+	}
+
 	//----material
 	m_ambientColorLoc[m_shaderType] = GetUniformLocation("ambientColor");
 	m_specularColorLoc[m_shaderType] = GetUniformLocation("specularColor");
@@ -90,7 +98,6 @@ void ShaderHelper::GetCommonUniformLocation()
 	m_timeLoc[m_shaderType] = GetUniformLocation("time");
 
 	//----light
-	QString strTmp;
 	for (int i = 0; i < maxLightNum; ++i)
 	{
 		strTmp = QString("lights[%1].isEnabled").arg(i);
@@ -409,6 +416,9 @@ void ShaderHelper::Init()
 	memset(m_matLightVPLoc, -1, sizeof(m_matLightVPLoc));
 	memset(m_timeLoc, -1, sizeof(m_timeLoc));
 
+	//----bones
+	memset(m_bonesLoc, -1, sizeof(m_bonesLoc));
+
 	//----light relevant
 	memset(m_lightEnableLoc, -1, sizeof(m_lightEnableLoc));
 	memset(m_isDirectionalLightLoc, -1, sizeof(m_isDirectionalLightLoc));
@@ -500,6 +510,21 @@ void ShaderHelper::SetLightVPMat(QMatrix4x4 &matLightVP)
 	if (m_matLightVPLoc[m_shaderType] != -1)
 	{
 		glUniformMatrix4fv(m_matLightVPLoc[m_shaderType], 1, GL_FALSE, matLightVP.data());
+	}
+}
+
+void ShaderHelper::SetBonesInfo(QVector<QMatrix4x4> &bonesInfoVec)
+{
+	unsigned int handleBoneNum = bonesInfoVec.size();
+	if (bonesInfoVec.size() > maxBoneNum) {
+		handleBoneNum = maxBoneNum;
+	}
+
+	for (int i = 0; i < bonesInfoVec.size(); ++i)
+	{
+		if (m_bonesLoc[m_shaderType][i] != -1) {
+			glUniformMatrix4fv(m_bonesLoc[m_shaderType][i], 1, GL_FALSE, bonesInfoVec[i].data());
+		}
 	}
 }
 

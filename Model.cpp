@@ -1,10 +1,13 @@
 #include "Model.h"
 #include "Mesh.h"
 #include "LightMgr.h"
+#include "AnimationMgr.h"
 
 Model::Model()
 	:m_shaderType(ShaderHelper::Default)
 	, m_enableNormalDebug(false)
+	, m_animId(0)
+	, m_animationMgrPtr(&AnimationMgr::Instance())
 {
 	m_worldMat.setToIdentity();
 
@@ -57,6 +60,16 @@ void Model::SetModelName(QString str)
 QString Model::GetModelName() const
 {
 	return m_name;
+}
+
+void Model::SetAnimId(unsigned int id)
+{
+	m_animId = id;
+}
+
+unsigned int Model::GetAnimId() const
+{
+	return m_animId;
 }
 
 void Model::EnableSkybox()
@@ -114,7 +127,7 @@ void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatri
 	}
 
 	auto meshNum = GetMeshNum();
-	for (int i = 0; i < meshNum; ++i)
+	for (unsigned int i = 0; i < meshNum; ++i)
 	{
 		auto mesh = GetMesh(i);
 		mesh->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
@@ -124,4 +137,9 @@ void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatri
 			m_shaderHelperPtr->SetShaderType(m_shaderType);
 		}
 	}
+}
+
+void Model::UpdateAnimation(float second)
+{
+	m_animationMgrPtr->UpdateAnimation(m_animId, second);
 }
