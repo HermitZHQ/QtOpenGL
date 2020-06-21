@@ -14,7 +14,7 @@ uniform mat4x4 mat_mvp;
 uniform mat4x4 mat_world;
 uniform samplerBuffer sb1;
 
-uniform mat4 gBones[60];
+uniform mat4x4 gBones[60];
 
 //----out vars
 out Vertex {
@@ -31,10 +31,19 @@ void main()
 	vec4 localPos = vec4(vPosition, 1);
 	vec4 weights = boneWeights;
 	weights.w = 1.0f - dot( weights.xyz, vec3(1, 1, 1));
+
+	/*
 	vec4 objPos = ((gBones[boneIds[0]]) * localPos) * weights[0];
 	objPos += ((gBones[boneIds[1]]) * localPos) * weights[1];
 	objPos += ((gBones[boneIds[2]]) * localPos) * weights[2];
 	objPos += ((gBones[boneIds[3]]) * localPos) * weights[3];
+	*/
+
+	mat4 boneTrans = gBones[boneIds[0]] * weights[0];
+	boneTrans += gBones[boneIds[1]] * weights[1];
+	boneTrans += gBones[boneIds[2]] * weights[2];
+	boneTrans += gBones[boneIds[3]] * weights[3];
+	vec4 objPos = boneTrans * localPos;
 
 	gl_Position = mat_mvp * objPos;
 	
