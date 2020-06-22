@@ -1,9 +1,9 @@
 #include "Texture.h"
-#include "SOIL.h"
+// #include "SOIL.h"
 #include "QImage"
 #include "PreDef.h"
 
-#pragma comment(lib, "SOIL.lib")
+// #pragma comment(lib, "SOIL.lib")
 
 Texture::Texture()
 	:m_texId(0)
@@ -19,7 +19,7 @@ void Texture::LoadTexture(QString path)
 {
 	m_path = path;
 
-	int w = 0, h = 0, channels = 0;
+	int w = 0, h = 0;
 	QImage image(path);
 	auto tex = image.bits();
 	if (nullptr == tex) {
@@ -28,7 +28,7 @@ void Texture::LoadTexture(QString path)
 	}
 	w = image.width();
 	h = image.height();
-	auto f = image.format();
+// 	auto f = image.format();
 
 	glGenTextures(1, &m_texId);
 	// Assign texture to ID
@@ -61,7 +61,7 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 	{
 		auto path = paths[face];
 
-		int w = 0, h = 0, channels = 0;
+		int w = 0, h = 0;
 		imgVec.push_back(QImage(path));
 		auto tex = imgVec[face].bits();
 		if (nullptr == tex) {
@@ -70,8 +70,8 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 		}
 		w = imgVec[face].width();
 		h = imgVec[face].height();
-		auto f = imgVec[face].format();
-		auto d = imgVec[face].depth();
+// 		auto f = imgVec[face].format();
+// 		auto d = imgVec[face].depth();
 
 
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
