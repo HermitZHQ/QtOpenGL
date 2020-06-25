@@ -53,16 +53,19 @@ unsigned int AnimationMgr::CreateAnimFromAiScene(const aiScene *scene)
 		for (unsigned int j = 0; j < cInfo.numPositionKeys; ++j)
 		{
 			cInfo.positionKeys.push_back(QVector3D(node->mPositionKeys[j].mValue.x, node->mPositionKeys[j].mValue.y, node->mPositionKeys[j].mValue.z));
+			cInfo.positionKeysTime.push_back(node->mPositionKeys[j].mTime);
 		}
 		cInfo.numRotationKeys = node->mNumRotationKeys;
 		for (unsigned int j = 0; j < cInfo.numRotationKeys; ++j)
 		{
 			cInfo.rotationKeys.push_back(QQuaternion(node->mRotationKeys[j].mValue.w, node->mRotationKeys[j].mValue.x, node->mRotationKeys[j].mValue.y, node->mRotationKeys[j].mValue.z));
+			cInfo.rotationKeysTime.push_back(node->mRotationKeys[j].mTime);
 		}
 		cInfo.numScalingKeys = node->mNumScalingKeys;
 		for (unsigned int j = 0; j < cInfo.numScalingKeys; ++j)
 		{
 			cInfo.scalingKeys.push_back(QVector3D(node->mScalingKeys[j].mValue.x, node->mScalingKeys[j].mValue.y, node->mScalingKeys[j].mValue.z));
+			cInfo.scalingKeysTime.push_back(node->mScalingKeys[j].mTime);
 		}
 
 		info.channels.push_back(cInfo);
@@ -81,55 +84,59 @@ unsigned int AnimationMgr::CreateAnimFromAiScene(const aiScene *scene)
 	return animId;
 }
 
-void AnimationMgr::ReadNodeHeirarchy(AnimInfo &info, float frameRate, NodeAnim *node, QMatrix4x4 &matParent)
+static bool bDebug = true;
+void AnimationMgr::UpdateAllChannels(AnimInfo &info, float frameRate)
 {
-	QString nodeName(node->name);
-	if (nodeName.compare("Bip001 L Forearm") == 0) {
-		int i = 5;
-		i += 2;
-	}
-// 	QMatrix4x4 NodeTransformation(node->globalTransform);
+	m_allChannelsInterpValueVec.clear();
 
-	if (-1 != node->channelId) {
-		if (nodeName.compare("Bip001 L Forearm") == 0) {
+	bDebug = true;
+	for (unsigned int i = 0; i < info.numChannels; ++i)
+	{
+		auto channel = info.channels[i];
+		if (channel.name.compare("hair_l_02") == 0) {
 			int i = 5;
 			i += 2;
 		}
 
 		// Interpolate translation and generate translation transformation matrix
 		QVector3D Translation;
-		CalcInterpolatedPosition(info, Translation, frameRate, node);
+		CalcInterpolatedPosition(info, Translation, frameRate, channel);
 		QMatrix4x4 TranslationM;
 		TranslationM.translate(Translation);
 
 		// Interpolate rotation and generate rotation transformation matrix
 		QQuaternion RotationQ;
-		CalcInterpolatedRotation(info, RotationQ, frameRate, node);
+		CalcInterpolatedRotation(info, RotationQ, frameRate, channel);
 		QMatrix4x4 RotationM;
 		RotationM = QMatrix4x4(RotationQ.toRotationMatrix());
 
 		// Interpolate scaling and generate scaling transformation matrix
 		QVector3D Scaling;
-		CalcInterpolatedScaling(info, Scaling, frameRate, node);
+		CalcInterpolatedScaling(info, Scaling, frameRate, channel);
 		QMatrix4x4 ScalingM;
 		ScalingM.scale(Scaling);
 
 		// Combine the above transformations
-		node->localTransform = TranslationM * RotationM * ScalingM;
+		m_allChannelsInterpValueVec.push_back(TranslationM * RotationM * ScalingM);
+
+		//every frame only output debug info once
+		bDebug = false;
+	}
+}
+
+static int iTest = 0;
+void AnimationMgr::ReadNodeHeirarchy(AnimInfo &info, float frameRate, NodeAnim *node, QMatrix4x4 &matParent)
+{
+	QString nodeName(node->name);
+	if (nodeName.compare("hair_l_02") == 0) {
+		int i = 5;
+		i += 2;
+	}
+
+	if (node->channelId != -1) {
+		node->localTransform = m_allChannelsInterpValueVec[node->channelId];
 	}
 	GetGlobalTransform(node);
-
-// 	QMatrix4x4 GlobalTransformation = matParent * NodeTransformation;
-
-	// ------ Get all bones final transform
-	if (info.bonesMap.find(nodeName) != info.bonesMap.end()) {
-		uint BoneIndex = info.bonesMap[nodeName];
-		if (nodeName.compare("Bip001 L Forearm") == 0) {
-			int i = 5;
-			i += 2;
-		}
-		info.bonesInfoVec[BoneIndex].finalMat = info.globalInverseTransform * node->globalTransform * info.bonesInfoVec[BoneIndex].offset;
-	}
 
 	for (uint i = 0; i < node->childs.size(); i++) {
 		ReadNodeHeirarchy(info, frameRate, node->childs[i], node->globalTransform);
@@ -162,14 +169,33 @@ void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 	float frameRate = totalTime / totalSeconds; // change frameRate to the time(per sec) * tickPerSec
 	frameRate = frameRate > 1.0f ? 0.0f : frameRate;
 	frameRate = 21.2f;// for test frame 1-2
-	frame += 0.1f;
-	if (frame > 61.0f) {
-		frame = 0.0f;
-	}
+	frame += 0.3f;
+// 	if (frame > 61.0f) {
+// 		frame = 0.0f;
+// 	}
+// 	frame = 19.6f;
 
+
+	UpdateAllChannels(anim.value(), frame);
 	QMatrix4x4 identity;
 	identity.setToIdentity();
 	ReadNodeHeirarchy(anim.value(), frame, anim.value().animRootNode, identity);
+
+
+	for (auto &bi : anim.value().bonesInfoVec)
+	{
+		// ------ Get all bones final transform
+// 		if (nullptr == bi.nodeAnim) {
+// 			continue;
+// 		}
+
+		if (bi.nodeAnim->name.compare("cape_l_03") == 0) {
+			int i = 5;
+			i += 2;
+		}
+			
+			bi.finalMat = anim.value().globalInverseTransform * bi.nodeAnim->globalTransform * bi.offset;
+	}
 
 	m_boneTransforms.clear();
 	auto boneInfoSize = anim.value().bonesInfoVec.size();
@@ -197,87 +223,94 @@ void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 	ShaderHelper::Instance().SetBonesInfo(m_boneTransforms);
 }
 
-void AnimationMgr::CalcInterpolatedScaling(AnimInfo &info, QVector3D &scaling, float frameRate, NodeAnim *node)
+void AnimationMgr::CalcInterpolatedScaling(AnimInfo &info, QVector3D &scaling, float frameRate, ChannelInfo &cInfo)
 {
-	auto channel = info.channels[node->channelId];
-
-	if (1 == channel.numScalingKeys) {
-		scaling = QVector3D(channel.scalingKeys[0].x(), channel.scalingKeys[0].y(), channel.scalingKeys[0].z());
+	if (1 == cInfo.numScalingKeys) {
+		scaling = QVector3D(cInfo.scalingKeys[0].x(), cInfo.scalingKeys[0].y(), cInfo.scalingKeys[0].z());
 		return;
 	}
 
-	auto numScalingKeys = channel.numScalingKeys - 2;
+	frameRate = fmod(frameRate, info.duration);
+
+	auto numScalingKeys = cInfo.numScalingKeys;
 	unsigned int frame = 0;
-	float factor = 0.0f;
 	for (int i = 0; i < numScalingKeys; ++i)
 	{
-		if (i > frameRate) {
+		if (frameRate < cInfo.scalingKeysTime[i]) {
 			frame = i - 1;
-			factor = frameRate - float(i - 1);
 			break;
 		}
 	}
-	unsigned int frameNext = frame + 1;
+	unsigned int frameNext = (frame + 1) % cInfo.numScalingKeys;
 
-	QVector3D scale = channel.scalingKeys[frame];
-	QVector3D scaleNext = channel.scalingKeys[frameNext];
+	double diffTime = cInfo.scalingKeysTime[frameNext] - cInfo.scalingKeysTime[frame];
+	float factor = float((frameRate - cInfo.scalingKeysTime[frame]) / diffTime);
+
+	QVector3D scale = cInfo.scalingKeys[frame];
+	QVector3D scaleNext = cInfo.scalingKeys[frameNext];
 
 	scaling = scale + (scaleNext - scale) * factor;
+	scaling = scale;
 }
 
-void AnimationMgr::CalcInterpolatedRotation(AnimInfo &info, QQuaternion &q, float frameRate, NodeAnim *node)
+void AnimationMgr::CalcInterpolatedRotation(AnimInfo &info, QQuaternion &q, float frameRate, ChannelInfo &cInfo)
 {
-	auto channel = info.channels[node->channelId];
-
-	if (1 == channel.numRotationKeys) {
-		q = channel.rotationKeys[0];
+	if (1 == cInfo.numRotationKeys) {
+		q = cInfo.rotationKeys[0];
 		return;
 	}
 
-	auto numRotationKeys = channel.numRotationKeys - 2;
+	frameRate = fmod(frameRate, info.duration);
+
+	auto numRotationKeys = cInfo.numRotationKeys;
 	unsigned int frame = 0;
-	float factor = 0.0f;
 	for (int i = 0; i < numRotationKeys; ++i)
 	{
-		if (i > frameRate) {
+		if (frameRate < cInfo.rotationKeysTime[i]) {
 			frame = i - 1;
-			factor = frameRate - float(i - 1);
 			break;
 		}
 	}
-	unsigned int frameNext = frame + 1;
+	unsigned int frameNext = (frame + 1) % cInfo.numRotationKeys;
 
-	qDebug() << QString("frame:%1, next:%2").arg(frame).arg(frameNext);
-	QQuaternion quat = channel.rotationKeys[frame];
-	QQuaternion quatNext = channel.rotationKeys[frameNext];
+	double diffTime = cInfo.rotationKeysTime[frameNext] - cInfo.rotationKeysTime[frame];
+	float factor = float((frameRate - cInfo.rotationKeysTime[frame]) / diffTime);
 
-	q = quat.nlerp(quat, quatNext, factor);
+	if (bDebug)
+	{
+		qDebug() << QString("frame:%1, next:%2, factor:%3").arg(frame).arg(frameNext).arg(factor);
+	}
+	QQuaternion quat = cInfo.rotationKeys[frame];
+	QQuaternion quatNext = cInfo.rotationKeys[frameNext];
+
+	q = quat.slerp(quat, quatNext, factor);
 }
 
-void AnimationMgr::CalcInterpolatedPosition(AnimInfo &info, QVector3D &translation, float frameRate, NodeAnim *node)
+void AnimationMgr::CalcInterpolatedPosition(AnimInfo &info, QVector3D &translation, float frameRate, ChannelInfo &cInfo)
 {
-	auto channel = info.channels[node->channelId];
-
-	if (1 == channel.numPositionKeys) {
-		translation = QVector3D(channel.positionKeys[0].x(), channel.positionKeys[0].y(), channel.positionKeys[0].z());
+	if (1 == cInfo.numPositionKeys) {
+		translation = QVector3D(cInfo.positionKeys[0].x(), cInfo.positionKeys[0].y(), cInfo.positionKeys[0].z());
 		return;
 	}
 
-	auto numPositionKeys = channel.numPositionKeys - 2;
+	frameRate = fmod(frameRate, info.duration);
+
+	auto numPositionKeys = cInfo.numPositionKeys;
 	unsigned int frame = 0;
-	float factor = 0.0f;
 	for (int i = 0; i < numPositionKeys; ++i)
 	{
-		if (i > frameRate) {
+		if (frameRate < cInfo.positionKeysTime[i]) {
 			frame = i - 1;
-			factor = frameRate - float(i - 1);
 			break;
 		}
 	}
-	unsigned int frameNext = frame + 1;
+	unsigned int frameNext = (frame + 1) % cInfo.numPositionKeys;
 
-	QVector3D pos = channel.positionKeys[frame];
-	QVector3D posNext = channel.positionKeys[frameNext];
+	double diffTime = cInfo.positionKeysTime[frameNext] - cInfo.positionKeysTime[frame];
+	float factor = float((frameRate - cInfo.positionKeysTime[frame]) / diffTime);
+
+	QVector3D pos = cInfo.positionKeys[frame];
+	QVector3D posNext = cInfo.positionKeys[frameNext];
 
 	translation = pos + (posNext - pos) * factor;
 }
@@ -324,7 +357,7 @@ AnimationMgr::NodeAnim* AnimationMgr::CreateAnimNodes(AnimInfo &info, const aiNo
 	GetGlobalTransform(pNode);
 
 	// test
-	if (pNode->name.compare("Bip001 L Forearm") == 0) {
+	if (pNode->name.compare("cape_l_03") == 0) {
 		int i = 5;
 		i += 2;
 	}
@@ -343,6 +376,7 @@ AnimationMgr::NodeAnim* AnimationMgr::CreateAnimNodes(AnimInfo &info, const aiNo
 	{
 		if (animation->mChannels[i]->mNodeName.data == pNode->name) {
 			pNode->channelId = i;
+			qDebug() << QString("find channel--[%1]").arg(i);
 		}
 	}
 
@@ -371,7 +405,7 @@ void AnimationMgr::GetAllBonesInfo(const aiScene *scene, AnimInfo &info)
 	// Get the total bones num
 	unsigned int numBones = 0;
 	unsigned int numMeshes = 1;
-// 	numMeshes = scene->mNumMeshes;
+	numMeshes = scene->mNumMeshes;
 	for (int i = 0; i < numMeshes; ++i)
 	{
 		numBones += scene->mMeshes[i]->mNumBones;
@@ -379,7 +413,7 @@ void AnimationMgr::GetAllBonesInfo(const aiScene *scene, AnimInfo &info)
 
 	info.bonesMap.clear();
 	info.bonesInfoVec.clear();
-	info.bonesInfoVec.resize(numBones);
+// 	info.bonesInfoVec.resize(numBones);
 
 	unsigned int boneIndex = 0;
 	for (int i = 0; i < numMeshes; ++i)
@@ -393,12 +427,24 @@ void AnimationMgr::GetAllBonesInfo(const aiScene *scene, AnimInfo &info)
 				info.bonesMap[bone->mName.data] = boneIndex;
 
 				BoneInfo bi;
-				info.bonesInfoVec[boneIndex] = bi;
+				info.bonesInfoVec.push_back(bi);
 				++boneIndex;
+			}
+			else {
+
 			}
 
 			auto &boneInfo = info.bonesInfoVec[info.bonesMap[bone->mName.data]];
 			boneInfo.nodeAnim = FindNodeAnimByName(info, bone->mName.data);
+
+// 			if (nullptr == boneInfo.nodeAnim) {
+// 				int i = 0;
+// 				i += 2;
+// 			}
+			if (bone->mName == aiString("cape_l_03")) {
+				int i = 0;
+				i += 2;
+			}
 
 			boneInfo.offset.setRow(0, QVector4D(bone->mOffsetMatrix.a1, bone->mOffsetMatrix.a2, bone->mOffsetMatrix.a3, bone->mOffsetMatrix.a4));
 			boneInfo.offset.setRow(1, QVector4D(bone->mOffsetMatrix.b1, bone->mOffsetMatrix.b2, bone->mOffsetMatrix.b3, bone->mOffsetMatrix.b4));

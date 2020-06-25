@@ -39,10 +39,13 @@ class AnimationMgr
 		QString					name;
 		unsigned int			numPositionKeys;
 		QVector<QVector3D>		positionKeys;
+		QVector<double>			positionKeysTime;
 		unsigned int			numRotationKeys;
 		QVector<QQuaternion>	rotationKeys;
+		QVector<double>			rotationKeysTime;
 		unsigned int			numScalingKeys;
 		QVector<QVector3D>		scalingKeys;
+		QVector<double>			scalingKeysTime;
 	};
 	struct AnimInfo
 	{
@@ -72,11 +75,12 @@ public:
 
 	unsigned int CreateAnimFromAiScene(const aiScene *scene);
 
+	void UpdateAllChannels(AnimInfo &info, float frameRate);
 	void ReadNodeHeirarchy(AnimInfo &info, float frameRate, NodeAnim *node, QMatrix4x4 &matParent);
 	void UpdateAnimation(unsigned int animId, float second);
-	void CalcInterpolatedScaling(AnimInfo &info, QVector3D &scaling, float frameRate, NodeAnim *node);
-	void CalcInterpolatedRotation(AnimInfo &info, QQuaternion &q, float frameRate, NodeAnim *node);
-	void CalcInterpolatedPosition(AnimInfo &info, QVector3D &translation, float frameRate, NodeAnim *node);
+	void CalcInterpolatedScaling(AnimInfo &info, QVector3D &scaling, float frameRate, ChannelInfo &cInfo);
+	void CalcInterpolatedRotation(AnimInfo &info, QQuaternion &q, float frameRate, ChannelInfo &cInfo);
+	void CalcInterpolatedPosition(AnimInfo &info, QVector3D &translation, float frameRate, ChannelInfo &cInfo);
 
 protected:
 	void CreateAnimNodesFromScene(AnimInfo &info, const aiScene *scene, NodeAnim **root);
@@ -96,4 +100,5 @@ private:
 	AnimInfoMap						m_animInfoMap;
 
 	QVector<QMatrix4x4>				m_boneTransforms;
+	QVector<QMatrix4x4>				m_allChannelsInterpValueVec;
 };

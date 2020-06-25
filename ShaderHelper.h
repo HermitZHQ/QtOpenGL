@@ -99,7 +99,7 @@ private:
 	ShaderHelper();
 
 	const static int		maxShaderNum = 20;
-	const static int		maxBoneNum = 60;
+	const static int		maxBoneNum = 100;
 	GLuint					m_programs[maxShaderNum];
 	eShaderType				m_shaderType;
 

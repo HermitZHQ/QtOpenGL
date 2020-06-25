@@ -6,15 +6,14 @@ layout (location = 1) in vec2 vUV;
 layout (location = 2) in vec3 vTangent;
 layout (location = 3) in vec3 vBitangent;
 layout (location = 4) in vec3 vNormal;
-layout (location = 5) in mat4 model_matrix;
-layout (location = 6) in ivec4 boneIds;
-layout (location = 7) in vec4 boneWeights;
+layout (location = 5) in vec4 boneIds;
+layout (location = 6) in vec4 boneWeights;
+//layout (location = 5) in mat4 model_matrix;
 
 uniform mat4x4 mat_mvp;
 uniform mat4x4 mat_world;
 uniform samplerBuffer sb1;
-
-uniform mat4x4 gBones[60];
+uniform mat4x4 gBones[100];
 
 //----out vars
 out Vertex {
@@ -39,11 +38,14 @@ void main()
 	objPos += ((gBones[boneIds[3]]) * localPos) * weights[3];
 	*/
 
-	mat4 boneTrans = gBones[boneIds[0]] * weights[0];
-	boneTrans += gBones[boneIds[1]] * weights[1];
-	boneTrans += gBones[boneIds[2]] * weights[2];
-	boneTrans += gBones[boneIds[3]] * weights[3];
+	/**/
+	mat4 boneTrans = gBones[int(boneIds[0])] * weights[0];
+	boneTrans += gBones[int(boneIds[1])] * weights[1];
+	boneTrans += gBones[int(boneIds[2])] * weights[2];
+	boneTrans += gBones[int(boneIds[3])] * weights[3];
 	vec4 objPos = boneTrans * localPos;
+	//objPos = localPos;
+	
 
 	gl_Position = mat_mvp * objPos;
 	
@@ -52,5 +54,6 @@ void main()
 
 	uv = vUV;
 	worldMat = mat_world;
-	testIds = weights;
+	testIds = vec4((boneIds.x) / 255.0, (boneIds.y) / 255.0, (boneIds.z) / 255.0, boneIds.w);
+	testIds = boneWeights;
 }

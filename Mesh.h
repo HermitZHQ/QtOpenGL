@@ -83,8 +83,8 @@ public:
 	int GetIndicesNum() const;
 
 	//----bone ids
-	void AddBoneId(GLuint id);
-	const GLuint* GetBoneIds() const;
+	void AddBoneId(GLfloat id);
+	const GLfloat* GetBoneIds() const;
 	int GetBoneIdsMemSize() const;
 	int GetBoneIdsNum() const;
 
@@ -119,7 +119,7 @@ private:
 	QVector<float>						m_tangents;
 	QVector<float>						m_binormals;
 	QVector<float>						m_uvs1;
-	QVector<GLuint>						m_boneIds;
+	QVector<float>						m_boneIds;
 	QVector<float>						m_boneWeights;
 	QVector<VertInfo>					m_vertInfoVec;
 

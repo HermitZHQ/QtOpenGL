@@ -49,6 +49,7 @@ void main()
 	float spec = pow(max(dot(halfDir, worldNormal), 0.0), 512);
 	vec3 specular = worldLightColor * specularColor.rgb * spec;
 
+	fColor = testIds;
 	fColor = vec4(ambient + diffuse, 1);
 	//fColor = vec4(albedo.rgb, 1);
 	//fColor = albedo;
