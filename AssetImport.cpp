@@ -11,24 +11,24 @@
 using namespace Assimp;
 
 unsigned int ppsteps = aiProcess_CalcTangentSpace | // calculate tangents and bitangents if possible
-aiProcess_JoinIdenticalVertices | // join identical vertices/ optimize indexing
-aiProcess_ValidateDataStructure | // perform a full validation of the loader's output
-aiProcess_ImproveCacheLocality | // improve the cache locality of the output vertices
-aiProcess_RemoveRedundantMaterials | // remove redundant materials
-aiProcess_FindDegenerates | // remove degenerated polygons from the import
-aiProcess_FindInvalidData | // detect invalid model data, such as invalid normal vectors
-aiProcess_GenUVCoords | // convert spherical, cylindrical, box and planar mapping to proper UVs
-aiProcess_TransformUVCoords | // preprocess UV transformations (scaling, translation ...)
-aiProcess_FindInstances | // search for instanced meshes and remove them by references to one master
-aiProcess_LimitBoneWeights | // limit bone weights to 4 per vertex
-aiProcess_OptimizeMeshes | // join small meshes, if possible;
-aiProcess_SplitByBoneCount | // split meshes with too many bones. Necessary for our (limited) hardware skinning shader
+//aiProcess_JoinIdenticalVertices | // join identical vertices/ optimize indexing
+//aiProcess_ValidateDataStructure | // perform a full validation of the loader's output
+//aiProcess_ImproveCacheLocality | // improve the cache locality of the output vertices
+//aiProcess_RemoveRedundantMaterials | // remove redundant materials
+//aiProcess_FindDegenerates | // remove degenerated polygons from the import
+//aiProcess_FindInvalidData | // detect invalid model data, such as invalid normal vectors
+//aiProcess_GenUVCoords | // convert spherical, cylindrical, box and planar mapping to proper UVs
+//aiProcess_TransformUVCoords | // preprocess UV transformations (scaling, translation ...)
+//aiProcess_FindInstances | // search for instanced meshes and remove them by references to one master
+//aiProcess_LimitBoneWeights | // limit bone weights to 4 per vertex
+//aiProcess_OptimizeMeshes | // join small meshes, if possible;
+//aiProcess_SplitByBoneCount | // split meshes with too many bones. Necessary for our (limited) hardware skinning shader
 // options....
-aiProcess_GenSmoothNormals | // generate smooth normal vectors if not existing
-aiProcess_SplitLargeMeshes | // split large, unrenderable meshes into submeshes
+//aiProcess_GenSmoothNormals | // generate smooth normal vectors if not existing
+//aiProcess_SplitLargeMeshes | // split large, unrenderable meshes into submeshes
 aiProcess_Triangulate | // triangulate polygons with more than 3 edges
-aiProcess_ConvertToLeftHanded | // convert everything to D3D left handed space
-aiProcess_SortByPType | // make 'clean' meshes which consist of a single typ of primitives
+//aiProcess_ConvertToLeftHanded | // convert everything to D3D left handed space
+//aiProcess_SortByPType | // make 'clean' meshes which consist of a single typ of primitives
 
 0;
 
@@ -140,6 +140,8 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 				}
 			}
 
+			// 此数值不能随意修改，之前就是随意修改成6了，造成bug，因为必须和真实得shader中数量对应
+			static const unsigned int max_bone_info_per_vertex = 8;
 			// ------collect bone info
 			m_weightsPerVertexVec.clear();
 			m_weightsPerVertexVec.resize(mesh->mNumVertices);
@@ -159,15 +161,21 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 					m_weightsPerVertexVec[vertexId].push_back(aiVertexWeight(j, bone->mWeights[k].mWeight));
 				}
 			}
-			static const unsigned int max_bone_info_per_vertex = 4;
+
+			// check the max bone id&weight limit
+			for (auto &info : m_weightsPerVertexVec)
+			{
+				ai_assert(info.size() <= max_bone_info_per_vertex);
+			}
+
 			// ------add bone info to vertex
 			for (unsigned int j = 0; j < mesh->mNumVertices; ++j)
 			{
-				unsigned char boneIndices[4] = { 0, 0, 0, 0 };
-				float boneWeights[4] = { 0, 0, 0, 0 };
+				unsigned char boneIndices[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+				float boneWeights[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 				if (mesh->HasBones()) {
-					ai_assert(m_weightsPerVertexVec[j].size() <= 4);
+					ai_assert(m_weightsPerVertexVec[j].size() <= max_bone_info_per_vertex);
 					for (unsigned int a = 0; a < m_weightsPerVertexVec[j].size(); a++) {
 						boneIndices[a] = static_cast<unsigned char>(m_weightsPerVertexVec[j][a].mVertexId);
 						boneWeights[a] = (m_weightsPerVertexVec[j][a].mWeight);

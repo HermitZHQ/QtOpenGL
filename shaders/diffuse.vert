@@ -6,8 +6,8 @@ layout (location = 1) in vec2 vUV;
 layout (location = 2) in vec3 vTangent;
 layout (location = 3) in vec3 vBitangent;
 layout (location = 4) in vec3 vNormal;
-layout (location = 5) in ivec4 boneIds;
-layout (location = 6) in vec4 boneWeights;
+layout (location = 5) in mat2x4 boneIds;
+layout (location = 7) in mat2x4 boneWeights;
 //layout (location = 5) in mat4 model_matrix;
 
 uniform mat4x4 mat_mvp;
@@ -28,14 +28,19 @@ out Vertex {
 void main()
 {
 	vec4 localPos = vec4(vPosition, 1);
-	vec4 weights = boneWeights;
-	weights.w = 1.0f - dot( weights.xyz, vec3(1, 1, 1));
+	//vec4 weights = boneWeights;
+	//weights.w = 1.0f - dot( weights.xyz, vec3(1, 1, 1));
 
 	/**/
-	vec4 objPos = ((gBones[boneIds[0]]) * localPos) * weights[0];
-	objPos += ((gBones[boneIds[1]]) * localPos) * weights[1];
-	objPos += ((gBones[boneIds[2]]) * localPos) * weights[2];
-	objPos += ((gBones[boneIds[3]]) * localPos) * weights[3];
+	vec4 objPos = ((gBones[int(boneIds[0].x)]) * localPos) * boneWeights[0].x;
+	objPos += ((gBones[int(boneIds[0].y)]) * localPos) * boneWeights[0].y;
+	objPos += ((gBones[int(boneIds[0].z)]) * localPos) * boneWeights[0].z;
+	objPos += ((gBones[int(boneIds[0].w)]) * localPos) * boneWeights[0].w;
+
+	objPos += ((gBones[int(boneIds[1].x)]) * localPos) * boneWeights[1].x;
+	objPos += ((gBones[int(boneIds[1].y)]) * localPos) * boneWeights[1].y;
+	objPos += ((gBones[int(boneIds[1].z)]) * localPos) * boneWeights[1].z;
+	objPos += ((gBones[int(boneIds[1].w)]) * localPos) * boneWeights[1].w;
 	
 
 	/*
@@ -45,6 +50,8 @@ void main()
 	boneTrans += gBones[(boneIds[3])] * weights[3];
 	vec4 objPos = boneTrans * localPos;
 	*/
+
+	//----reset pos to original pos
 	//objPos = localPos;
 	
 
@@ -55,6 +62,6 @@ void main()
 
 	uv = vUV;
 	worldMat = mat_world;
-	testIds = vec4((boneIds.x) / 255.0, (boneIds.y) / 255.0, (boneIds.z) / 255.0, boneIds.w);
-	//testIds = boneWeights;
+	//testIds = vec4((boneIds[1].x) / 255.0, (boneIds[1].y) / 255.0, (boneIds[1].z) / 255.0, boneIds[0].w);
+	//testIds = boneWeights[0];
 }

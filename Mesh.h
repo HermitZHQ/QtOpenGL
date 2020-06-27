@@ -7,7 +7,7 @@
 #include "ShaderHelper.h"
 
 #define MAX_SHADER_NUM 8
-#define NUM_BONES_PER_VEREX 4
+#define NUM_BONES_PER_VEREX 8
 
 class Texture;
 class MainWindow;
@@ -83,8 +83,8 @@ public:
 	int GetIndicesNum() const;
 
 	//----bone ids
-	void AddBoneId(GLint id);
-	const GLint* GetBoneIds() const;
+	void AddBoneId(GLfloat id);
+	const GLfloat* GetBoneIds() const;
 	int GetBoneIdsMemSize() const;
 	int GetBoneIdsNum() const;
 
@@ -123,7 +123,7 @@ private:
 	QVector<float>						m_tangents;
 	QVector<float>						m_binormals;
 	QVector<float>						m_uvs1;
-	QVector<GLint>						m_boneIds;
+	QVector<float>						m_boneIds;
 	QVector<float>						m_boneWeights;
 	QVector<VertInfo>					m_vertInfoVec;
 
