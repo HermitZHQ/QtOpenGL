@@ -83,8 +83,8 @@ public:
 	int GetIndicesNum() const;
 
 	//----bone ids
-	void AddBoneId(GLfloat id);
-	const GLfloat* GetBoneIds() const;
+	void AddBoneId(GLint id);
+	const GLint* GetBoneIds() const;
 	int GetBoneIdsMemSize() const;
 	int GetBoneIdsNum() const;
 
@@ -93,6 +93,10 @@ public:
 	const GLfloat* GetBoneWeights() const;
 	int GetBoneWeightsMemSize() const;
 	int GetBoneWeightsNum() const;
+
+	//----anim id
+	void SetAnimId(GLuint id);
+	GLuint GetAnimId() const;
 
 	//----multi instance
 	GLuint GetMultiInstanceModelMatrixOffset() const;
@@ -119,7 +123,7 @@ private:
 	QVector<float>						m_tangents;
 	QVector<float>						m_binormals;
 	QVector<float>						m_uvs1;
-	QVector<float>						m_boneIds;
+	QVector<GLint>						m_boneIds;
 	QVector<float>						m_boneWeights;
 	QVector<VertInfo>					m_vertInfoVec;
 
@@ -140,5 +144,8 @@ private:
 	GLuint								m_vaeo;// vertex array elements object
 	GLuint								m_instanceBufferId;
 	GLuint								m_tbo1;// texture buffer object
+
+	//----animation
+	GLuint								m_animId;
 };
 

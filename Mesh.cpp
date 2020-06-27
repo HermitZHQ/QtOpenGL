@@ -10,6 +10,7 @@ Mesh::Mesh()
 	, m_skyboxTexID(0), m_projTexID(0), m_normalmapTexID(0)
 	, m_diffuseTex1ID(0), m_shader(ShaderHelper::Instance())
 	, m_mainWnd(GetGlobalMainWndPtr())
+	, m_animId(0)
 {
 	initializeOpenGLFunctions();
 
@@ -179,7 +180,7 @@ void Mesh::BindVertexRelevantBuffer()
 	const GLfloat *vertex_tangents = GetTangents();
 	const GLfloat *vertex_bitangents = GetBitangents();
 	const GLfloat *vertex_normals = GetNormals();
-	const GLfloat *vertex_boneIds = GetBoneIds();// id 5
+	const GLint *vertex_boneIds = GetBoneIds();// id 5
 	const GLfloat *vertex_boneWeights = GetBoneWeights();// id 6
 
 	//--------------------------You must gen and bind the VAO first, the after operations all depends on it!!!!!!
@@ -249,7 +250,9 @@ void Mesh::BindVertexRelevantBuffer()
 	err = glGetError();
 	glEnableVertexAttribArray(normalLoc);
 
-	glVertexAttribPointer(boneIdsLoc, 4, GL_FLOAT, GL_FALSE, 0,
+	// 不能使用glEnableVertexAttribArray来设置GL_INT类型，shader中读取的数据不正常，但是官方又说可以使用两种来设置glint类型
+	// 但是有说-I的类型是专门设置GL_INT或者uint的，反正感觉说的很模糊，只能当是经验积累学习了
+	glVertexAttribIPointer(boneIdsLoc, 4, GL_INT, 0,
 		(void*)(GetVerticesMemSize() + GetUvs1MemSize()
 			+ GetTangentsMemSize() + GetBitangentsMemSize()
 			+ GetNormalsMemSize()));
@@ -329,12 +332,12 @@ int Mesh::GetIndicesNum() const
 	return m_indices.size();
 }
 
-void Mesh::AddBoneId(GLfloat id)
+void Mesh::AddBoneId(GLint id)
 {
 	m_boneIds.append(id);
 }
 
-const GLfloat* Mesh::GetBoneIds() const
+const GLint* Mesh::GetBoneIds() const
 {
 	return m_boneIds.data();
 }
@@ -367,6 +370,16 @@ int Mesh::GetBoneWeightsMemSize() const
 int Mesh::GetBoneWeightsNum() const
 {
 	return m_boneWeights.size() / NUM_BONES_PER_VEREX;
+}
+
+void Mesh::SetAnimId(GLuint id)
+{
+	m_animId = id;
+}
+
+GLuint Mesh::GetAnimId() const
+{
+	return m_animId;
 }
 
 GLuint Mesh::GetMultiInstanceModelMatrixOffset() const

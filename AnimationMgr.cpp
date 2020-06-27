@@ -24,7 +24,7 @@ unsigned int AnimationMgr::GenAnimID()
 	return id++;
 }
 
-unsigned int AnimationMgr::CreateAnimFromAiScene(const aiScene *scene)
+unsigned int AnimationMgr::CreateAnimFromAiScene(const aiScene *scene, const aiMesh *mesh)
 {
 	if (0 == scene->mNumAnimations) {
 		return 0;
@@ -72,13 +72,14 @@ unsigned int AnimationMgr::CreateAnimFromAiScene(const aiScene *scene)
 	}
 
 	// ------get all anim nodes
+	auto meshNode = scene->mRootNode->FindNode(mesh->mName);
 	CreateAnimNodesFromScene(info, scene, &info.animRootNode);
 
 	unsigned int iTest = 0;
 	GetAnimNodesCount(info.animRootNode, iTest);
 
 	// ------Get all bones info
-	GetAllBonesInfo(scene, info);
+	GetAllBonesInfo(mesh, info);
 
 	m_animInfoMap.insert(animId, info);
 	return animId;
@@ -93,10 +94,10 @@ void AnimationMgr::UpdateAllChannels(AnimInfo &info, float frameRate)
 	for (unsigned int i = 0; i < info.numChannels; ++i)
 	{
 		auto channel = info.channels[i];
-		if (channel.name.compare("hair_l_02") == 0) {
-			int i = 5;
-			i += 2;
-		}
+// 		if (channel.name.compare("hair_l_02") == 0) {
+// 			int i = 5;
+// 			i += 2;
+// 		}
 
 		// Interpolate translation and generate translation transformation matrix
 		QVector3D Translation;
@@ -125,13 +126,13 @@ void AnimationMgr::UpdateAllChannels(AnimInfo &info, float frameRate)
 }
 
 static int iTest = 0;
-void AnimationMgr::ReadNodeHeirarchy(AnimInfo &info, float frameRate, NodeAnim *node, QMatrix4x4 &matParent)
+void AnimationMgr::ReadNodeHeirarchy(AnimInfo &info, NodeAnim *node)
 {
 	QString nodeName(node->name);
-	if (nodeName.compare("hair_l_02") == 0) {
-		int i = 5;
-		i += 2;
-	}
+// 	if (nodeName.compare("hair_l_02") == 0) {
+// 		int i = 5;
+// 		i += 2;
+// 	}
 
 	if (node->channelId != -1) {
 		node->localTransform = m_allChannelsInterpValueVec[node->channelId];
@@ -139,15 +140,12 @@ void AnimationMgr::ReadNodeHeirarchy(AnimInfo &info, float frameRate, NodeAnim *
 	GetGlobalTransform(node);
 
 	for (uint i = 0; i < node->childs.size(); i++) {
-		ReadNodeHeirarchy(info, frameRate, node->childs[i], node->globalTransform);
+		ReadNodeHeirarchy(info, node->childs[i]);
 	}
 }
 
-float time1 = 0.001f;
-static float frame = 0.0f;
 void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 {
-	second = time1;// debug the 0-1 frame
 	auto anim = m_animInfoMap.find(animId);
 	if (anim == m_animInfoMap.end()) {
 		return;
@@ -157,44 +155,22 @@ void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 	QString animName =  anim.value().name;
 	float duration = anim.value().duration;
 	float tickPerSec = anim.value().tickPerSecond == 0 ? 25.0f : anim.value().tickPerSecond;
-	float totalSeconds = duration / tickPerSec;
 	float totalTime = anim.value().totalTime + second;
+	totalTime = fmod(totalTime, duration / tickPerSec);
 	anim.value().totalTime = totalTime;
 
-	// reset the anim total time
-	if (anim.value().totalTime > totalSeconds) {
-		anim.value().totalTime = 0;
-	}
-
-	float frameRate = totalTime / totalSeconds; // change frameRate to the time(per sec) * tickPerSec
-	frameRate = frameRate > 1.0f ? 0.0f : frameRate;
-	frameRate = 21.2f;// for test frame 1-2
-	frame += 0.3f;
-// 	if (frame > 61.0f) {
-// 		frame = 0.0f;
-// 	}
-// 	frame = 19.6f;
-
-
-	UpdateAllChannels(anim.value(), frame);
-	QMatrix4x4 identity;
-	identity.setToIdentity();
-	ReadNodeHeirarchy(anim.value(), frame, anim.value().animRootNode, identity);
-
+	float curTick = tickPerSec * totalTime;
+	UpdateAllChannels(anim.value(), curTick);
+	ReadNodeHeirarchy(anim.value(), anim.value().animRootNode);
 
 	for (auto &bi : anim.value().bonesInfoVec)
 	{
-		// ------ Get all bones final transform
-// 		if (nullptr == bi.nodeAnim) {
-// 			continue;
+// 		if (bi.nodeAnim->name.compare("cape_l_03") == 0) {
+// 			int i = 5;
+// 			i += 2;
 // 		}
-
-		if (bi.nodeAnim->name.compare("cape_l_03") == 0) {
-			int i = 5;
-			i += 2;
-		}
-			
-			bi.finalMat = anim.value().globalInverseTransform * bi.nodeAnim->globalTransform * bi.offset;
+		
+		bi.finalMat = anim.value().globalInverseTransform * bi.nodeAnim->globalTransform * bi.offset;
 	}
 
 	m_boneTransforms.clear();
@@ -207,17 +183,6 @@ void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 	{
 		auto boneInfo = anim.value().bonesInfoVec[i];
 
-// 		NodeAnim *parent = nullptr;
-// 		if (boneInfo.nodeAnim) {
-// 			parent = boneInfo.nodeAnim->parent;
-// 		}
-// 		while (parent) {
-// 			boneInfo.finalMat = parent->transform * boneInfo.finalMat;
-// 
-// 			parent = parent->parent;
-// 		}
-		// test identity
-// 		QMatrix4x4 mat;
 		m_boneTransforms[i] = boneInfo.finalMat;
 	}
 	ShaderHelper::Instance().SetBonesInfo(m_boneTransforms);
@@ -357,7 +322,7 @@ AnimationMgr::NodeAnim* AnimationMgr::CreateAnimNodes(AnimInfo &info, const aiNo
 	GetGlobalTransform(pNode);
 
 	// test
-	if (pNode->name.compare("cape_l_03") == 0) {
+	if (pNode->name.compare("omniknight") == 0) {
 		int i = 5;
 		i += 2;
 	}
@@ -400,57 +365,39 @@ void AnimationMgr::GetGlobalTransform(NodeAnim *node)
 	}
 }
 
-void AnimationMgr::GetAllBonesInfo(const aiScene *scene, AnimInfo &info)
+void AnimationMgr::GetAllBonesInfo(const aiMesh *mesh, AnimInfo &info)
 {
-	// Get the total bones num
-	unsigned int numBones = 0;
-	unsigned int numMeshes = 1;
-	numMeshes = scene->mNumMeshes;
-	for (int i = 0; i < numMeshes; ++i)
-	{
-		numBones += scene->mMeshes[i]->mNumBones;
-	}
-
 	info.bonesMap.clear();
 	info.bonesInfoVec.clear();
-// 	info.bonesInfoVec.resize(numBones);
 
-	unsigned int boneIndex = 0;
-	for (int i = 0; i < numMeshes; ++i)
+	auto numBones = mesh->mNumBones;
+	GLuint boneIndex = 0;
+	for (int j = 0; j < numBones; ++j)
 	{
-		auto mesh = scene->mMeshes[i];
-		auto numBones = mesh->mNumBones;
-		for (int j = 0; j < numBones; ++j)
-		{
-			auto bone = mesh->mBones[j];
-			if (info.bonesMap.find(bone->mName.data) == info.bonesMap.end()) {
-				info.bonesMap[bone->mName.data] = boneIndex;
+		auto bone = mesh->mBones[j];
+		if (info.bonesMap.find(bone->mName.data) == info.bonesMap.end()) {
+			info.bonesMap[bone->mName.data] = boneIndex;
 
-				BoneInfo bi;
-				info.bonesInfoVec.push_back(bi);
-				++boneIndex;
-			}
-			else {
-
-			}
-
-			auto &boneInfo = info.bonesInfoVec[info.bonesMap[bone->mName.data]];
-			boneInfo.nodeAnim = FindNodeAnimByName(info, bone->mName.data);
-
-// 			if (nullptr == boneInfo.nodeAnim) {
-// 				int i = 0;
-// 				i += 2;
-// 			}
-			if (bone->mName == aiString("cape_l_03")) {
-				int i = 0;
-				i += 2;
-			}
-
-			boneInfo.offset.setRow(0, QVector4D(bone->mOffsetMatrix.a1, bone->mOffsetMatrix.a2, bone->mOffsetMatrix.a3, bone->mOffsetMatrix.a4));
-			boneInfo.offset.setRow(1, QVector4D(bone->mOffsetMatrix.b1, bone->mOffsetMatrix.b2, bone->mOffsetMatrix.b3, bone->mOffsetMatrix.b4));
-			boneInfo.offset.setRow(2, QVector4D(bone->mOffsetMatrix.c1, bone->mOffsetMatrix.c2, bone->mOffsetMatrix.c3, bone->mOffsetMatrix.c4));
-			boneInfo.offset.setRow(3, QVector4D(bone->mOffsetMatrix.d1, bone->mOffsetMatrix.d2, bone->mOffsetMatrix.d3, bone->mOffsetMatrix.d4));
+			BoneInfo bi;
+			info.bonesInfoVec.push_back(bi);
+			++boneIndex;
 		}
+		else {
+
+		}
+
+		auto &boneInfo = info.bonesInfoVec[info.bonesMap[bone->mName.data]];
+		boneInfo.nodeAnim = FindNodeAnimByName(info, bone->mName.data);
+
+		if (bone->mName == aiString("cape_l_03")) {
+			int i = 0;
+			i += 2;
+		}
+
+		boneInfo.offset.setRow(0, QVector4D(bone->mOffsetMatrix.a1, bone->mOffsetMatrix.a2, bone->mOffsetMatrix.a3, bone->mOffsetMatrix.a4));
+		boneInfo.offset.setRow(1, QVector4D(bone->mOffsetMatrix.b1, bone->mOffsetMatrix.b2, bone->mOffsetMatrix.b3, bone->mOffsetMatrix.b4));
+		boneInfo.offset.setRow(2, QVector4D(bone->mOffsetMatrix.c1, bone->mOffsetMatrix.c2, bone->mOffsetMatrix.c3, bone->mOffsetMatrix.c4));
+		boneInfo.offset.setRow(3, QVector4D(bone->mOffsetMatrix.d1, bone->mOffsetMatrix.d2, bone->mOffsetMatrix.d3, bone->mOffsetMatrix.d4));
 	}
 }
 

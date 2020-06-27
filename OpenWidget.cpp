@@ -10,7 +10,6 @@
 #include "ModelMgr.h"
 #include "TextureMgr.h"
 #include "LightMgr.h"
-#include <windows.h>
 
 
 OpenWidget::OpenWidget()
@@ -22,7 +21,6 @@ OpenWidget::OpenWidget()
 	, m_gBufferDepthTex(0)
 	, m_ssaoFbo(0), m_ssaoTex(0)
 	, m_ssaoBlurFbo(0), m_ssaoBlurTex(0)
-	, m_animTime(GetTickCount())
 {
 	m_cam = new Camera();
 
@@ -160,7 +158,7 @@ void OpenWidget::initializeGL()
 	matModel.translate(QVector3D(0, 0, 30));
 	matModel.rotate(90, QVector3D(1, 0, 0));
 	matModel.scale(20);
-	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/1.fbx", matModel, ShaderHelper::Diffuse);
+	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/2.fbx", matModel, ShaderHelper::Diffuse);
 
 // 	m_assimpPtr->LoadModel("./models/skybox.obj");
 // 	m_assimpPtr->LoadModel("./models/Box002.obj");
@@ -335,15 +333,8 @@ void OpenWidget::UpdateAllLightsInfo()
 	}
 }
 
-void OpenWidget::UpdateAnimTime()
-{
-	m_animTime = GetTickCount() - m_animTime;
-}
-
 void OpenWidget::paintGL()
 {
-	UpdateAnimTime();
-
 	//----test geometry shader
 // 	QMatrix4x4 matVP = m_cam->GetVPMatrix();
 // 	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
@@ -405,11 +396,9 @@ void OpenWidget::paintGL()
 			continue;
 		}
 		QMatrix4x4 matModel = mod->GetWorldMat();
-		mod->UpdateAnimation(m_animTime / 1000.0f);
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
 
-	m_animTime = GetTickCount(); // update the latest animation time
 	return;// test skeleton anim
 
 	//----test add water wave during the deferred rendering g-buffer phase

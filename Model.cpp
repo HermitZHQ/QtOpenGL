@@ -2,12 +2,13 @@
 #include "Mesh.h"
 #include "LightMgr.h"
 #include "AnimationMgr.h"
+#include <windows.h>
 
 Model::Model()
 	:m_shaderType(ShaderHelper::Default)
 	, m_enableNormalDebug(false)
-	, m_animId(0)
 	, m_animationMgrPtr(&AnimationMgr::Instance())
+	, m_time(GetTickCount())
 {
 	m_worldMat.setToIdentity();
 
@@ -62,16 +63,6 @@ QString Model::GetModelName() const
 	return m_name;
 }
 
-void Model::SetAnimId(unsigned int id)
-{
-	m_animId = id;
-}
-
-unsigned int Model::GetAnimId() const
-{
-	return m_animId;
-}
-
 void Model::EnableSkybox()
 {
 	for (auto &mesh : m_meshes)
@@ -117,6 +108,8 @@ void Model::SetNormalMapTexture(const QString &path)
 void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 	QMatrix4x4 matOrtho)
 {
+	m_time = GetTickCount() - m_time;
+
 	// switch the shader type and set the light data before we draw
 	m_shaderHelperPtr->SetShaderType(m_shaderType);
 	auto lightNum = m_lightMgrPtr->GetCurLightNum();
@@ -130,16 +123,18 @@ void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatri
 	for (unsigned int i = 0; i < meshNum; ++i)
 	{
 		auto mesh = GetMesh(i);
+		if (m_time == 0) {
+			m_time = 5;
+		}
+		m_animationMgrPtr->UpdateAnimation(mesh->GetAnimId(), m_time / 1000.0f);
 		mesh->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+
 		if (m_enableNormalDebug) {
 			m_shaderHelperPtr->SetShaderType(ShaderHelper::Geometry);
 			mesh->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 			m_shaderHelperPtr->SetShaderType(m_shaderType);
 		}
 	}
-}
 
-void Model::UpdateAnimation(float second)
-{
-	m_animationMgrPtr->UpdateAnimation(m_animId, second);
+	m_time = GetTickCount();
 }

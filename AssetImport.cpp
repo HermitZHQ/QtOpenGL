@@ -87,18 +87,21 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 			mod = ModelMgr::Instance().CreateNewModel();
 			mod->SetModelName(child->mName.C_Str());
 		}
+		else {
+			continue;
+		}
 
 		auto numMeshes = child->mNumMeshes;
-		unsigned int baseBoneIndex = 0;
-		for (unsigned int i = 0; i < 1; ++i)
+		unsigned int baseVertIndex = 0;
+		for (unsigned int i = 0; i < numMeshes; ++i)
 		{
 			if (nullptr == child->mMeshes) {
 				continue;
 			}
-			// create new sub mesh, then you can add it to one model
-			Mesh *m = new Mesh;
 
 			auto mesh = scene->mMeshes[child->mMeshes[i]];
+			// create new sub mesh, then you can add it to one model
+			Mesh *m = new Mesh;
 
 			//handle the mesh's materials
 			auto mat = scene->mMaterials[mesh->mMaterialIndex];
@@ -111,17 +114,16 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 
 				info.pos = QVector3D(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z);
 				info.color = QVector4D(0.8f, 0.8f, 0.8f, 1);
-				info.normal = QVector3D(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
-				if (nullptr != mesh->mTangents)
-				{
+				if (nullptr != mesh->mNormals) {
+					info.normal = QVector3D(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
+				}
+				if (nullptr != mesh->mTangents)	{
 					info.tangent = QVector4D(mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z, 0);
 				}
-				if (nullptr != mesh->mBitangents)
-				{
+				if (nullptr != mesh->mBitangents) {
 					info.bitangent = QVector4D(mesh->mBitangents[j].x, mesh->mBitangents[j].y, mesh->mBitangents[j].z, 0);
 				}
-				if (nullptr != mesh->mTextureCoords[0])
-				{
+				if (nullptr != mesh->mTextureCoords[0])	{
 					info.uv1 = QVector2D(mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y);
 				}
 
@@ -144,6 +146,13 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 			for (unsigned int j = 0; j < mesh->mNumBones; ++j)
 			{
 				const aiBone *bone = mesh->mBones[j];
+
+				// for test
+				if (bone->mName == aiString("mouse")) {
+					int iy = 0;
+					++iy;
+				}
+
 				for (unsigned int k = 0; k < bone->mNumWeights; ++k)
 				{
 					unsigned int vertexId = bone->mWeights[k].mVertexId;
@@ -172,20 +181,17 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 				}
 			}
 
+			// init animation
+			auto animId = AnimationMgr::Instance().CreateAnimFromAiScene(scene, mesh);
+			m->SetAnimId(animId);
 			m->BindBuffer();
 			mod->AddMesh(m);
-
-			baseBoneIndex += mesh->mNumBones;
 		}
 
 		if (nullptr != mod)
 		{
 			mod->SetWroldMat(m_matModel);
 			mod->SetShaderType(m_shaderType);
-
-			// init animation
-			auto animId = AnimationMgr::Instance().CreateAnimFromAiScene(scene);
-			mod->SetAnimId(animId);
 		}
 		m_model = mod;
 	}

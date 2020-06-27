@@ -9,6 +9,7 @@
 
 struct aiScene;
 struct aiNode;
+struct aiMesh;
 class AnimationMgr
 {
 	struct NodeAnim
@@ -73,20 +74,20 @@ public:
 	static AnimationMgr& Instance();
 	static unsigned int GenAnimID();
 
-	unsigned int CreateAnimFromAiScene(const aiScene *scene);
-
-	void UpdateAllChannels(AnimInfo &info, float frameRate);
-	void ReadNodeHeirarchy(AnimInfo &info, float frameRate, NodeAnim *node, QMatrix4x4 &matParent);
+	unsigned int CreateAnimFromAiScene(const aiScene *scene, const aiMesh *mesh);
 	void UpdateAnimation(unsigned int animId, float second);
+
+protected:
+	void UpdateAllChannels(AnimInfo &info, float frameRate);
+	void ReadNodeHeirarchy(AnimInfo &info, NodeAnim *node);
 	void CalcInterpolatedScaling(AnimInfo &info, QVector3D &scaling, float frameRate, ChannelInfo &cInfo);
 	void CalcInterpolatedRotation(AnimInfo &info, QQuaternion &q, float frameRate, ChannelInfo &cInfo);
 	void CalcInterpolatedPosition(AnimInfo &info, QVector3D &translation, float frameRate, ChannelInfo &cInfo);
 
-protected:
 	void CreateAnimNodesFromScene(AnimInfo &info, const aiScene *scene, NodeAnim **root);
 	NodeAnim* CreateAnimNodes(AnimInfo &info, const aiNode *node, NodeAnim *parent, const aiScene *scene);
 	void GetGlobalTransform(NodeAnim *node);
-	void GetAllBonesInfo(const aiScene *scene, AnimInfo &info);
+	void GetAllBonesInfo(const aiMesh *mesh, AnimInfo &info);
 	NodeAnim* FindNodeAnimByName(AnimInfo &info, const char *name);
 	void FindNodeAnimRecursive(NodeAnim *node, const char *name, NodeAnim **outNode);
 
