@@ -71,6 +71,9 @@ unsigned int AnimationMgr::CreateAnimFromAiScene(const aiScene *scene, const aiM
 		info.channels.push_back(cInfo);
 	}
 
+	// ------Get all bones info
+	GetAllBonesInfo(mesh, info);
+
 	// ------get all anim nodes
 	auto meshNode = scene->mRootNode->FindNode(mesh->mName);
 	CreateAnimNodesFromScene(info, scene, &info.animRootNode);
@@ -78,8 +81,8 @@ unsigned int AnimationMgr::CreateAnimFromAiScene(const aiScene *scene, const aiM
 	unsigned int iTest = 0;
 	GetAnimNodesCount(info.animRootNode, iTest);
 
-	// ------Get all bones info
-	GetAllBonesInfo(mesh, info);
+	// ------get all bones anim node
+	GetAllBonesAnimNode(info);
 
 	m_animInfoMap.insert(animId, info);
 	return animId;
@@ -129,19 +132,42 @@ static int iTest = 0;
 void AnimationMgr::ReadNodeHeirarchy(AnimInfo &info, NodeAnim *node)
 {
 	QString nodeName(node->name);
-// 	if (nodeName.compare("hair_l_02") == 0) {
-// 		int i = 5;
-// 		i += 2;
-// 	}
+	if (nodeName.compare("mixamorig:LeftShoulder") == 0) {
+		int i = 5;
+		i += 2;
+	}
 
+	if (/*node->isBone &&*/ node->channelId == -1) {
+		ChannelInfo *pCha = FindChannelTransformByName(info, node->name);
+		if (nullptr != pCha) {
+			int i = 0;
+			++i;
+		}
+	}
+
+	// 易错点：这里的更新不能用channelId等于-1来判断，因为有的Bone虽然channel等于-1，但是仍然需要更新
+	// 这里应该是使用名字进行节点匹配！！！
 	if (node->channelId != -1) {
 		node->localTransform = m_allChannelsInterpValueVec[node->channelId];
+		++iTest;
 	}
 	GetGlobalTransform(node);
 
 	for (uint i = 0; i < node->childs.size(); i++) {
 		ReadNodeHeirarchy(info, node->childs[i]);
 	}
+}
+
+AnimationMgr::ChannelInfo* AnimationMgr::FindChannelTransformByName(AnimInfo &info, QString name)
+{
+	for (auto &chan : info.channels)
+	{
+		if (chan.name == name) {
+			return &chan;
+		}
+	}
+
+	return nullptr;
 }
 
 void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
@@ -160,6 +186,7 @@ void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 	anim.value().totalTime = totalTime;
 
 	float curTick = tickPerSec * totalTime;
+// 	curTick = 30.0f;// middle of the anim(duration 60)
 	UpdateAllChannels(anim.value(), curTick);
 	ReadNodeHeirarchy(anim.value(), anim.value().animRootNode);
 
@@ -170,7 +197,7 @@ void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 // 			i += 2;
 // 		}
 		
-		bi.finalMat = anim.value().globalInverseTransform * bi.nodeAnim->globalTransform * bi.offset;
+		bi.finalMat = /*anim.value().globalInverseTransform **/ bi.nodeAnim->globalTransform * bi.offset;
 	}
 
 	m_boneTransforms.clear();
@@ -285,6 +312,7 @@ void AnimationMgr::CreateAnimNodesFromScene(AnimInfo &info, const aiScene *scene
 	*root = new NodeAnim;
 	(*root)->name = scene->mRootNode->mName.data;
 	(*root)->parent = nullptr;
+	(*root)->isBone = CheckNodeIsBoneByName(info, (*root)->name);
 	auto trans = scene->mRootNode->mTransformation;
 	(*root)->localTransform.setRow(0, QVector4D(trans.a1, trans.a2, trans.a3, trans.a4));
 	(*root)->localTransform.setRow(1, QVector4D(trans.b1, trans.b2, trans.b3, trans.b4));
@@ -312,6 +340,7 @@ AnimationMgr::NodeAnim* AnimationMgr::CreateAnimNodes(AnimInfo &info, const aiNo
 	NodeAnim *pNode = new NodeAnim;
 	pNode->name = node->mName.data;
 	pNode->parent = parent;
+	pNode->isBone = CheckNodeIsBoneByName(info, pNode->name);
 	auto trans = node->mTransformation;
 	pNode->localTransform.setRow(0, QVector4D(trans.a1, trans.a2, trans.a3, trans.a4));
 	pNode->localTransform.setRow(1, QVector4D(trans.b1, trans.b2, trans.b3, trans.b4));
@@ -322,7 +351,7 @@ AnimationMgr::NodeAnim* AnimationMgr::CreateAnimNodes(AnimInfo &info, const aiNo
 	GetGlobalTransform(pNode);
 
 	// test
-	if (pNode->name.compare("omniknight") == 0) {
+	if (pNode->name.compare("weapon sub") == 0) {
 		int i = 5;
 		i += 2;
 	}
@@ -387,9 +416,11 @@ void AnimationMgr::GetAllBonesInfo(const aiMesh *mesh, AnimInfo &info)
 		}
 
 		auto &boneInfo = info.bonesInfoVec[info.bonesMap[bone->mName.data]];
-		boneInfo.nodeAnim = FindNodeAnimByName(info, bone->mName.data);
+// 		boneInfo.nodeAnim = FindNodeAnimByName(info, bone->mName.data);
+		boneInfo.name = bone->mName.data;
 
-		if (bone->mName == aiString("cape_l_03")) {
+		if (bone->mName == aiString("mixamorig:LeftShoulder")) {
+// 			auto invertMat = bone->mNode->mTransformation.Inverse();
 			int i = 0;
 			i += 2;
 		}
@@ -399,6 +430,26 @@ void AnimationMgr::GetAllBonesInfo(const aiMesh *mesh, AnimInfo &info)
 		boneInfo.offset.setRow(2, QVector4D(bone->mOffsetMatrix.c1, bone->mOffsetMatrix.c2, bone->mOffsetMatrix.c3, bone->mOffsetMatrix.c4));
 		boneInfo.offset.setRow(3, QVector4D(bone->mOffsetMatrix.d1, bone->mOffsetMatrix.d2, bone->mOffsetMatrix.d3, bone->mOffsetMatrix.d4));
 	}
+}
+
+void AnimationMgr::GetAllBonesAnimNode(AnimInfo &info)
+{
+	for (auto &bone : info.bonesInfoVec)
+	{
+		bone.nodeAnim = FindNodeAnimByName(info, bone.name.toStdString().c_str());
+	}
+}
+
+bool AnimationMgr::CheckNodeIsBoneByName(AnimInfo &info, QString &name)
+{
+	for (auto &bone : info.bonesInfoVec)
+	{
+		if (bone.name == name) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 AnimationMgr::NodeAnim* AnimationMgr::FindNodeAnimByName(AnimInfo &info, const char *name)

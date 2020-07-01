@@ -20,13 +20,15 @@ class AnimationMgr
 		QMatrix4x4				localTransform;
 		QMatrix4x4				globalTransform;
 		int						channelId;
+		bool					isBone;
 
 		NodeAnim()
-			:channelId(-1), parent(nullptr)
+			:channelId(-1), parent(nullptr), isBone(false)
 		{}
 	};
 	struct BoneInfo
 	{
+		QString					name;
 		QMatrix4x4				offset;
 		QMatrix4x4				finalMat;
 		NodeAnim				*nodeAnim;
@@ -80,6 +82,7 @@ public:
 protected:
 	void UpdateAllChannels(AnimInfo &info, float frameRate);
 	void ReadNodeHeirarchy(AnimInfo &info, NodeAnim *node);
+	ChannelInfo* FindChannelTransformByName(AnimInfo &info, QString name);
 	void CalcInterpolatedScaling(AnimInfo &info, QVector3D &scaling, float frameRate, ChannelInfo &cInfo);
 	void CalcInterpolatedRotation(AnimInfo &info, QQuaternion &q, float frameRate, ChannelInfo &cInfo);
 	void CalcInterpolatedPosition(AnimInfo &info, QVector3D &translation, float frameRate, ChannelInfo &cInfo);
@@ -88,6 +91,9 @@ protected:
 	NodeAnim* CreateAnimNodes(AnimInfo &info, const aiNode *node, NodeAnim *parent, const aiScene *scene);
 	void GetGlobalTransform(NodeAnim *node);
 	void GetAllBonesInfo(const aiMesh *mesh, AnimInfo &info);
+	void GetAllBonesAnimNode(AnimInfo &info);
+	bool CheckNodeIsBoneByName(AnimInfo &info, QString &name);
+
 	NodeAnim* FindNodeAnimByName(AnimInfo &info, const char *name);
 	void FindNodeAnimRecursive(NodeAnim *node, const char *name, NodeAnim **outNode);
 

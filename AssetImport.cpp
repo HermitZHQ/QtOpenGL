@@ -15,8 +15,8 @@ unsigned int ppsteps = aiProcess_CalcTangentSpace | // calculate tangents and bi
 //aiProcess_ValidateDataStructure | // perform a full validation of the loader's output
 //aiProcess_ImproveCacheLocality | // improve the cache locality of the output vertices
 //aiProcess_RemoveRedundantMaterials | // remove redundant materials
-//aiProcess_FindDegenerates | // remove degenerated polygons from the import
-//aiProcess_FindInvalidData | // detect invalid model data, such as invalid normal vectors
+aiProcess_FindDegenerates | // remove degenerated polygons from the import
+aiProcess_FindInvalidData | // detect invalid model data, such as invalid normal vectors
 //aiProcess_GenUVCoords | // convert spherical, cylindrical, box and planar mapping to proper UVs
 //aiProcess_TransformUVCoords | // preprocess UV transformations (scaling, translation ...)
 //aiProcess_FindInstances | // search for instanced meshes and remove them by references to one master
@@ -29,6 +29,16 @@ unsigned int ppsteps = aiProcess_CalcTangentSpace | // calculate tangents and bi
 aiProcess_Triangulate | // triangulate polygons with more than 3 edges
 //aiProcess_ConvertToLeftHanded | // convert everything to D3D left handed space
 //aiProcess_SortByPType | // make 'clean' meshes which consist of a single typ of primitives
+
+aiProcess_GlobalScale |
+// aiProcess_FlipWindingOrder |
+aiProcess_GenSmoothNormals |
+// aiProcess_ImproveCacheLocality |
+// aiProcess_GenUVCoords |
+// aiProcess_TransformUVCoords |
+// aiProcess_FindInstances |
+// aiProcess_OptimizeMeshes |
+// aiProcess_PopulateArmatureData |
 
 0;
 
@@ -240,6 +250,11 @@ int AssetImport::HandleMeshMaterial(aiMaterial *mat, Mesh *mesh)
 
 void AssetImport::InitScene(const char *path)
 {
+	// 修改点：非常重要，查了4，5个小时发现的大bug，不过也多亏了godot32中有这个处理我才能发现，虽然它其他的动画处理很头疼
+	// 发现这个是因为改godot中的骨骼动画bug，参照的是assimp-viewer的流程，改完后发现不但能播放assimp-viewer能播放的，还能
+	// 播放它播放不正常的，为了摸清真相，就进行了上面的长时间对比和查找不同点，最后发现就是这么一个属性.....
+	m_importer->SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+
 	m_scene = m_importer->ReadFile(path,
 		ppsteps
 		| ppsteps_extra

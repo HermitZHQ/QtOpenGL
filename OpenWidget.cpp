@@ -156,9 +156,9 @@ void OpenWidget::initializeGL()
 
 	QMatrix4x4 matModel;
 // 	matModel.translate(QVector3D(0, 0, 30));
-// 	matModel.rotate(-90, QVector3D(1, 0, 0));
-// 	matModel.scale(20);
-	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/test.fbx", matModel, ShaderHelper::Diffuse);
+	matModel.rotate(-90, QVector3D(1, 0, 0));
+	matModel.scale(20);
+	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/sealife.fbx", matModel, ShaderHelper::Diffuse);
 
 // 	m_assimpPtr->LoadModel("./models/skybox.obj");
 // 	m_assimpPtr->LoadModel("./models/Box002.obj");
@@ -169,7 +169,7 @@ void OpenWidget::initializeGL()
 		QMatrix4x4 mat;
 // 		mat.translate(0, 30, 0);
 // 		mat.rotate(90, QVector3D(0, 0, 1));
-		mat.scale(40, 40, 40);
+// 		mat.scale(40, 40, 40);
 		pMod->SetWroldMat(mat);
 	}
 	else {
