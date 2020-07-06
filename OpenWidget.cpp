@@ -82,14 +82,14 @@ void OpenWidget::initializeGL()
 	TestGeometryPoints();
 	// test for a quad
 	{
-// 		const GLfloat g_vertices[6][2] = {
-// 			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
-// 			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
-// 		};
 		const GLfloat g_vertices[6][2] = {
-			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
-			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
+			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
 		};
+// 		const GLfloat g_vertices[6][2] = {
+// 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
+// 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+// 		};
 
 		const GLfloat g_uvs[6][2] = {
 			{0, 1}, {1, 1}, {0, 0}, //
@@ -158,7 +158,7 @@ void OpenWidget::initializeGL()
 // 	matModel.translate(QVector3D(0, 0, 30));
 	matModel.rotate(-90, QVector3D(1, 0, 0));
 	matModel.scale(20);
-	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/sealife.fbx", matModel, ShaderHelper::Diffuse);
+	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/1.fbx", matModel, ShaderHelper::Diffuse);
 
 // 	m_assimpPtr->LoadModel("./models/skybox.obj");
 // 	m_assimpPtr->LoadModel("./models/Box002.obj");
@@ -351,6 +351,13 @@ void OpenWidget::paintGL()
 // 	}
 // 	return;
 
+	// test quad lines
+// 	m_shaderHelperPtr->SetShaderType(ShaderHelper::FrameBuffer1);
+// 	glBindVertexArray(vao_quad);
+// 	static unsigned char idx[] = { 0,1,1,2,2,0, 3,4,4,5,5,3 };
+// 	glDrawElements(GL_LINE_LOOP, 12, GL_UNSIGNED_BYTE, idx);
+// 	return;
+
 	auto modelNum = ModelMgr::Instance().GetModelNum();
 	QMatrix4x4 matVP = m_cam->GetVPMatrix();
 	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
@@ -390,6 +397,7 @@ void OpenWidget::paintGL()
 	for (unsigned int i = 0; i < modelNum; ++i)
 	{
 		Model *mod = ModelMgr::Instance().GetModel(i);
+// 		mod->SetDrawType(Mesh::Line);
 
 // 		mod->SetShaderType(ShaderHelper::GBufferGeometry);
 		if (mod->GetModelName().compare("water") == 0) {

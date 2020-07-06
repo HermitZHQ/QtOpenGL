@@ -5,7 +5,7 @@
 #include "QMatrix4x4"
 
 Mesh::Mesh()
-	:m_vao(0), m_vbo(0), m_vaeo(0), m_instanceBufferId(0), m_tbo1(0)
+	:m_vao(0), m_vbo(0), m_vaeo(0), m_vaeo_lines(0), m_instanceBufferId(0), m_tbo1(0)
 	, m_drawType(Triangle)
 	, m_skyboxTexID(0), m_projTexID(0), m_normalmapTexID(0)
 	, m_diffuseTex1ID(0), m_shader(ShaderHelper::Instance())
@@ -180,8 +180,10 @@ void Mesh::BindVertexRelevantBuffer()
 	const GLfloat *vertex_tangents = GetTangents();
 	const GLfloat *vertex_bitangents = GetBitangents();
 	const GLfloat *vertex_normals = GetNormals();
-	const GLfloat *vertex_boneIds = GetBoneIds();// id 5
-	const GLfloat *vertex_boneWeights = GetBoneWeights();// id 6
+	const GLfloat *vertex_boneIds = GetBoneIds();
+	const GLfloat *vertex_boneWeights = GetBoneWeights();
+
+	BuildLinesIndicesFromTrianglesIndices();
 
 	//--------------------------You must gen and bind the VAO first, the after operations all depends on it!!!!!!
 	// set vertex array object
@@ -192,8 +194,12 @@ void Mesh::BindVertexRelevantBuffer()
 	glGenBuffers(1, &m_vaeo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vaeo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, GetIndicesMemSize(), vertex_indices, GL_STATIC_DRAW);
-
 	glVertexArrayElementBuffer(m_vao, m_vaeo);
+
+	// also create the lines indices at the same time, so we can switch them dynamicly
+	glGenBuffers(1, &m_vaeo_lines);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vaeo_lines);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, GetLinesIndicesMemSize(), GetLinesIndices(), GL_STATIC_DRAW);
 
 	glGenBuffers(1, &m_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
@@ -346,6 +352,34 @@ int Mesh::GetIndicesNum() const
 	return m_indices.size();
 }
 
+void Mesh::BuildLinesIndicesFromTrianglesIndices()
+{
+	for (int i = 0; i < m_indices.size(); i += 3)
+	{
+		m_indices_lines.push_back(m_indices[i]);
+		m_indices_lines.push_back(m_indices[i + 1]);
+		m_indices_lines.push_back(m_indices[i + 1]);
+		m_indices_lines.push_back(m_indices[i + 2]);
+		m_indices_lines.push_back(m_indices[i + 2]);
+		m_indices_lines.push_back(m_indices[i]);
+	}
+}
+
+int Mesh::GetLinesIndicesNum() const
+{
+	return m_indices_lines.size();
+}
+
+const unsigned int* Mesh::GetLinesIndices() const
+{
+	return m_indices_lines.data();
+}
+
+int Mesh::GetLinesIndicesMemSize() const
+{
+	return m_indices_lines.size() * sizeof(GLuint);
+}
+
 void Mesh::AddBoneId(GLfloat id)
 {
 	m_boneIds.append(id);
@@ -482,10 +516,15 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 
 	// Draw element(with indices)
 	if (Triangle == m_drawType) {
+		glVertexArrayElementBuffer(GetVao(), m_vaeo);
 		glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, 0);
 	}
 	else if (Point == m_drawType) {
 		glDrawArrays(GL_TRIANGLES, 0, GetVerticesNum());
+	}
+	else if (Line == m_drawType) {
+		glVertexArrayElementBuffer(GetVao(), m_vaeo_lines);
+		glDrawElements(GL_LINES, GetLinesIndicesNum(), GL_UNSIGNED_INT, 0);
 	}
 
 	if (0 != m_skyboxTexID) {

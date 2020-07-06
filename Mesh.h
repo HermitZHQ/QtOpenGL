@@ -18,6 +18,7 @@ public:
 	{
 		Triangle,
 		Point,
+		Line,
 	};
 
 	struct VertInfo
@@ -82,6 +83,11 @@ public:
 	int GetIndicesMemSize() const;
 	int GetIndicesNum() const;
 
+	void BuildLinesIndicesFromTrianglesIndices();
+	int GetLinesIndicesNum() const;
+	const unsigned int* GetLinesIndices() const;
+	int GetLinesIndicesMemSize() const;
+
 	//----bone ids
 	void AddBoneId(GLfloat id);
 	const GLfloat* GetBoneIds() const;
@@ -137,11 +143,13 @@ private:
 	GLuint								m_normalmapTexID;
 
 	unsigned short						m_faceNum;
-	QVector<unsigned int>				m_indices;
+	QVector<unsigned int>				m_indices;// for triangles
+	QVector<unsigned int>				m_indices_lines;// for lines
 
 	GLuint								m_vao;
 	GLuint								m_vbo;
 	GLuint								m_vaeo;// vertex array elements object
+	GLuint								m_vaeo_lines;// for lines
 	GLuint								m_instanceBufferId;
 	GLuint								m_tbo1;// texture buffer object
 

@@ -51,4 +51,5 @@ void main()
     
     fColor = vec4(col, 1.0);
 	fColor = vec4(texture(tex, uv.st));
+	fColor = vec4(1, 1, 1, 1);
 }

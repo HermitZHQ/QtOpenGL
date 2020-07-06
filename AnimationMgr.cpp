@@ -197,7 +197,7 @@ void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 // 			i += 2;
 // 		}
 		
-		bi.finalMat = /*anim.value().globalInverseTransform **/ bi.nodeAnim->globalTransform * bi.offset;
+		bi.finalMat = anim.value().globalInverseTransform * bi.nodeAnim->globalTransform * bi.offset;
 	}
 
 	m_boneTransforms.clear();
