@@ -102,7 +102,7 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 		}
 
 		auto numMeshes = child->mNumMeshes;
-		unsigned int baseVertIndex = 0;
+// 		unsigned int baseVertIndex = 0;
 		for (unsigned int i = 0; i < numMeshes; ++i)
 		{
 			if (nullptr == child->mMeshes) {

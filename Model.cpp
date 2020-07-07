@@ -124,7 +124,7 @@ void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatri
 	{
 		auto mesh = GetMesh(i);
 		if (m_time == 0) {
-			m_time = 5;
+			m_time = 2;
 		}
 		m_animationMgrPtr->UpdateAnimation(mesh->GetAnimId(), m_time / 1000.0f);
 		mesh->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);

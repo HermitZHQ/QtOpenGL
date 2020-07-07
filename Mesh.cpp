@@ -3,6 +3,7 @@
 #include "ShaderHelper.h"
 #include "PreDef.h"
 #include "QMatrix4x4"
+#include "AnimationMgr.h"
 
 Mesh::Mesh()
 	:m_vao(0), m_vbo(0), m_vaeo(0), m_vaeo_lines(0), m_instanceBufferId(0), m_tbo1(0)
@@ -354,7 +355,7 @@ int Mesh::GetIndicesNum() const
 
 void Mesh::BuildLinesIndicesFromTrianglesIndices()
 {
-	for (int i = 0; i < m_indices.size(); i += 3)
+	for (int i = 0; i < m_indices.size() - 2; i += 3)
 	{
 		m_indices_lines.push_back(m_indices[i]);
 		m_indices_lines.push_back(m_indices[i + 1]);
@@ -530,6 +531,11 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	if (0 != m_skyboxTexID) {
 		glCullFace(GL_BACK);
 		glDepthMask(1);
+	}
+
+	// Test draw skeleton here
+	if (GetAnimId() != 0) {
+		AnimationMgr::Instance().DrawSkeleton(GetAnimId());
 	}
 
 	glBindVertexArray(0);

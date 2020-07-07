@@ -5,7 +5,9 @@
 #include "ShaderHelper.h"
 
 AnimationMgr::AnimationMgr()
+	:m_vao_skin(0), m_vbo_skin(0)
 {
+	initializeOpenGLFunctions();
 }
 
 AnimationMgr::~AnimationMgr()
@@ -75,7 +77,7 @@ unsigned int AnimationMgr::CreateAnimFromAiScene(const aiScene *scene, const aiM
 	GetAllBonesInfo(mesh, info);
 
 	// ------get all anim nodes
-	auto meshNode = scene->mRootNode->FindNode(mesh->mName);
+// 	auto meshNode = scene->mRootNode->FindNode(mesh->mName);
 	CreateAnimNodesFromScene(info, scene, &info.animRootNode);
 
 	unsigned int iTest = 0;
@@ -153,7 +155,7 @@ void AnimationMgr::ReadNodeHeirarchy(AnimInfo &info, NodeAnim *node)
 	}
 	GetGlobalTransform(node);
 
-	for (uint i = 0; i < node->childs.size(); i++) {
+	for (int i = 0; i < node->childs.size(); i++) {
 		ReadNodeHeirarchy(info, node->childs[i]);
 	}
 }
@@ -215,6 +217,198 @@ void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 	ShaderHelper::Instance().SetBonesInfo(m_boneTransforms);
 }
 
+void AnimationMgr::DrawSkeleton(unsigned int animId)
+{
+	auto anim = m_animInfoMap.find(animId);
+	if (anim == m_animInfoMap.end()) {
+		return;
+	}
+
+	// reset vertices
+	m_skin_vertices.clear();
+	m_skin_indices.clear();
+
+	QMatrix4x4 identity;
+	identity.setToIdentity();
+	RenderSkeleton(anim.value(), anim.value().animRootNode, anim.value().globalInverseTransform, identity);
+	// 只使用bones相关的节点信息（父节点也可能是非bone），两种绘制都可以，root的形式绘制的更全面一些
+// 	RenderSkeletonWithBones(anim.value());
+
+	auto numVertices = m_skin_vertices.size() / 3;
+	for (int i = 0; i < numVertices; ++i)
+	{
+		m_skin_indices.push_back(i);
+	}
+
+	// init skin vao
+	if (0 == m_vao_skin) {
+		glGenVertexArrays(1, &m_vao_skin);
+		glBindVertexArray(m_vao_skin);
+
+		GLuint evao = 0;
+		glGenBuffers(1, &evao);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, evao);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_skin_indices.size(), m_skin_indices.data(), GL_STATIC_DRAW);
+		glVertexArrayElementBuffer(m_vao_skin, evao);
+
+		glGenBuffers(1, &m_vbo_skin);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_skin);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * m_skin_vertices.size(), nullptr, GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * m_skin_vertices.size(), m_skin_vertices.data());
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+	}
+
+	glBindVertexArray(m_vao_skin);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo_skin);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * m_skin_vertices.size(), m_skin_vertices.data());
+
+	glDrawElements(GL_LINES, m_skin_indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+}
+
+void AnimationMgr::RenderSkeleton(AnimInfo &info, NodeAnim *node, QMatrix4x4 mat, QMatrix4x4 parentMat)
+{
+	QMatrix4x4 offset = node->isBone ? GetBoneOffsetByName(info, node->name) : QMatrix4x4();
+	QMatrix4x4 me = /*mat **/ node->globalTransform /** offset*/;
+
+	if (node->parent) {
+		QVector3D pos1(parentMat.column(3).x(), parentMat.column(3).y(), parentMat.column(3).z());
+		QVector3D pos2(me.column(3).x(), me.column(3).y(), me.column(3).z());
+		QVector3D dir = pos1 - pos2;
+		float len = dir.length();
+		dir.normalize();
+
+		QVector3D axisY = dir;
+		QVector3D axisX(0, 1, 0);
+		QVector3D axisZ = axisY.crossProduct(axisX, axisY);
+		axisX = axisX.crossProduct(axisY, axisZ);
+
+		float phaseRate = 0.2f;
+		QVector3D posMid = pos2 + dir * len * phaseRate;
+		QVector3D pos3(posMid + axisX * (len * phaseRate));
+		QVector3D pos4(posMid - axisX * (len * phaseRate));
+		QVector3D pos5(posMid + axisZ * (len * phaseRate));
+		QVector3D pos6(posMid - axisZ * (len * phaseRate));
+		
+		//---up side
+		m_skin_vertices.push_back(pos1.x());
+		m_skin_vertices.push_back(pos1.y());
+		m_skin_vertices.push_back(pos1.z());
+		m_skin_vertices.push_back(pos3.x());
+		m_skin_vertices.push_back(pos3.y());
+		m_skin_vertices.push_back(pos3.z());
+
+		m_skin_vertices.push_back(pos1.x());
+		m_skin_vertices.push_back(pos1.y());
+		m_skin_vertices.push_back(pos1.z());
+		m_skin_vertices.push_back(pos4.x());
+		m_skin_vertices.push_back(pos4.y());
+		m_skin_vertices.push_back(pos4.z());
+
+		m_skin_vertices.push_back(pos1.x());
+		m_skin_vertices.push_back(pos1.y());
+		m_skin_vertices.push_back(pos1.z());
+		m_skin_vertices.push_back(pos5.x());
+		m_skin_vertices.push_back(pos5.y());
+		m_skin_vertices.push_back(pos5.z());
+
+		m_skin_vertices.push_back(pos1.x());
+		m_skin_vertices.push_back(pos1.y());
+		m_skin_vertices.push_back(pos1.z());
+		m_skin_vertices.push_back(pos6.x());
+		m_skin_vertices.push_back(pos6.y());
+		m_skin_vertices.push_back(pos6.z());
+
+		//----mid quad
+		m_skin_vertices.push_back(pos3.x());
+		m_skin_vertices.push_back(pos3.y());
+		m_skin_vertices.push_back(pos3.z());
+		m_skin_vertices.push_back(pos5.x());
+		m_skin_vertices.push_back(pos5.y());
+		m_skin_vertices.push_back(pos5.z());
+
+		m_skin_vertices.push_back(pos4.x());
+		m_skin_vertices.push_back(pos4.y());
+		m_skin_vertices.push_back(pos4.z());
+		m_skin_vertices.push_back(pos5.x());
+		m_skin_vertices.push_back(pos5.y());
+		m_skin_vertices.push_back(pos5.z());
+
+		m_skin_vertices.push_back(pos4.x());
+		m_skin_vertices.push_back(pos4.y());
+		m_skin_vertices.push_back(pos4.z());
+		m_skin_vertices.push_back(pos6.x());
+		m_skin_vertices.push_back(pos6.y());
+		m_skin_vertices.push_back(pos6.z());
+
+		m_skin_vertices.push_back(pos6.x());
+		m_skin_vertices.push_back(pos6.y());
+		m_skin_vertices.push_back(pos6.z());
+		m_skin_vertices.push_back(pos3.x());
+		m_skin_vertices.push_back(pos3.y());
+		m_skin_vertices.push_back(pos3.z());
+
+
+		//----under side
+		m_skin_vertices.push_back(pos3.x());
+		m_skin_vertices.push_back(pos3.y());
+		m_skin_vertices.push_back(pos3.z());
+		m_skin_vertices.push_back(pos2.x());
+		m_skin_vertices.push_back(pos2.y());
+		m_skin_vertices.push_back(pos2.z());
+
+		m_skin_vertices.push_back(pos4.x());
+		m_skin_vertices.push_back(pos4.y());
+		m_skin_vertices.push_back(pos4.z());
+		m_skin_vertices.push_back(pos2.x());
+		m_skin_vertices.push_back(pos2.y());
+		m_skin_vertices.push_back(pos2.z());
+
+		m_skin_vertices.push_back(pos5.x());
+		m_skin_vertices.push_back(pos5.y());
+		m_skin_vertices.push_back(pos5.z());
+		m_skin_vertices.push_back(pos2.x());
+		m_skin_vertices.push_back(pos2.y());
+		m_skin_vertices.push_back(pos2.z());
+
+		m_skin_vertices.push_back(pos6.x());
+		m_skin_vertices.push_back(pos6.y());
+		m_skin_vertices.push_back(pos6.z());
+		m_skin_vertices.push_back(pos2.x());
+		m_skin_vertices.push_back(pos2.y());
+		m_skin_vertices.push_back(pos2.z());
+	}
+
+	// render all childs nodes
+	for (int i = 0; i < node->childs.size(); ++i)
+	{
+		RenderSkeleton(info, node->childs[i], mat, me);
+	}
+}
+
+void AnimationMgr::RenderSkeletonWithBones(AnimInfo &info)
+{
+	for (auto &bone : info.bonesInfoVec)
+	{
+		QMatrix4x4 me = bone.nodeAnim->globalTransform;
+
+		if (bone.nodeAnim->parent) {
+			QMatrix4x4 parentMat = bone.nodeAnim->parent->globalTransform;
+
+			m_skin_vertices.push_back(parentMat.column(3).x());
+			m_skin_vertices.push_back(parentMat.column(3).y());
+			m_skin_vertices.push_back(parentMat.column(3).z());
+
+			m_skin_vertices.push_back(me.column(3).x());
+			m_skin_vertices.push_back(me.column(3).y());
+			m_skin_vertices.push_back(me.column(3).z());
+		}
+	}
+}
+
 void AnimationMgr::CalcInterpolatedScaling(AnimInfo &info, QVector3D &scaling, float frameRate, ChannelInfo &cInfo)
 {
 	if (1 == cInfo.numScalingKeys) {
@@ -226,7 +420,7 @@ void AnimationMgr::CalcInterpolatedScaling(AnimInfo &info, QVector3D &scaling, f
 
 	auto numScalingKeys = cInfo.numScalingKeys;
 	unsigned int frame = 0;
-	for (int i = 0; i < numScalingKeys; ++i)
+	for (unsigned int i = 0; i < numScalingKeys; ++i)
 	{
 		if (frameRate < cInfo.scalingKeysTime[i]) {
 			frame = i - 1;
@@ -256,7 +450,7 @@ void AnimationMgr::CalcInterpolatedRotation(AnimInfo &info, QQuaternion &q, floa
 
 	auto numRotationKeys = cInfo.numRotationKeys;
 	unsigned int frame = 0;
-	for (int i = 0; i < numRotationKeys; ++i)
+	for (unsigned int i = 0; i < numRotationKeys; ++i)
 	{
 		if (frameRate < cInfo.rotationKeysTime[i]) {
 			frame = i - 1;
@@ -289,7 +483,7 @@ void AnimationMgr::CalcInterpolatedPosition(AnimInfo &info, QVector3D &translati
 
 	auto numPositionKeys = cInfo.numPositionKeys;
 	unsigned int frame = 0;
-	for (int i = 0; i < numPositionKeys; ++i)
+	for (unsigned int i = 0; i < numPositionKeys; ++i)
 	{
 		if (frameRate < cInfo.positionKeysTime[i]) {
 			frame = i - 1;
@@ -322,14 +516,14 @@ void AnimationMgr::CreateAnimNodesFromScene(AnimInfo &info, const aiScene *scene
 	// find correspond channel id, default is -1(this means this node is not a anim node)
 	auto numChannels = scene->mAnimations[0]->mNumChannels;
 	auto animation = scene->mAnimations[0];
-	for (int i = 0; i < numChannels; ++i)
+	for (unsigned int i = 0; i < numChannels; ++i)
 	{
 		if (animation->mChannels[i]->mNodeName.data == (*root)->name) {
 			(*root)->channelId = i;
 		}
 	}
 
-	for (int i = 0; i < scene->mRootNode->mNumChildren; ++i)
+	for (unsigned int i = 0; i < scene->mRootNode->mNumChildren; ++i)
 	{
 		(*root)->childs.push_back(CreateAnimNodes(info, scene->mRootNode->mChildren[i], *root, scene));
 	}
@@ -366,7 +560,7 @@ AnimationMgr::NodeAnim* AnimationMgr::CreateAnimNodes(AnimInfo &info, const aiNo
 	// find correspond channel id, default is -1(this means this node is not a anim node)
 	auto numChannels = scene->mAnimations[0]->mNumChannels;
 	auto animation = scene->mAnimations[0];
-	for (int i = 0; i < numChannels; ++i)
+	for (unsigned int i = 0; i < numChannels; ++i)
 	{
 		if (animation->mChannels[i]->mNodeName.data == pNode->name) {
 			pNode->channelId = i;
@@ -374,7 +568,7 @@ AnimationMgr::NodeAnim* AnimationMgr::CreateAnimNodes(AnimInfo &info, const aiNo
 		}
 	}
 
-	for (int i = 0; i < node->mNumChildren; ++i)
+	for (unsigned int i = 0; i < node->mNumChildren; ++i)
 	{
 		pNode->childs.push_back(CreateAnimNodes(info, node->mChildren[i], pNode, scene));
 	}
@@ -401,7 +595,7 @@ void AnimationMgr::GetAllBonesInfo(const aiMesh *mesh, AnimInfo &info)
 
 	auto numBones = mesh->mNumBones;
 	GLuint boneIndex = 0;
-	for (int j = 0; j < numBones; ++j)
+	for (unsigned int j = 0; j < numBones; ++j)
 	{
 		auto bone = mesh->mBones[j];
 		if (info.bonesMap.find(bone->mName.data) == info.bonesMap.end()) {
@@ -450,6 +644,18 @@ bool AnimationMgr::CheckNodeIsBoneByName(AnimInfo &info, QString &name)
 	}
 
 	return false;
+}
+
+QMatrix4x4 AnimationMgr::GetBoneOffsetByName(AnimInfo &info, QString &name)
+{
+	for (auto &bone : info.bonesInfoVec)
+	{
+		if (bone.name == name) {
+			return bone.offset;
+		}
+	}
+
+	return QMatrix4x4();
 }
 
 AnimationMgr::NodeAnim* AnimationMgr::FindNodeAnimByName(AnimInfo &info, const char *name)

@@ -4,13 +4,14 @@
 #include <QVector>
 #include <QString>
 #include <QMap>
+#include "QOpenGLFunctions_4_5_Core"
 #include "QMatrix4x4"
 #include "QQuaternion"
 
 struct aiScene;
 struct aiNode;
 struct aiMesh;
-class AnimationMgr
+class AnimationMgr : QOpenGLFunctions_4_5_Core
 {
 	struct NodeAnim
 	{
@@ -78,6 +79,9 @@ public:
 
 	unsigned int CreateAnimFromAiScene(const aiScene *scene, const aiMesh *mesh);
 	void UpdateAnimation(unsigned int animId, float second);
+	void DrawSkeleton(unsigned int animId);
+	void RenderSkeleton(AnimInfo &info, NodeAnim *node, QMatrix4x4 mat, QMatrix4x4 parentMat);
+	void RenderSkeletonWithBones(AnimInfo &info);
 
 protected:
 	void UpdateAllChannels(AnimInfo &info, float frameRate);
@@ -93,6 +97,7 @@ protected:
 	void GetAllBonesInfo(const aiMesh *mesh, AnimInfo &info);
 	void GetAllBonesAnimNode(AnimInfo &info);
 	bool CheckNodeIsBoneByName(AnimInfo &info, QString &name);
+	QMatrix4x4 GetBoneOffsetByName(AnimInfo &info, QString &name);
 
 	NodeAnim* FindNodeAnimByName(AnimInfo &info, const char *name);
 	void FindNodeAnimRecursive(NodeAnim *node, const char *name, NodeAnim **outNode);
@@ -108,4 +113,9 @@ private:
 
 	QVector<QMatrix4x4>				m_boneTransforms;
 	QVector<QMatrix4x4>				m_allChannelsInterpValueVec;
+
+	GLuint							m_vao_skin;
+	GLuint							m_vbo_skin;
+	QVector<float>					m_skin_vertices;
+	QVector<unsigned int>			m_skin_indices;
 };
