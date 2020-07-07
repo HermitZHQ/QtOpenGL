@@ -158,7 +158,7 @@ void OpenWidget::initializeGL()
 // 	matModel.translate(QVector3D(0, 0, 30));
 	matModel.rotate(-90, QVector3D(1, 0, 0));
 	matModel.scale(20);
-	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/test.fbx", matModel, ShaderHelper::Diffuse);
+	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/1.fbx", matModel, ShaderHelper::Diffuse);
 
 // 	m_assimpPtr->LoadModel("./models/skybox.obj");
 // 	m_assimpPtr->LoadModel("./models/Box002.obj");

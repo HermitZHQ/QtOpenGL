@@ -5,7 +5,7 @@
 #include "ShaderHelper.h"
 
 AnimationMgr::AnimationMgr()
-	:m_vao_skin(0), m_vbo_skin(0)
+
 {
 	initializeOpenGLFunctions();
 }
@@ -225,47 +225,47 @@ void AnimationMgr::DrawSkeleton(unsigned int animId)
 	}
 
 	// reset vertices
-	m_skin_vertices.clear();
-	m_skin_indices.clear();
+	anim.value().skin_vertices.clear();
+	anim.value().skin_indices.clear();
 
 	QMatrix4x4 identity;
 	identity.setToIdentity();
-	RenderSkeleton(anim.value(), anim.value().animRootNode, anim.value().globalInverseTransform, identity);
+/*	RenderSkeleton(anim.value(), anim.value().animRootNode, anim.value().globalInverseTransform, identity);*/
 	// 只使用bones相关的节点信息（父节点也可能是非bone），两种绘制都可以，root的形式绘制的更全面一些
-// 	RenderSkeletonWithBones(anim.value());
+	RenderSkeletonWithBones(anim.value());
 
-	auto numVertices = m_skin_vertices.size() / 3;
+	auto numVertices = anim.value().skin_vertices.size() / 3;
 	for (int i = 0; i < numVertices; ++i)
 	{
-		m_skin_indices.push_back(i);
+		anim.value().skin_indices.push_back(i);
 	}
 
 	// init skin vao
-	if (0 == m_vao_skin) {
-		glGenVertexArrays(1, &m_vao_skin);
-		glBindVertexArray(m_vao_skin);
+	if (0 == anim.value().vao_skin) {
+		glGenVertexArrays(1, &anim.value().vao_skin);
+		glBindVertexArray(anim.value().vao_skin);
 
 		GLuint evao = 0;
 		glGenBuffers(1, &evao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, evao);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_skin_indices.size(), m_skin_indices.data(), GL_STATIC_DRAW);
-		glVertexArrayElementBuffer(m_vao_skin, evao);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * anim.value().skin_indices.size(), anim.value().skin_indices.data(), GL_STATIC_DRAW);
+		glVertexArrayElementBuffer(anim.value().vao_skin, evao);
 
-		glGenBuffers(1, &m_vbo_skin);
-		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_skin);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * m_skin_vertices.size(), nullptr, GL_DYNAMIC_DRAW);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * m_skin_vertices.size(), m_skin_vertices.data());
+		glGenBuffers(1, &anim.value().vbo_skin);
+		glBindBuffer(GL_ARRAY_BUFFER, anim.value().vbo_skin);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * anim.value().skin_vertices.size(), nullptr, GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * anim.value().skin_vertices.size(), anim.value().skin_vertices.data());
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(0);
 	}
 
-	glBindVertexArray(m_vao_skin);
+	glBindVertexArray(anim.value().vao_skin);
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo_skin);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * m_skin_vertices.size(), m_skin_vertices.data());
+	glBindBuffer(GL_ARRAY_BUFFER, anim.value().vbo_skin);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * anim.value().skin_vertices.size(), anim.value().skin_vertices.data());
 
-	glDrawElements(GL_LINES, m_skin_indices.size(), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_LINES, anim.value().skin_indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
 
@@ -294,92 +294,92 @@ void AnimationMgr::RenderSkeleton(AnimInfo &info, NodeAnim *node, QMatrix4x4 mat
 		QVector3D pos6(posMid - axisZ * (len * phaseRate));
 		
 		//---up side
-		m_skin_vertices.push_back(pos1.x());
-		m_skin_vertices.push_back(pos1.y());
-		m_skin_vertices.push_back(pos1.z());
-		m_skin_vertices.push_back(pos3.x());
-		m_skin_vertices.push_back(pos3.y());
-		m_skin_vertices.push_back(pos3.z());
+		info.skin_vertices.push_back(pos1.x());
+		info.skin_vertices.push_back(pos1.y());
+		info.skin_vertices.push_back(pos1.z());
+		info.skin_vertices.push_back(pos3.x());
+		info.skin_vertices.push_back(pos3.y());
+		info.skin_vertices.push_back(pos3.z());
 
-		m_skin_vertices.push_back(pos1.x());
-		m_skin_vertices.push_back(pos1.y());
-		m_skin_vertices.push_back(pos1.z());
-		m_skin_vertices.push_back(pos4.x());
-		m_skin_vertices.push_back(pos4.y());
-		m_skin_vertices.push_back(pos4.z());
+		info.skin_vertices.push_back(pos1.x());
+		info.skin_vertices.push_back(pos1.y());
+		info.skin_vertices.push_back(pos1.z());
+		info.skin_vertices.push_back(pos4.x());
+		info.skin_vertices.push_back(pos4.y());
+		info.skin_vertices.push_back(pos4.z());
 
-		m_skin_vertices.push_back(pos1.x());
-		m_skin_vertices.push_back(pos1.y());
-		m_skin_vertices.push_back(pos1.z());
-		m_skin_vertices.push_back(pos5.x());
-		m_skin_vertices.push_back(pos5.y());
-		m_skin_vertices.push_back(pos5.z());
+		info.skin_vertices.push_back(pos1.x());
+		info.skin_vertices.push_back(pos1.y());
+		info.skin_vertices.push_back(pos1.z());
+		info.skin_vertices.push_back(pos5.x());
+		info.skin_vertices.push_back(pos5.y());
+		info.skin_vertices.push_back(pos5.z());
 
-		m_skin_vertices.push_back(pos1.x());
-		m_skin_vertices.push_back(pos1.y());
-		m_skin_vertices.push_back(pos1.z());
-		m_skin_vertices.push_back(pos6.x());
-		m_skin_vertices.push_back(pos6.y());
-		m_skin_vertices.push_back(pos6.z());
+		info.skin_vertices.push_back(pos1.x());
+		info.skin_vertices.push_back(pos1.y());
+		info.skin_vertices.push_back(pos1.z());
+		info.skin_vertices.push_back(pos6.x());
+		info.skin_vertices.push_back(pos6.y());
+		info.skin_vertices.push_back(pos6.z());
 
 		//----mid quad
-		m_skin_vertices.push_back(pos3.x());
-		m_skin_vertices.push_back(pos3.y());
-		m_skin_vertices.push_back(pos3.z());
-		m_skin_vertices.push_back(pos5.x());
-		m_skin_vertices.push_back(pos5.y());
-		m_skin_vertices.push_back(pos5.z());
+		info.skin_vertices.push_back(pos3.x());
+		info.skin_vertices.push_back(pos3.y());
+		info.skin_vertices.push_back(pos3.z());
+		info.skin_vertices.push_back(pos5.x());
+		info.skin_vertices.push_back(pos5.y());
+		info.skin_vertices.push_back(pos5.z());
 
-		m_skin_vertices.push_back(pos4.x());
-		m_skin_vertices.push_back(pos4.y());
-		m_skin_vertices.push_back(pos4.z());
-		m_skin_vertices.push_back(pos5.x());
-		m_skin_vertices.push_back(pos5.y());
-		m_skin_vertices.push_back(pos5.z());
+		info.skin_vertices.push_back(pos4.x());
+		info.skin_vertices.push_back(pos4.y());
+		info.skin_vertices.push_back(pos4.z());
+		info.skin_vertices.push_back(pos5.x());
+		info.skin_vertices.push_back(pos5.y());
+		info.skin_vertices.push_back(pos5.z());
 
-		m_skin_vertices.push_back(pos4.x());
-		m_skin_vertices.push_back(pos4.y());
-		m_skin_vertices.push_back(pos4.z());
-		m_skin_vertices.push_back(pos6.x());
-		m_skin_vertices.push_back(pos6.y());
-		m_skin_vertices.push_back(pos6.z());
+		info.skin_vertices.push_back(pos4.x());
+		info.skin_vertices.push_back(pos4.y());
+		info.skin_vertices.push_back(pos4.z());
+		info.skin_vertices.push_back(pos6.x());
+		info.skin_vertices.push_back(pos6.y());
+		info.skin_vertices.push_back(pos6.z());
 
-		m_skin_vertices.push_back(pos6.x());
-		m_skin_vertices.push_back(pos6.y());
-		m_skin_vertices.push_back(pos6.z());
-		m_skin_vertices.push_back(pos3.x());
-		m_skin_vertices.push_back(pos3.y());
-		m_skin_vertices.push_back(pos3.z());
+		info.skin_vertices.push_back(pos6.x());
+		info.skin_vertices.push_back(pos6.y());
+		info.skin_vertices.push_back(pos6.z());
+		info.skin_vertices.push_back(pos3.x());
+		info.skin_vertices.push_back(pos3.y());
+		info.skin_vertices.push_back(pos3.z());
 
 
 		//----under side
-		m_skin_vertices.push_back(pos3.x());
-		m_skin_vertices.push_back(pos3.y());
-		m_skin_vertices.push_back(pos3.z());
-		m_skin_vertices.push_back(pos2.x());
-		m_skin_vertices.push_back(pos2.y());
-		m_skin_vertices.push_back(pos2.z());
+		info.skin_vertices.push_back(pos3.x());
+		info.skin_vertices.push_back(pos3.y());
+		info.skin_vertices.push_back(pos3.z());
+		info.skin_vertices.push_back(pos2.x());
+		info.skin_vertices.push_back(pos2.y());
+		info.skin_vertices.push_back(pos2.z());
 
-		m_skin_vertices.push_back(pos4.x());
-		m_skin_vertices.push_back(pos4.y());
-		m_skin_vertices.push_back(pos4.z());
-		m_skin_vertices.push_back(pos2.x());
-		m_skin_vertices.push_back(pos2.y());
-		m_skin_vertices.push_back(pos2.z());
+		info.skin_vertices.push_back(pos4.x());
+		info.skin_vertices.push_back(pos4.y());
+		info.skin_vertices.push_back(pos4.z());
+		info.skin_vertices.push_back(pos2.x());
+		info.skin_vertices.push_back(pos2.y());
+		info.skin_vertices.push_back(pos2.z());
 
-		m_skin_vertices.push_back(pos5.x());
-		m_skin_vertices.push_back(pos5.y());
-		m_skin_vertices.push_back(pos5.z());
-		m_skin_vertices.push_back(pos2.x());
-		m_skin_vertices.push_back(pos2.y());
-		m_skin_vertices.push_back(pos2.z());
+		info.skin_vertices.push_back(pos5.x());
+		info.skin_vertices.push_back(pos5.y());
+		info.skin_vertices.push_back(pos5.z());
+		info.skin_vertices.push_back(pos2.x());
+		info.skin_vertices.push_back(pos2.y());
+		info.skin_vertices.push_back(pos2.z());
 
-		m_skin_vertices.push_back(pos6.x());
-		m_skin_vertices.push_back(pos6.y());
-		m_skin_vertices.push_back(pos6.z());
-		m_skin_vertices.push_back(pos2.x());
-		m_skin_vertices.push_back(pos2.y());
-		m_skin_vertices.push_back(pos2.z());
+		info.skin_vertices.push_back(pos6.x());
+		info.skin_vertices.push_back(pos6.y());
+		info.skin_vertices.push_back(pos6.z());
+		info.skin_vertices.push_back(pos2.x());
+		info.skin_vertices.push_back(pos2.y());
+		info.skin_vertices.push_back(pos2.z());
 	}
 
 	// render all childs nodes
@@ -391,20 +391,125 @@ void AnimationMgr::RenderSkeleton(AnimInfo &info, NodeAnim *node, QMatrix4x4 mat
 
 void AnimationMgr::RenderSkeletonWithBones(AnimInfo &info)
 {
+	QMatrix4x4 offset;
+	offset.translate(10.0f, 0, 0);
+
 	for (auto &bone : info.bonesInfoVec)
 	{
 		QMatrix4x4 me = bone.nodeAnim->globalTransform;
+// 		me.translate(10.0f, 0, 0);
 
 		if (bone.nodeAnim->parent) {
 			QMatrix4x4 parentMat = bone.nodeAnim->parent->globalTransform;
+// 			parentMat.translate(10.0f, 0, 0);
 
-			m_skin_vertices.push_back(parentMat.column(3).x());
-			m_skin_vertices.push_back(parentMat.column(3).y());
-			m_skin_vertices.push_back(parentMat.column(3).z());
+			QVector3D pos1(parentMat.column(3).x(), parentMat.column(3).y(), parentMat.column(3).z());
+			QVector3D pos2(me.column(3).x(), me.column(3).y(), me.column(3).z());
+// 			pos1 = offset * pos1;
+// 			pos2 = offset * pos2;
+			QVector3D dir = pos1 - pos2;
+			float len = dir.length();
+			dir.normalize();
 
-			m_skin_vertices.push_back(me.column(3).x());
-			m_skin_vertices.push_back(me.column(3).y());
-			m_skin_vertices.push_back(me.column(3).z());
+			QVector3D axisY = dir;
+			QVector3D axisX(0, 1, 0);
+			QVector3D axisZ = axisY.crossProduct(axisX, axisY);
+			axisX = axisX.crossProduct(axisY, axisZ);
+
+			float phaseRate = 0.2f;
+			QVector3D posMid = pos2 + dir * len * phaseRate;
+			QVector3D pos3(posMid + axisX * (len * phaseRate));
+			QVector3D pos4(posMid - axisX * (len * phaseRate));
+			QVector3D pos5(posMid + axisZ * (len * phaseRate));
+			QVector3D pos6(posMid - axisZ * (len * phaseRate));
+
+			//---up side
+			info.skin_vertices.push_back(pos1.x());
+			info.skin_vertices.push_back(pos1.y());
+			info.skin_vertices.push_back(pos1.z());
+			info.skin_vertices.push_back(pos3.x());
+			info.skin_vertices.push_back(pos3.y());
+			info.skin_vertices.push_back(pos3.z());
+
+			info.skin_vertices.push_back(pos1.x());
+			info.skin_vertices.push_back(pos1.y());
+			info.skin_vertices.push_back(pos1.z());
+			info.skin_vertices.push_back(pos4.x());
+			info.skin_vertices.push_back(pos4.y());
+			info.skin_vertices.push_back(pos4.z());
+
+			info.skin_vertices.push_back(pos1.x());
+			info.skin_vertices.push_back(pos1.y());
+			info.skin_vertices.push_back(pos1.z());
+			info.skin_vertices.push_back(pos5.x());
+			info.skin_vertices.push_back(pos5.y());
+			info.skin_vertices.push_back(pos5.z());
+
+			info.skin_vertices.push_back(pos1.x());
+			info.skin_vertices.push_back(pos1.y());
+			info.skin_vertices.push_back(pos1.z());
+			info.skin_vertices.push_back(pos6.x());
+			info.skin_vertices.push_back(pos6.y());
+			info.skin_vertices.push_back(pos6.z());
+
+			//----mid quad
+			info.skin_vertices.push_back(pos3.x());
+			info.skin_vertices.push_back(pos3.y());
+			info.skin_vertices.push_back(pos3.z());
+			info.skin_vertices.push_back(pos5.x());
+			info.skin_vertices.push_back(pos5.y());
+			info.skin_vertices.push_back(pos5.z());
+
+			info.skin_vertices.push_back(pos4.x());
+			info.skin_vertices.push_back(pos4.y());
+			info.skin_vertices.push_back(pos4.z());
+			info.skin_vertices.push_back(pos5.x());
+			info.skin_vertices.push_back(pos5.y());
+			info.skin_vertices.push_back(pos5.z());
+
+			info.skin_vertices.push_back(pos4.x());
+			info.skin_vertices.push_back(pos4.y());
+			info.skin_vertices.push_back(pos4.z());
+			info.skin_vertices.push_back(pos6.x());
+			info.skin_vertices.push_back(pos6.y());
+			info.skin_vertices.push_back(pos6.z());
+
+			info.skin_vertices.push_back(pos6.x());
+			info.skin_vertices.push_back(pos6.y());
+			info.skin_vertices.push_back(pos6.z());
+			info.skin_vertices.push_back(pos3.x());
+			info.skin_vertices.push_back(pos3.y());
+			info.skin_vertices.push_back(pos3.z());
+
+
+			//----under side
+			info.skin_vertices.push_back(pos3.x());
+			info.skin_vertices.push_back(pos3.y());
+			info.skin_vertices.push_back(pos3.z());
+			info.skin_vertices.push_back(pos2.x());
+			info.skin_vertices.push_back(pos2.y());
+			info.skin_vertices.push_back(pos2.z());
+
+			info.skin_vertices.push_back(pos4.x());
+			info.skin_vertices.push_back(pos4.y());
+			info.skin_vertices.push_back(pos4.z());
+			info.skin_vertices.push_back(pos2.x());
+			info.skin_vertices.push_back(pos2.y());
+			info.skin_vertices.push_back(pos2.z());
+
+			info.skin_vertices.push_back(pos5.x());
+			info.skin_vertices.push_back(pos5.y());
+			info.skin_vertices.push_back(pos5.z());
+			info.skin_vertices.push_back(pos2.x());
+			info.skin_vertices.push_back(pos2.y());
+			info.skin_vertices.push_back(pos2.z());
+
+			info.skin_vertices.push_back(pos6.x());
+			info.skin_vertices.push_back(pos6.y());
+			info.skin_vertices.push_back(pos6.z());
+			info.skin_vertices.push_back(pos2.x());
+			info.skin_vertices.push_back(pos2.y());
+			info.skin_vertices.push_back(pos2.z());
 		}
 	}
 }

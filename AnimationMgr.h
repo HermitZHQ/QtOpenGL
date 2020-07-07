@@ -66,9 +66,14 @@ class AnimationMgr : QOpenGLFunctions_4_5_Core
 		QVector<BoneInfo>		bonesInfoVec;
 		QMatrix4x4				globalInverseTransform;
 
+		GLuint					vao_skin;
+		GLuint					vbo_skin;
+		QVector<float>			skin_vertices;
+		QVector<unsigned int>	skin_indices;
+
 		AnimInfo()
 			:id(0), duration(0), tickPerSecond(25), totalTime(0), numChannels(0)
-			, animRootNode(nullptr)
+			, animRootNode(nullptr), vao_skin(0), vbo_skin(0)
 		{}
 	};
 public:
@@ -113,9 +118,4 @@ private:
 
 	QVector<QMatrix4x4>				m_boneTransforms;
 	QVector<QMatrix4x4>				m_allChannelsInterpValueVec;
-
-	GLuint							m_vao_skin;
-	GLuint							m_vbo_skin;
-	QVector<float>					m_skin_vertices;
-	QVector<unsigned int>			m_skin_indices;
 };
