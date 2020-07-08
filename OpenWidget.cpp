@@ -82,14 +82,14 @@ void OpenWidget::initializeGL()
 	TestGeometryPoints();
 	// test for a quad
 	{
-		const GLfloat g_vertices[6][2] = {
-			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
-			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
-		};
 // 		const GLfloat g_vertices[6][2] = {
-// 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
-// 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+// 			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
+// 			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
 // 		};
+		const GLfloat g_vertices[6][2] = {
+			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
+			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+		};
 
 		const GLfloat g_uvs[6][2] = {
 			{0, 1}, {1, 1}, {0, 0}, //
@@ -133,35 +133,35 @@ void OpenWidget::initializeGL()
 	TextureMgr::Instance();
 
 	// load the light box
-// 	auto lightNum = LightMgr::Instance().GetCurLightNum();
-// 	for (int i = 0; i < lightNum; ++i)
-// 	{
-// 		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
-// 		if (lightInfo.isEnabled) {
-// 			QMatrix4x4 matModel;
-// 			matModel.translate(lightInfo.pos);
-// 			matModel.scale(0.1f);
-// 			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::Diffuse);
-// 			lightInfo.SetModel(mod);
-// 		}
-// 	}
+	auto lightNum = LightMgr::Instance().GetCurLightNum();
+	for (int i = 0; i < lightNum; ++i)
+	{
+		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
+		if (lightInfo.isEnabled) {
+			QMatrix4x4 matModel;
+			matModel.translate(lightInfo.pos);
+			matModel.scale(0.1f);
+			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::Diffuse);
+			lightInfo.SetModel(mod);
+		}
+	}
 
 	// test load model
-// 	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
-// 	m_assimpPtr->LoadModel("./models/Box001.obj");
-// 	m_assimpPtr->LoadModel("./models/plane2.obj");
-// 	m_assimpPtr->LoadModel("./models/plane3.obj");
-// 	m_assimpPtr->LoadModel("./models/teapot.obj");
-// 	m_assimpPtr->LoadModel("./models/dva/001.obj");
+	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+	m_assimpPtr->LoadModel("./models/Box001.obj");
+	m_assimpPtr->LoadModel("./models/plane2.obj");
+	m_assimpPtr->LoadModel("./models/plane3.obj");
+	m_assimpPtr->LoadModel("./models/teapot.obj");
+	m_assimpPtr->LoadModel("./models/dva/001.obj");
 
 	QMatrix4x4 matModel;
 // 	matModel.translate(QVector3D(0, 0, 30));
 	matModel.rotate(-90, QVector3D(1, 0, 0));
 	matModel.scale(20);
-	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/1.fbx", matModel, ShaderHelper::Diffuse);
+// 	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/1.fbx", matModel, ShaderHelper::Diffuse);
 
-// 	m_assimpPtr->LoadModel("./models/skybox.obj");
-// 	m_assimpPtr->LoadModel("./models/Box002.obj");
+	m_assimpPtr->LoadModel("./models/skybox.obj");
+	m_assimpPtr->LoadModel("./models/Box002.obj");
 
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
@@ -383,7 +383,7 @@ void OpenWidget::paintGL()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
 	//--------Deferred rendering g-buffer handle pass
-// 	CreateGBufferFrameBufferTextures();
+	CreateGBufferFrameBufferTextures();
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		qDebug() << "check frame buffer failed";
 		return;
@@ -399,7 +399,7 @@ void OpenWidget::paintGL()
 		Model *mod = ModelMgr::Instance().GetModel(i);
 // 		mod->SetDrawType(Mesh::Line);
 
-// 		mod->SetShaderType(ShaderHelper::GBufferGeometry);
+		mod->SetShaderType(ShaderHelper::GBufferGeometry);
 		if (mod->GetModelName().compare("water") == 0) {
 			continue;
 		}
@@ -407,7 +407,7 @@ void OpenWidget::paintGL()
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
 
-	return;// test skeleton anim
+// 	return;// test skeleton anim
 
 	//----test add water wave during the deferred rendering g-buffer phase
 	Model *pWater = ModelMgr::Instance().FindModelByName("water");

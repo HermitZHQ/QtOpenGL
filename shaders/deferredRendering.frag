@@ -102,6 +102,16 @@ vec4 CalculateDirLight(Light light)
 	//----test volumetric light
 	vec3 worldPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
 
+	//----fog(use depth 0.1 - 0.2 to be the fog area)
+	vec4 posInLightSpace = vec4(wPos, 1);
+	posInLightSpace = posInLightSpace / posInLightSpace.w;
+	posInLightSpace = (posInLightSpace + 1.0) / 2.0;
+	float depth = posInLightSpace.z;
+	vec3 fogColor = vec3(0, 0, 0);
+	if (depth < 0.6 && depth > 0.1){
+		fogColor = vec3(0.5, 0.5, 0.5);
+	}
+
 	vec3 ray = worldPos - camPosWorld;
 	float rayLen = length(ray);
 	vec3 rayDir = normalize(ray);
@@ -154,8 +164,9 @@ vec4 CalculateDirLight(Light light)
     // SSAO
 	float occlusion = texture(ssaoBlurTex, uv).r;
 
+	//return vec4(fogColor, 1);
 	//return vec4(accumulateFog, 1);
-	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + accumulateFog, 1);
+	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + fogColor, 1);
 }
 
 vec4 CalculatePointLight(Light light)
