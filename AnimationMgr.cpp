@@ -230,9 +230,9 @@ void AnimationMgr::DrawSkeleton(unsigned int animId)
 
 	QMatrix4x4 identity;
 	identity.setToIdentity();
-/*	RenderSkeleton(anim.value(), anim.value().animRootNode, anim.value().globalInverseTransform, identity);*/
+	RenderSkeleton(anim.value(), anim.value().animRootNode, anim.value().globalInverseTransform, identity);
 	// 只使用bones相关的节点信息（父节点也可能是非bone），两种绘制都可以，root的形式绘制的更全面一些
-	RenderSkeletonWithBones(anim.value());
+// 	RenderSkeletonWithBones(anim.value());
 
 	auto numVertices = anim.value().skin_vertices.size() / 3;
 	for (int i = 0; i < numVertices; ++i)
@@ -271,12 +271,20 @@ void AnimationMgr::DrawSkeleton(unsigned int animId)
 
 void AnimationMgr::RenderSkeleton(AnimInfo &info, NodeAnim *node, QMatrix4x4 mat, QMatrix4x4 parentMat)
 {
-	QMatrix4x4 offset = node->isBone ? GetBoneOffsetByName(info, node->name) : QMatrix4x4();
+// 	QMatrix4x4 offset = node->isBone ? GetBoneOffsetByName(info, node->name) : QMatrix4x4();
 	QMatrix4x4 me = /*mat **/ node->globalTransform /** offset*/;
+
+	QMatrix4x4 offset;
+	offset.translate(3.0f, 0, 0);
+	offset.rotate(90, QVector3D(1, 0, 0));
 
 	if (node->parent) {
 		QVector3D pos1(parentMat.column(3).x(), parentMat.column(3).y(), parentMat.column(3).z());
 		QVector3D pos2(me.column(3).x(), me.column(3).y(), me.column(3).z());
+
+		pos1 = offset * pos1;
+		pos2 = offset * pos2;
+
 		QVector3D dir = pos1 - pos2;
 		float len = dir.length();
 		dir.normalize();
@@ -286,12 +294,12 @@ void AnimationMgr::RenderSkeleton(AnimInfo &info, NodeAnim *node, QMatrix4x4 mat
 		QVector3D axisZ = axisY.crossProduct(axisX, axisY);
 		axisX = axisX.crossProduct(axisY, axisZ);
 
-		float phaseRate = 0.2f;
+		float phaseRate = 0.15f;
 		QVector3D posMid = pos2 + dir * len * phaseRate;
-		QVector3D pos3(posMid + axisX * (len * phaseRate));
-		QVector3D pos4(posMid - axisX * (len * phaseRate));
-		QVector3D pos5(posMid + axisZ * (len * phaseRate));
-		QVector3D pos6(posMid - axisZ * (len * phaseRate));
+		QVector3D pos3(posMid + axisX * (len * phaseRate * 0.5f));
+		QVector3D pos4(posMid - axisX * (len * phaseRate * 0.5f));
+		QVector3D pos5(posMid + axisZ * (len * phaseRate * 0.5f));
+		QVector3D pos6(posMid - axisZ * (len * phaseRate * 0.5f));
 		
 		//---up side
 		info.skin_vertices.push_back(pos1.x());
@@ -392,21 +400,20 @@ void AnimationMgr::RenderSkeleton(AnimInfo &info, NodeAnim *node, QMatrix4x4 mat
 void AnimationMgr::RenderSkeletonWithBones(AnimInfo &info)
 {
 	QMatrix4x4 offset;
-	offset.translate(10.0f, 0, 0);
+	offset.translate(3.0f, 0, 0);
+	offset.rotate(90, QVector3D(1, 0, 0));
 
 	for (auto &bone : info.bonesInfoVec)
 	{
 		QMatrix4x4 me = bone.nodeAnim->globalTransform;
-// 		me.translate(10.0f, 0, 0);
 
 		if (bone.nodeAnim->parent) {
 			QMatrix4x4 parentMat = bone.nodeAnim->parent->globalTransform;
-// 			parentMat.translate(10.0f, 0, 0);
 
 			QVector3D pos1(parentMat.column(3).x(), parentMat.column(3).y(), parentMat.column(3).z());
 			QVector3D pos2(me.column(3).x(), me.column(3).y(), me.column(3).z());
-// 			pos1 = offset * pos1;
-// 			pos2 = offset * pos2;
+			pos1 = offset * pos1;
+			pos2 = offset * pos2;
 			QVector3D dir = pos1 - pos2;
 			float len = dir.length();
 			dir.normalize();
@@ -416,12 +423,12 @@ void AnimationMgr::RenderSkeletonWithBones(AnimInfo &info)
 			QVector3D axisZ = axisY.crossProduct(axisX, axisY);
 			axisX = axisX.crossProduct(axisY, axisZ);
 
-			float phaseRate = 0.2f;
+			float phaseRate = 0.15f;
 			QVector3D posMid = pos2 + dir * len * phaseRate;
-			QVector3D pos3(posMid + axisX * (len * phaseRate));
-			QVector3D pos4(posMid - axisX * (len * phaseRate));
-			QVector3D pos5(posMid + axisZ * (len * phaseRate));
-			QVector3D pos6(posMid - axisZ * (len * phaseRate));
+			QVector3D pos3(posMid + axisX * (len * phaseRate * 0.5f));
+			QVector3D pos4(posMid - axisX * (len * phaseRate * 0.5f));
+			QVector3D pos5(posMid + axisZ * (len * phaseRate * 0.5f));
+			QVector3D pos6(posMid - axisZ * (len * phaseRate * 0.5f));
 
 			//---up side
 			info.skin_vertices.push_back(pos1.x());
