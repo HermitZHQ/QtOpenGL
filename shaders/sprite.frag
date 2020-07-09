@@ -19,6 +19,6 @@ in Vertex {
 
 void main()
 {
-	fColor = texture(tex, gl_PointCoord) * ambiendColor;
+	fColor = texture(tex, gl_PointCoord) * ambientColor;
 	//fColor = vec4(1, 0, 0, 1);
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>626</width>
-    <height>389</height>
+    <width>642</width>
+    <height>443</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="btn_Specular">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>130</y>
+      <x>370</x>
+      <y>70</y>
       <width>111</width>
       <height>28</height>
      </rect>
@@ -30,8 +30,8 @@
    <widget class="QPushButton" name="btn_Ambient">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>100</y>
+      <x>370</x>
+      <y>40</y>
       <width>111</width>
       <height>28</height>
      </rect>
@@ -43,10 +43,10 @@
    <widget class="QListWidget" name="list_info">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>0</y>
-      <width>321</width>
-      <height>391</height>
+      <x>0</x>
+      <y>160</y>
+      <width>641</width>
+      <height>281</height>
      </rect>
     </property>
    </widget>
@@ -88,8 +88,8 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>70</y>
+      <x>190</x>
+      <y>10</y>
       <width>101</width>
       <height>21</height>
      </rect>
@@ -101,8 +101,8 @@
    <widget class="QSlider" name="slid_R">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>100</y>
+      <x>190</x>
+      <y>40</y>
       <width>160</width>
       <height>22</height>
      </rect>
@@ -123,8 +123,8 @@
    <widget class="QSlider" name="slid_G">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>130</y>
+      <x>190</x>
+      <y>70</y>
       <width>160</width>
       <height>22</height>
      </rect>
@@ -145,8 +145,8 @@
    <widget class="QSlider" name="slid_B">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>160</y>
+      <x>190</x>
+      <y>100</y>
       <width>160</width>
       <height>22</height>
      </rect>
@@ -167,8 +167,8 @@
    <widget class="QSlider" name="slid_A">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>190</y>
+      <x>190</x>
+      <y>130</y>
       <width>160</width>
       <height>22</height>
      </rect>

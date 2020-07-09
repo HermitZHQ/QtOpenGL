@@ -26,7 +26,7 @@ void main()
 
 	// assumption ambient light color
 	vec3 ambient = vec3(1, 1, 1);
-	ambient = ambientColor;
+	ambient = ambientColor.rgb;
 	// assumption diffuse color
 	vec3 diffuseColor = vec3(1, 1, 1);
 	// assumption specular color

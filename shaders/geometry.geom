@@ -22,7 +22,7 @@ vec3 getNormal(){
 }
 
 vec4 explode(vec4 pos, vec3 normal){
-	float t = time / 1000.0;
+	float t = float(time) / 1000.0;
 	vec3 dirLen = normal * ((sin(t) + 1.0) / 2.0) * 2;
 	return pos + vec4(dirLen, 0);
 }

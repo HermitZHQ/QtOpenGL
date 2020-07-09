@@ -79,7 +79,8 @@ void OpenWidget::initializeGL()
 	initializeOpenGLFunctions();
 
 	m_shaderHelperPtr = &ShaderHelper::Instance();
-	TestGeometryPoints();
+	CheckError;
+// 	TestGeometryPoints();
 	// test for a quad
 	{
 // 		const GLfloat g_vertices[6][2] = {
@@ -98,11 +99,13 @@ void OpenWidget::initializeGL()
 
 		glGenVertexArrays(1, &vao_quad);
 		glBindVertexArray(vao_quad);
+		CheckError;
 
 		texId = TextureMgr::Instance().LoadTexture("./textures/container.jpg");
 		SwitchShader(ShaderHelper::FrameBuffer1);
 		auto loc = ShaderHelper::Instance().GetUniformLocation("tex");
 		glUniform1i(loc, 0);
+		CheckError;
 
 		GLuint vbo = 0;
 		glGenBuffers(1, &vbo);
@@ -110,10 +113,13 @@ void OpenWidget::initializeGL()
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 24, nullptr, GL_STATIC_DRAW);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 12, g_vertices);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 12, sizeof(GLfloat) * 12, g_uvs);
+		CheckError;
 
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		CheckError;
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(GLfloat) * 12));
+		CheckError;
 		glEnableVertexAttribArray(1);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -124,35 +130,40 @@ void OpenWidget::initializeGL()
 // 	glFrontFace(GL_CW);
 
 	glEnable(GL_DEPTH_TEST);
+	CheckError;
 	glEnable(GL_STENCIL_TEST);
+	CheckError;
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	CheckError;
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	CheckError;
 // 	glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 
 	TextureMgr::Instance();
+	CheckError;
 
 	// load the light box
-	auto lightNum = LightMgr::Instance().GetCurLightNum();
-	for (int i = 0; i < lightNum; ++i)
-	{
-		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
-		if (lightInfo.isEnabled) {
-			QMatrix4x4 matModel;
-			matModel.translate(lightInfo.pos);
-			matModel.scale(0.1f);
-			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::Diffuse);
-			lightInfo.SetModel(mod);
-		}
-	}
+// 	auto lightNum = LightMgr::Instance().GetCurLightNum();
+// 	for (int i = 0; i < lightNum; ++i)
+// 	{
+// 		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
+// 		if (lightInfo.isEnabled) {
+// 			QMatrix4x4 matModel;
+// 			matModel.translate(lightInfo.pos);
+// 			matModel.scale(0.1f);
+// 			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::Diffuse);
+// 			lightInfo.SetModel(mod);
+// 		}
+// 	}
 
 	// test load model
-	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+// 	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
 	m_assimpPtr->LoadModel("./models/Box001.obj");
-	m_assimpPtr->LoadModel("./models/plane2.obj");
-	m_assimpPtr->LoadModel("./models/plane3.obj");
-	m_assimpPtr->LoadModel("./models/teapot.obj");
-	m_assimpPtr->LoadModel("./models/dva/001.obj");
+// 	m_assimpPtr->LoadModel("./models/plane2.obj");
+// 	m_assimpPtr->LoadModel("./models/plane3.obj");
+// 	m_assimpPtr->LoadModel("./models/teapot.obj");
+// 	m_assimpPtr->LoadModel("./models/dva/001.obj");
 
 	QMatrix4x4 matModel;
 // 	matModel.translate(QVector3D(0, 0, 30));
@@ -160,8 +171,8 @@ void OpenWidget::initializeGL()
 	matModel.scale(20);
 // 	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/1.fbx", matModel, ShaderHelper::Diffuse);
 
-	m_assimpPtr->LoadModel("./models/skybox.obj");
-	m_assimpPtr->LoadModel("./models/Box002.obj");
+// 	m_assimpPtr->LoadModel("./models/skybox.obj");
+// 	m_assimpPtr->LoadModel("./models/Box002.obj");
 
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
@@ -364,26 +375,26 @@ void OpenWidget::paintGL()
 	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
 	QMatrix4x4 matView = m_cam->GetViewMatrix();
 	QVector3D camPos = m_cam->GetCamPos().toVector3D();
-	matVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
+// 	matVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
 
 	//-----Shadow render pass
-	CreateShadowMapFrameBufferTexture();
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		qDebug() << "check frame buffer failed";
-		return;
-	}
-	ClearAndReset();
-	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
-
-	for (unsigned int i = 0; i < modelNum; ++i)	{
-		Model *mod = ModelMgr::Instance().GetModel(i);
-		QMatrix4x4 matModel = mod->GetWorldMat();
-		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
+// 	CreateShadowMapFrameBufferTexture();
+// 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+// 		qDebug() << "check frame buffer failed";
+// 		return;
+// 	}
+// 	ClearAndReset();
+// 	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
+// 
+// 	for (unsigned int i = 0; i < modelNum; ++i)	{
+// 		Model *mod = ModelMgr::Instance().GetModel(i);
+// 		QMatrix4x4 matModel = mod->GetWorldMat();
+// 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+// 	}
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
 	//--------Deferred rendering g-buffer handle pass
-	CreateGBufferFrameBufferTextures();
+// 	CreateGBufferFrameBufferTextures();
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		qDebug() << "check frame buffer failed";
 		return;
@@ -399,7 +410,7 @@ void OpenWidget::paintGL()
 		Model *mod = ModelMgr::Instance().GetModel(i);
 // 		mod->SetDrawType(Mesh::Line);
 
-		mod->SetShaderType(ShaderHelper::GBufferGeometry);
+// 		mod->SetShaderType(ShaderHelper::GBufferGeometry);
 		if (mod->GetModelName().compare("water") == 0) {
 			continue;
 		}
@@ -407,7 +418,7 @@ void OpenWidget::paintGL()
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
 
-// 	return;// test skeleton anim
+	return;// test skeleton anim
 
 	//----test add water wave during the deferred rendering g-buffer phase
 	Model *pWater = ModelMgr::Instance().FindModelByName("water");
