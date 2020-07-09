@@ -424,11 +424,14 @@ void OpenWidget::paintGL()
 	Model *pWater = ModelMgr::Instance().FindModelByName("water");
 	if (Q_NULLPTR != pWater) {
 		pWater->SetShaderType(ShaderHelper::Water);
+		CheckError;
 		glActiveTexture(GL_TEXTURE3);
+		CheckError;
 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+		CheckError;
 
-		SwitchShader(ShaderHelper::GBufferGeometry);
 		QMatrix4x4 matModel = pWater->GetWorldMat();
+// 		pWater->SetShaderType(ShaderHelper::GBufferGeometry);
 		pWater->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down

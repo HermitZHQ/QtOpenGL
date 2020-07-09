@@ -6,7 +6,7 @@ MainWindow* GetGlobalMainWndPtr();
 
 #define ENABLE_TEX
 #define ENABLE_NORMALMAP
-#define VERBOSE_DEBUG
+// #define VERBOSE_DEBUG
 
 #define Q8(str) (QString::fromLocal8Bit(str))
 #define AddTipInfo(info) { \
@@ -49,4 +49,5 @@ MainWindow* GetGlobalMainWndPtr();
 #else
 	#define CheckError
 	#define CheckErrorMsg
+	#define CheckErrorFatal
 #endif
