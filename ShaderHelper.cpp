@@ -22,6 +22,7 @@ GLuint ShaderHelper::LoadShaders(ShaderInfo *info, GLuint size)
 	for (GLuint i = 0; i < size; ++i)
 	{
 		GLuint shaderId = glCreateShader(info[i].shaderType);
+		CheckError;
 
 		QFile file(info[i].shaderPath);
 		if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -36,7 +37,9 @@ GLuint ShaderHelper::LoadShaders(ShaderInfo *info, GLuint size)
 		const GLchar *content = ba.data();
 
 		glShaderSource(shaderId, 1, &(content), NULL);
+		CheckError;
 		glCompileShader(shaderId);
+		CheckError;
 
 		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &res);
 		if (!res) {
@@ -48,9 +51,11 @@ GLuint ShaderHelper::LoadShaders(ShaderInfo *info, GLuint size)
 		}
 
 		glAttachShader(program, shaderId);
+		CheckError;
 	}
 
 	glLinkProgram(program);
+	CheckError;
 	glGetProgramiv(program, GL_LINK_STATUS, &res);
 	if (!res) {
 		GLchar cLog[520] = { 0 };
@@ -81,6 +86,7 @@ void ShaderHelper::GetCommonUniformLocation()
 	m_matOrthoLoc[m_shaderType] = GetUniformLocation("orthoMat");
 	m_matViewLoc[m_shaderType] = GetUniformLocation("viewMat");
 	m_matLightVPLoc[m_shaderType] = GetUniformLocation("lightVPMat");
+	CheckError;
 
 	//----bones
 	QString strTmp;
@@ -89,13 +95,16 @@ void ShaderHelper::GetCommonUniformLocation()
 		strTmp = QString("gBones[%1]").arg(i);
 		m_bonesLoc[m_shaderType][i] = GetUniformLocation(strTmp.toLocal8Bit());
 	}
+	CheckError;
 
 	//----material
 	m_ambientColorLoc[m_shaderType] = GetUniformLocation("ambientColor");
 	m_specularColorLoc[m_shaderType] = GetUniformLocation("specularColor");
+	CheckError;
 
 	//----time
 	m_timeLoc[m_shaderType] = GetUniformLocation("time");
+	CheckError;
 
 	//----light
 	for (int i = 0; i < maxLightNum; ++i)
@@ -125,6 +134,7 @@ void ShaderHelper::GetCommonUniformLocation()
 		strTmp = QString("lights[%1].outerCutoff").arg(i);
 		m_spotLightOuterCutoff[m_shaderType][i] = GetUniformLocation(strTmp.toLocal8Bit());
 	}
+	CheckError;
 
 	//----SSAO samples
 	for (int i = 0; i < ShaderHelper::ssaoSampleNum; ++i)
@@ -132,61 +142,75 @@ void ShaderHelper::GetCommonUniformLocation()
 		strTmp = QString("ssaoSamples[%1]").arg(i);
 		m_ssaoSamples[m_shaderType][i] = GetUniformLocation(strTmp.toLocal8Bit());
 	}
+	CheckError;
 
 	//----texture
 	auto texId = GetUniformLocation("tex");
 	if (-1 != texId) {
 		glUniform1i(texId, 0);
 	}
+	CheckError;
 	auto normalMapId = GetUniformLocation("normalMap");
 	if (-1 != normalMapId) {
 		glUniform1i(normalMapId, 1);
 	}
+	CheckError;
 	auto projTexId = GetUniformLocation("projTex");
 	if (-1 != projTexId) {
 		glUniform1i(projTexId, 10);
 	}
+	CheckError;
 	auto shadowMapId = GetUniformLocation("shadowMap");
 	if (-1 != shadowMapId) {
 		glUniform1i(shadowMapId, 2);
 	}
+	CheckError;
 	auto offScreenTexId = GetUniformLocation("offScreenTex");
 	if (-1 != offScreenTexId) {
 		glUniform1i(offScreenTexId, 3);
 	}
+	CheckError;
 	auto gBufferPosTexId = GetUniformLocation("gBufferPosTex");
 	if (-1 != gBufferPosTexId) {
 		glUniform1i(gBufferPosTexId, 4);
 	}
+	CheckError;
 	auto gBufferNormalTexId = GetUniformLocation("gBufferNormalTex");
 	if (-1 != gBufferNormalTexId) {
 		glUniform1i(gBufferNormalTexId, 5);
 	}
+	CheckError;
 	auto gBufferAlbedoTexId = GetUniformLocation("gBufferAlbedoTex");
 	if (-1 != gBufferAlbedoTexId) {
 		glUniform1i(gBufferAlbedoTexId, 6);
 	}
+	CheckError;
 	auto gBufferSkyboxTexId = GetUniformLocation("gBufferSkyboxTex");
 	if (-1 != gBufferSkyboxTexId) {
 		glUniform1i(gBufferSkyboxTexId, 7);
 	}
+	CheckError;
 	auto ssaoNoiseTexId = GetUniformLocation("texNoise");
 	if (-1 != ssaoNoiseTexId) {
 		glUniform1i(ssaoNoiseTexId, 8);
 	}
+	CheckError;
 	auto ssaoTexId = GetUniformLocation("ssaoTex");
 	if (-1 != ssaoTexId) {
 		glUniform1i(ssaoTexId, 9);
 	}
+	CheckError;
 	auto ssaoBlurTexId = GetUniformLocation("ssaoBlurTex");
 	if (-1 != ssaoBlurTexId) {
 		glUniform1i(ssaoBlurTexId, 10);
 	}
+	CheckError;
 
 	auto skyboxId = GetUniformLocation("skybox");// put skybox unit far away.....
 	if (-1 != skyboxId) {
 // 		glUniform1i(skyboxId, 8);// why I should set it 2?? I don't understand here.....
 	}
+	CheckError;
 
 	Unuse();
 }

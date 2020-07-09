@@ -77,7 +77,7 @@ vec4 CalculateDirLight(Light light)
 	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
 
 	//return vec4(1, 0, 0, 1);
-	return vec4(albedo);
+	//return vec4(albedo);
 	return vec4(ambient + (diffuse + specularRes) * shadowValue, 1);
 }
 

@@ -511,12 +511,15 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	QMatrix4x4 matOrtho)
 {
 	glBindVertexArray(GetVao());
-	CheckError;
+	CheckErrorFatal;
 
 	if (0 != m_skyboxTexID) {
 		m_shader.SetShaderType(ShaderHelper::SkyboxGBuffer);
+		CheckErrorFatal;
 		glActiveTexture(GL_TEXTURE8);
+		CheckErrorFatal;
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexID);
+		CheckErrorFatal;
 		matModel.translate(camPos);
 		matModel.scale(10000);
 		glCullFace(GL_FRONT);
@@ -527,52 +530,59 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 		glBindTexture(GL_TEXTURE_2D, m_projTexID);
 		ShaderHelper::Instance().SetShaderType(ShaderHelper::Decal);
 	}
-	CheckError;
+	CheckErrorFatal;
 
 	if (0 != m_diffuseTex1ID) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_diffuseTex1ID);
 	}
-	CheckError;
+	CheckErrorFatal;
 
 	if (0 != m_normalmapTexID && 0 == m_skyboxTexID) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_normalmapTexID);
 	}
-	CheckError;
+	CheckErrorFatal;
 
 	matVP = matVP * matModel;
 	m_shader.SetMVPMatrix(matVP, matModel, matView, matProj);
 	m_shader.SetCamWorldPos(camPos);
 	m_shader.SetOrthoMat(matOrtho);
+	CheckErrorFatal;
 
 	m_shader.SetAmbientSpecularColor(m_mainWnd->GetAmbientColor(), m_mainWnd->GetSpecularColor());
 	m_shader.SetTime(GetTickCount());
+	CheckErrorFatal;
 
 	// Draw element(with indices)
 	if (Triangle == m_drawType) {
 		glVertexArrayElementBuffer(GetVao(), m_vaeo);
+		CheckErrorFatal;
 		glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, 0);
+		CheckErrorFatal;
 	}
 	else if (Point == m_drawType) {
 		glDrawArrays(GL_TRIANGLES, 0, GetVerticesNum());
+		CheckErrorFatal;
 	}
 	else if (Line == m_drawType) {
 		glVertexArrayElementBuffer(GetVao(), m_vaeo_lines);
+		CheckErrorFatal;
 		glDrawElements(GL_LINES, GetLinesIndicesNum(), GL_UNSIGNED_INT, 0);
+		CheckErrorFatal;
 	}
-	CheckError;
 
 	if (0 != m_skyboxTexID) {
 		glCullFace(GL_BACK);
 		glDepthMask(1);
 	}
+	CheckErrorFatal;
 
 	// Test draw skeleton here
 	if (GetAnimId() != 0) {
 		AnimationMgr::Instance().DrawSkeleton(GetAnimId());
 	}
-	CheckError;
+	CheckErrorFatal;
 
 	glBindVertexArray(0);
 }

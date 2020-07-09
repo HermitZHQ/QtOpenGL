@@ -35,6 +35,17 @@ MainWindow* GetGlobalMainWndPtr();
 			AddTipInfo(str); \
 		} \
 	}
+
+	#define CheckErrorFatal \
+	{ \
+		auto err = glGetError(); \
+		if (0 != err) { \
+			QString str; \
+			str = QString("[GL Error]-No[%1]-File[%2]-Line[%3]-Func[%4]").arg(err).arg(__FILE__).arg(__LINE__).arg(__FUNCTION__); \
+			AddTipInfo(str); \
+			throw(0); \
+		} \
+	}
 #else
 	#define CheckError
 	#define CheckErrorMsg

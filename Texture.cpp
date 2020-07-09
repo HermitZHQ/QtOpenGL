@@ -32,7 +32,8 @@ void Texture::LoadTexture(QString path)
 	// Assign texture to ID
 	glBindTexture(GL_TEXTURE_2D, m_texId);
 	CheckError;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, w, h, 0, GL_BGRA, GL_UNSIGNED_INT, tex);
+// 	glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
 	CheckErrorMsg(path);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	CheckError;
@@ -52,7 +53,8 @@ void Texture::LoadTexture(QString path)
 void Texture::LoadSkyboxTexture(QVector<QString> paths)
 {
 	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_texId);
-	glTextureStorage2D(m_texId, 10, GL_BGRA, 2048, 2048);
+	CheckError;
+	glTextureStorage2D(m_texId, 10, GL_RGBA, 2048, 2048);
 	CheckError;
 
 // 	glGenTextures(1, &m_texId);
@@ -80,7 +82,7 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 
 
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
-			0, GL_BGRA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
+			0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
 		CheckError;
 	}
 	
