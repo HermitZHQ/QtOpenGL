@@ -461,6 +461,16 @@ GLuint Mesh::GetAnimId() const
 	return m_animId;
 }
 
+void Mesh::SetName(const QString &name)
+{
+	m_name = name;
+}
+
+QString Mesh::GetName() const
+{
+	return m_name;
+}
+
 GLuint Mesh::GetMultiInstanceModelMatrixOffset() const
 {
 	return (GetVerticesMemSize() + GetUvs1MemSize() + GetTangentsMemSize()

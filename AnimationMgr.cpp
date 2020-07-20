@@ -179,6 +179,10 @@ void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 		return;
 	}
 
+	// 测试：running.fbx，统一时间后，动画正常，也就是说我这里的处理也是ok的，只是因为各个mesh之间的时差导致了问题
+	// 所以说，同一个动画应该一起播放？？但是如何统合所有的mesh呢？这里还需要思考一下
+	second = 0.002f;
+
 	// begin to update the valid animation......
 	QString animName =  anim.value().name;
 	float duration = anim.value().duration;

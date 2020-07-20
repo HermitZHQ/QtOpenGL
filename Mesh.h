@@ -104,6 +104,10 @@ public:
 	void SetAnimId(GLuint id);
 	GLuint GetAnimId() const;
 
+	//----name
+	void SetName(const QString &name);
+	QString GetName() const;
+
 	//----multi instance
 	GLuint GetMultiInstanceModelMatrixOffset() const;
 	GLuint GetInstancesBufferId() const;
@@ -122,6 +126,7 @@ public:
 		QMatrix4x4 matOrtho);
 
 private:
+	QString								m_name;
 	eDrawType							m_drawType;
 	QVector<float>						m_vertices;
 	QVector<float>						m_colors;

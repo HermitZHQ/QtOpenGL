@@ -112,6 +112,7 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
 			auto mesh = scene->mMeshes[child->mMeshes[i]];
 			// create new sub mesh, then you can add it to one model
 			Mesh *m = new Mesh;
+			m->SetName(mesh->mName.data);
 
 			//handle the mesh's materials
 			auto mat = scene->mMaterials[mesh->mMaterialIndex];
