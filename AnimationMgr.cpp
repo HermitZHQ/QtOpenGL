@@ -85,6 +85,7 @@ unsigned int AnimationMgr::CreateAnimFromAiScene(const aiScene *scene, const aiM
 
 	// ------get all bones anim node
 	GetAllBonesAnimNode(info);
+	GetAllChannelsBoneInfo(info); // for debug test
 
 	m_animInfoMap.insert(animId, info);
 	return animId;
@@ -181,7 +182,8 @@ void AnimationMgr::UpdateAnimation(unsigned int animId, float second)
 
 	// 测试：running.fbx，统一时间后，动画正常，也就是说我这里的处理也是ok的，只是因为各个mesh之间的时差导致了问题
 	// 所以说，同一个动画应该一起播放？？但是如何统合所有的mesh呢？这里还需要思考一下
-	second = 0.002f;
+	// 这里就是因为我在assimp load的时候没有处理好，一个running.fbx处理成11个model了，只要他们都统合在一个model里就ok了（assimp的修改）
+// 	second = 0.002f;
 
 	// begin to update the valid animation......
 	QString animName =  anim.value().name;
@@ -680,7 +682,7 @@ AnimationMgr::NodeAnim* AnimationMgr::CreateAnimNodes(AnimInfo &info, const aiNo
 	{
 		if (animation->mChannels[i]->mNodeName.data == pNode->name) {
 			pNode->channelId = i;
-			qDebug() << QString("find channel--[%1]").arg(i);
+// 			qDebug() << QString("find channel--[%1]").arg(i);
 		}
 	}
 
@@ -772,6 +774,13 @@ QMatrix4x4 AnimationMgr::GetBoneOffsetByName(AnimInfo &info, QString &name)
 	}
 
 	return QMatrix4x4();
+}
+
+void AnimationMgr::GetAllChannelsBoneInfo(AnimInfo &info)
+{
+	for (auto &channel : info.channels) {
+		channel.isBone = CheckNodeIsBoneByName(info, channel.name);
+	}
 }
 
 AnimationMgr::NodeAnim* AnimationMgr::FindNodeAnimByName(AnimInfo &info, const char *name)

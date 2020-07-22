@@ -50,6 +50,11 @@ class AnimationMgr : QOpenGLFunctions_4_5_Core
 		unsigned int			numScalingKeys;
 		QVector<QVector3D>		scalingKeys;
 		QVector<double>			scalingKeysTime;
+		bool					isBone;
+
+		ChannelInfo()
+			:isBone(false) 
+		{}
 	};
 	struct AnimInfo
 	{
@@ -103,6 +108,7 @@ protected:
 	void GetAllBonesAnimNode(AnimInfo &info);
 	bool CheckNodeIsBoneByName(AnimInfo &info, QString &name);
 	QMatrix4x4 GetBoneOffsetByName(AnimInfo &info, QString &name);
+	void GetAllChannelsBoneInfo(AnimInfo &info);
 
 	NodeAnim* FindNodeAnimByName(AnimInfo &info, const char *name);
 	void FindNodeAnimRecursive(NodeAnim *node, const char *name, NodeAnim **outNode);

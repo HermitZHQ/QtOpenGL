@@ -64,7 +64,13 @@ int AssetImport::LoadModel(const char *path)
 	m_model = nullptr;
 	m_matModel.setToIdentity();
 	m_shaderType = ShaderHelper::Default;
-	HandleChildNode(m_scene, m_scene->mRootNode);
+
+	// create a new model for a child
+	Model *mod = nullptr;
+	mod = ModelMgr::Instance().CreateNewModel();
+	mod->SetModelName(m_scene->mMeshes[0]->mName.data);
+
+	HandleChildNode(m_scene, m_scene->mRootNode, mod);
 
 	return 0;
 }
@@ -76,29 +82,25 @@ Model* AssetImport::LoadModelWithModelMatrixAndShaderType(const char *path, QMat
 	m_model = nullptr;
 	m_matModel = matModel;
 	m_shaderType = type;
-	HandleChildNode(m_scene, m_scene->mRootNode);
+
+	// create a new model for a child
+	Model *mod = nullptr;
+	mod = ModelMgr::Instance().CreateNewModel();
+	mod->SetModelName(m_scene->mMeshes[0]->mName.data);
+
+	HandleChildNode(m_scene, m_scene->mRootNode, mod);
 
 	return m_model;
 }
 
-int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node)
+int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node, Model *mod)
 {
 	unsigned int numChild = node->mNumChildren;
 	for (unsigned int a = 0; a < numChild; ++a)
 	{
 		auto child = node->mChildren[a];
 		if (child->mNumChildren > 0) {
-			HandleChildNode(scene, child);
-		}
-
-		// create a new model for a child
-		Model *mod = nullptr;
-		if (0 != child->mNumMeshes) {
-			mod = ModelMgr::Instance().CreateNewModel();
-			mod->SetModelName(child->mName.C_Str());
-		}
-		else {
-			continue;
+			HandleChildNode(scene, child, mod);
 		}
 
 		auto numMeshes = child->mNumMeshes;
