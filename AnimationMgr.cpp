@@ -3,6 +3,7 @@
 #include "assimp/ai_assert.h"
 #include "assimp/anim.h"
 #include "ShaderHelper.h"
+#include "PreDef.h"
 
 AnimationMgr::AnimationMgr()
 
@@ -34,7 +35,10 @@ unsigned int AnimationMgr::CreateAnimFromAiScene(const aiScene *scene, const aiM
 
 	auto animId = GenAnimID();
 
-	ai_assert(scene->mNumAnimations == 1);
+// 	ai_assert(scene->mNumAnimations == 1);
+	if (scene->mNumAnimations > 1) {
+		AddTipInfo(Q8("[TODO]:动画数量大于1，还没有进行处理，默认取动画0"));
+	}
 	aiAnimation *anim = scene->mAnimations[0];
 
 	AnimInfo info;
