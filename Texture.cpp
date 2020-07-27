@@ -54,7 +54,8 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 {
 	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_texId);
 	CheckError;
-	glTextureStorage2D(m_texId, 10, GL_RGBA, 2048, 2048);
+// 	glTextureStorage2D(m_texId, 10, GL_RGBA, 2048, 2048);
+	glTextureStorage2D(m_texId, 6, GL_RGBA32F, 2048, 2048);
 	CheckError;
 
 // 	glGenTextures(1, &m_texId);

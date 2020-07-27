@@ -32,6 +32,10 @@ Q_INVOKABLE void MainWindow::AddInfo(QString info)
 {
 	ui->list_info->addItem(info);
 	ui->list_info->scrollToBottom();
+
+	if (ui->list_info->count() > 1000) {
+		ui->list_info->clear();
+	}
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
