@@ -159,11 +159,11 @@ void OpenWidget::initializeGL()
 
 	// test load model
 	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
-	m_assimpPtr->LoadModel("./models/Box001.obj");
-	m_assimpPtr->LoadModel("./models/plane2.obj");
-	m_assimpPtr->LoadModel("./models/plane3.obj");
-	m_assimpPtr->LoadModel("./models/teapot.obj");
-	m_assimpPtr->LoadModel("./models/dva/001.obj");
+// 	m_assimpPtr->LoadModel("./models/Box001.obj");
+// 	m_assimpPtr->LoadModel("./models/plane2.obj");
+// 	m_assimpPtr->LoadModel("./models/plane3.obj");
+// 	m_assimpPtr->LoadModel("./models/teapot.obj");
+// 	m_assimpPtr->LoadModel("./models/dva/001.obj");
 
 	QMatrix4x4 matModel;
 // 	matModel.translate(QVector3D(0, 0, 30));
@@ -171,8 +171,8 @@ void OpenWidget::initializeGL()
 	matModel.scale(20);
 // 	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/piety.fbx", matModel, ShaderHelper::Diffuse);
 
-	m_assimpPtr->LoadModel("./models/skybox.obj");
-	m_assimpPtr->LoadModel("./models/Box002.obj");
+// 	m_assimpPtr->LoadModel("./models/skybox.obj");
+// 	m_assimpPtr->LoadModel("./models/Box002.obj");
 
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
@@ -438,49 +438,49 @@ void OpenWidget::paintGL()
 	CheckError;
 
 	//--------SSAO buffer handle pass
-	CreateSSAOFrameBufferTextures();
-	SwitchShader(ShaderHelper::SSAO);
-	ClearAndReset();
-
-	glBindVertexArray(vao_quad);
-	m_shaderHelperPtr->SetSSAOSamples(m_ssaoSampleVec);
-	m_shaderHelperPtr->SetMVPMatrix(matVP, matVP, matView, matProj);
-
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, m_gBufferPosTex);
-	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_2D, m_gBufferNormalTex);
-	glActiveTexture(GL_TEXTURE6);
-	glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
-	glActiveTexture(GL_TEXTURE8);
-	glBindTexture(GL_TEXTURE_2D, m_ssaoNoiseTex);
-
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
-
-	//--------SSAO blur pass
-	CreateSSAOBlurFrameBufferTextures();
-	SwitchShader(ShaderHelper::SSAOBlur);
-	ClearAndReset();
-	glBindVertexArray(vao_quad);
-
-	glActiveTexture(GL_TEXTURE9);
-	glBindTexture(GL_TEXTURE_2D, m_ssaoTex);
-
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
-
-	//-------Draw normal debug after blur
-	CreateGBufferFrameBufferTextures();
-	Model *pMode = m_modelMgrPtr->FindModelByName("body");
-	if (nullptr != pMode) {
-		pMode->SetShaderType(ShaderHelper::Geometry);
-		pMode->Draw(matVP, pMode->GetWorldMat(), camPos, matProj, matView, matOrtho);
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
-
-	//-------Final draw pass
-	glViewport(0, 0, size().width(), size().height());
+// 	CreateSSAOFrameBufferTextures();
+// 	SwitchShader(ShaderHelper::SSAO);
+// 	ClearAndReset();
+// 
+// 	glBindVertexArray(vao_quad);
+// 	m_shaderHelperPtr->SetSSAOSamples(m_ssaoSampleVec);
+// 	m_shaderHelperPtr->SetMVPMatrix(matVP, matVP, matView, matProj);
+// 
+// 	glActiveTexture(GL_TEXTURE4);
+// 	glBindTexture(GL_TEXTURE_2D, m_gBufferPosTex);
+// 	glActiveTexture(GL_TEXTURE5);
+// 	glBindTexture(GL_TEXTURE_2D, m_gBufferNormalTex);
+// 	glActiveTexture(GL_TEXTURE6);
+// 	glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+// 	glActiveTexture(GL_TEXTURE8);
+// 	glBindTexture(GL_TEXTURE_2D, m_ssaoNoiseTex);
+// 
+// 	glDrawArrays(GL_TRIANGLES, 0, 6);
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
+// 
+// 	//--------SSAO blur pass
+// 	CreateSSAOBlurFrameBufferTextures();
+// 	SwitchShader(ShaderHelper::SSAOBlur);
+// 	ClearAndReset();
+// 	glBindVertexArray(vao_quad);
+// 
+// 	glActiveTexture(GL_TEXTURE9);
+// 	glBindTexture(GL_TEXTURE_2D, m_ssaoTex);
+// 
+// 	glDrawArrays(GL_TRIANGLES, 0, 6);
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
+// 
+// 	//-------Draw normal debug after blur
+// 	CreateGBufferFrameBufferTextures();
+// 	Model *pMode = m_modelMgrPtr->FindModelByName("body");
+// 	if (nullptr != pMode) {
+// 		pMode->SetShaderType(ShaderHelper::Geometry);
+// 		pMode->Draw(matVP, pMode->GetWorldMat(), camPos, matProj, matView, matOrtho);
+// 	}
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
+// 
+// 	//-------Final draw pass
+// 	glViewport(0, 0, size().width(), size().height());
 
 // 	SwitchShader(ShaderHelper::FrameBuffer1);
 // 	glBindVertexArray(vao_quad);

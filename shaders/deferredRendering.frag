@@ -107,10 +107,10 @@ vec4 CalculateDirLight(Light light)
 	posInLightSpace = posInLightSpace / posInLightSpace.w;
 	posInLightSpace = (posInLightSpace + 1.0) / 2.0;
 	float depth = posInLightSpace.z;
-	vec3 fogColor = vec3(0, 0, 0);
-	if (depth < 0.6 && depth > 0.1){
-		fogColor = vec3(0.5, 0.5, 0.5);
-	}
+	//vec3 fogColor = vec3(0, 0, 0);
+	//if (depth < 0.6 && depth > 0.1){
+	//	fogColor = vec3(0.5, 0.5, 0.5);
+	//}
 
 	vec3 ray = worldPos - camPosWorld;
 	float rayLen = length(ray);
@@ -166,7 +166,7 @@ vec4 CalculateDirLight(Light light)
 
 	//return vec4(fogColor, 1);
 	//return vec4(accumulateFog, 1);
-	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + fogColor, 1);
+	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse, 1);
 }
 
 vec4 CalculatePointLight(Light light)
