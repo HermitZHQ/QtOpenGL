@@ -158,12 +158,12 @@ void OpenWidget::initializeGL()
 // 	}
 
 	// test load model
-	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
-// 	m_assimpPtr->LoadModel("./models/Box001.obj");
-// 	m_assimpPtr->LoadModel("./models/plane2.obj");
-// 	m_assimpPtr->LoadModel("./models/plane3.obj");
-// 	m_assimpPtr->LoadModel("./models/teapot.obj");
-// 	m_assimpPtr->LoadModel("./models/dva/001.obj");
+// 	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+	m_assimpPtr->LoadModel("./models/Box001.obj");
+	m_assimpPtr->LoadModel("./models/plane2.obj");
+	m_assimpPtr->LoadModel("./models/plane3.obj");
+	m_assimpPtr->LoadModel("./models/teapot.obj");
+	m_assimpPtr->LoadModel("./models/dva/001.obj");
 
 	QMatrix4x4 matModel;
 // 	matModel.translate(QVector3D(0, 0, 30));
@@ -171,8 +171,8 @@ void OpenWidget::initializeGL()
 	matModel.scale(20);
 // 	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/piety.fbx", matModel, ShaderHelper::Diffuse);
 
-// 	m_assimpPtr->LoadModel("./models/skybox.obj");
-// 	m_assimpPtr->LoadModel("./models/Box002.obj");
+	m_assimpPtr->LoadModel("./models/skybox.obj");
+	m_assimpPtr->LoadModel("./models/Box002.obj");
 
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
@@ -378,20 +378,20 @@ void OpenWidget::paintGL()
 	matVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
 
 	//-----Shadow render pass
-// 	CreateShadowMapFrameBufferTexture();
-// 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-// 		qDebug() << "check frame buffer failed";
-// 		return;
-// 	}
-// 	ClearAndReset();
-// 	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
-// 
-// 	for (unsigned int i = 0; i < modelNum; ++i)	{
-// 		Model *mod = ModelMgr::Instance().GetModel(i);
-// 		QMatrix4x4 matModel = mod->GetWorldMat();
-// 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
-// 	}
-// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
+	CreateShadowMapFrameBufferTexture();
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		qDebug() << "check frame buffer failed";
+		return;
+	}
+	ClearAndReset();
+	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
+
+	for (unsigned int i = 0; i < modelNum; ++i)	{
+		Model *mod = ModelMgr::Instance().GetModel(i);
+		QMatrix4x4 matModel = mod->GetWorldMat();
+		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
 	//--------Deferred rendering g-buffer handle pass
 	CreateGBufferFrameBufferTextures();

@@ -46,6 +46,7 @@ uniform vec4 specularColor;
 in Vertex {
 	vec2 uv;
 	vec3 camPosWorld;
+	mat4x4 matWorld;
 };
 
 float CalculateTheShadowValue()
@@ -102,15 +103,27 @@ vec4 CalculateDirLight(Light light)
 	//----test volumetric light
 	vec3 worldPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
 
-	//----fog(use depth 0.1 - 0.2 to be the fog area)
-	vec4 posInLightSpace = vec4(wPos, 1);
-	posInLightSpace = posInLightSpace / posInLightSpace.w;
-	posInLightSpace = (posInLightSpace + 1.0) / 2.0;
-	float depth = posInLightSpace.z;
-	//vec3 fogColor = vec3(0, 0, 0);
-	//if (depth < 0.6 && depth > 0.1){
-	//	fogColor = vec3(0.5, 0.5, 0.5);
-	//}
+	//----fog(use the depth from camera to decide the fog density)
+	//--first fog style(Depth Fog:distance from camera)
+	/**/
+	vec3 diffPos = worldPos - camPosWorld;
+	float depth = length(diffPos);
+
+	vec3 fogColor = vec3(0.45, 0.45, 0.45);
+	float fogDensity = 0.0;
+	if (depth > 60.0){
+		fogDensity = min((depth - 60.0) / 60.0, 1.0);
+	}
+
+	//--second fog style(Height Fog: fog from the specify height)
+	/*
+	float height = worldPos.y;
+	vec3 fogColor = vec3(0.3, 0.3, 0.3);
+	float fogDensity = 0.0;
+	if (height > 0){
+		fogDensity = 1.0 - min((height) / 40.0, 1.0);
+	}*/
+
 
 	vec3 ray = worldPos - camPosWorld;
 	float rayLen = length(ray);
@@ -166,7 +179,7 @@ vec4 CalculateDirLight(Light light)
 
 	//return vec4(fogColor, 1);
 	//return vec4(accumulateFog, 1);
-	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse, 1);
+	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + fogColor * fogDensity, 1);
 }
 
 vec4 CalculatePointLight(Light light)
@@ -243,7 +256,7 @@ void main()
 			//fColor += CalculatePointLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && !lights[i].isPoint && !lights[i].isDirectional){
-			fColor += CalculateSpotLight(lights[i]);
+			//fColor += CalculateSpotLight(lights[i]);
 		}
 	}
 }

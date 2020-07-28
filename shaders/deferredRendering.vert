@@ -16,6 +16,7 @@ uniform vec3 worldCamPos;
 out Vertex {
 	vec2 uv;
 	vec3 camPosWorld;
+	mat4x4 matWorld;
 };
 
 void main()
@@ -23,6 +24,7 @@ void main()
 	gl_Position = vec4(vPosition, 1);
 	camPosWorld = worldCamPos;
 
+	matWorld = mat_world;
 	uv = vUV;
 	uv.y = 1.0 - uv.y;
 }

@@ -33,7 +33,9 @@ void main()
 	normal = normalize(tangentToModelMat * normal);
 	//normal = normalize((viewMat * vec4(normal, 1)).xyz);// View space for SSAO
 
-	normal = normalize((transpose(inverse(viewMat)) * vec4(worldNormal, 0)).xyz);
+	// This is very important, you can't use viewMat * worldNormal
+	// you must use inverse&transpose
+	normal = normalize((transpose(inverse(viewMat)) * vec4(worldNormal, 0)).xyz); 
 	//normal = normalize((viewMat * vec4(worldNormal, 0)).xyz);
 	gNormal = normal;
 
