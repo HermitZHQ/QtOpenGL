@@ -102,6 +102,16 @@ void ShaderHelper::GetCommonUniformLocation()
 	m_specularColorLoc[m_shaderType] = GetUniformLocation("specularColor");
 	CheckError;
 
+	//----PBR params
+	m_metallic[m_shaderType] = GetUniformLocation("metallic");
+	m_roughness[m_shaderType] = GetUniformLocation("roughness");
+	m_ao[m_shaderType] = GetUniformLocation("ao");
+	if (m_metallic[m_shaderType] != -1) {
+		int i = 0;
+		++i;
+	}
+	CheckError;
+
 	//----time
 	m_timeLoc[m_shaderType] = GetUniformLocation("time");
 	CheckError;
@@ -440,6 +450,10 @@ void ShaderHelper::Init()
 	memset(m_matLightVPLoc, -1, sizeof(m_matLightVPLoc));
 	memset(m_timeLoc, -1, sizeof(m_timeLoc));
 
+	memset(m_metallic, -1, sizeof(m_metallic));
+	memset(m_roughness, -1, sizeof(m_roughness));
+	memset(m_ao, -1, sizeof(m_ao));
+
 	//----bones
 	memset(m_bonesLoc, -1, sizeof(m_bonesLoc));
 
@@ -614,6 +628,42 @@ void ShaderHelper::SetLightsInfo(const LightMgr::LightInfo &info, int index)
 	}
 	if (m_spotLightOuterCutoff[m_shaderType][index] != -1) {
 		glUniform1f(m_spotLightOuterCutoff[m_shaderType][index], info.outerCutoff);
+	}
+}
+
+void ShaderHelper::SetPBR(float metallic, float roughness, float ao)
+{
+	if (m_metallic[m_shaderType] != -1) {
+		glUniform1f(m_metallic[m_shaderType], metallic);
+	}
+
+	if (m_roughness[m_shaderType] != -1) {
+		glUniform1f(m_roughness[m_shaderType], roughness);
+	}
+
+	if (m_ao[m_shaderType] != -1) {
+		glUniform1f(m_ao[m_shaderType], ao);
+	}
+}
+
+void ShaderHelper::SetPBR_Metallic(float metallic)
+{
+	if (m_metallic[m_shaderType] != -1) {
+		glUniform1f(m_metallic[m_shaderType], metallic);
+	}
+}
+
+void ShaderHelper::SetPBR_Roughness(float roughness)
+{
+	if (m_roughness[m_shaderType] != -1) {
+		glUniform1f(m_roughness[m_shaderType], roughness);
+	}
+}
+
+void ShaderHelper::SetPBR_AO(float ao)
+{
+	if (m_ao[m_shaderType] != -1) {
+		glUniform1f(m_ao[m_shaderType], ao);
 	}
 }
 

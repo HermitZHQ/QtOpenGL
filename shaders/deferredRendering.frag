@@ -42,6 +42,11 @@ uniform mat4x4 viewMat;
 uniform vec4 ambientColor;
 uniform vec4 specularColor;
 
+//----PBR params
+uniform float metallic;
+uniform float roughness;
+uniform float ao;
+
 //----in vars
 in Vertex {
 	vec2 uv;
@@ -49,6 +54,14 @@ in Vertex {
 	mat4x4 matWorld;
 };
 
+//--------------------------------------------------functions
+//----PBR relevant
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}  
+
+//----Shadow relevant
 float CalculateTheShadowValue()
 {	
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;

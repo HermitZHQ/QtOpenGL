@@ -63,6 +63,12 @@ public:
 	void SetAmbientSpecularColor(QVector4D ambient, QVector4D specular);
 	void SetLightsInfo(const LightMgr::LightInfo &info, int index);
 
+	//----PBR relevant
+	void SetPBR(float metallic, float roughness, float ao);
+	void SetPBR_Metallic(float metallic);
+	void SetPBR_Roughness(float roughness);
+	void SetPBR_AO(float ao);
+
 	//----SSAO relevant
 	void SetSSAOSamples(QVector<QVector3D> &sampleVec);
 
@@ -119,6 +125,11 @@ private:
 
 	GLint					m_ambientColorLoc[maxShaderNum];
 	GLint					m_specularColorLoc[maxShaderNum];
+
+	//----PBR params
+	GLint					m_metallic[maxShaderNum];
+	GLint					m_roughness[maxShaderNum];
+	GLint					m_ao[maxShaderNum];
 
 	GLint					m_timeLoc[maxShaderNum];
 
