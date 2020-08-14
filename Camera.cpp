@@ -19,6 +19,7 @@ QMatrix4x4 Camera::GetLightViewMatrix() const
 {
 	QMatrix4x4 matView;
 	QVector3D dirLightPos = LightMgr::Instance().GetDirLightPos();
+// 	dirLightPos = QVector3D(200, 200, 200);
 	QVector4D lightPos(dirLightPos.x(), dirLightPos.y(), dirLightPos.z(), 1);
 
 	QVector3D axisZ = QVector3D(1, 1, 1).normalized();

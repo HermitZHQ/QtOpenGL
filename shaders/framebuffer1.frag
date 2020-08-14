@@ -49,7 +49,7 @@ void main()
     for(int i = 0; i < 9; i++)
         col += sampleTex[i] * kernel[i];
     
-    fColor = vec4(col, 1.0);
+    //fColor = vec4(col, 1.0);
 	fColor = vec4(texture(tex, uv.st));
-	fColor = vec4(1, 1, 1, 1);
+	//fColor = vec4(1, 1, 1, 1);
 }

@@ -83,14 +83,14 @@ void OpenWidget::initializeGL()
 // 	TestGeometryPoints();
 	// test for a quad
 	{
-		const GLfloat g_vertices[6][2] = {
-			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
-			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
-		};
 // 		const GLfloat g_vertices[6][2] = {
-// 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
-// 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+// 			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
+// 			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
 // 		};
+		const GLfloat g_vertices[6][2] = {
+			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
+			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+		};
 
 		const GLfloat g_uvs[6][2] = {
 			{0, 1}, {1, 1}, {0, 0}, //
@@ -152,14 +152,14 @@ void OpenWidget::initializeGL()
 			QMatrix4x4 matModel;
 			matModel.translate(lightInfo.pos);
 			matModel.scale(0.1f);
-			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::Diffuse);
+			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
 			lightInfo.SetModel(mod);
 		}
 	}
 
 	// test load model
-// 	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
-	m_assimpPtr->LoadModel("./models/plane.obj");
+ 	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+// 	m_assimpPtr->LoadModel("./models/plane.obj");
 
 	m_assimpPtr->LoadModel("./models/Box001.obj");
 	m_assimpPtr->LoadModel("./models/plane2.obj");
@@ -222,8 +222,8 @@ void OpenWidget::initializeGL()
 // 		pBox001->EnableProjTex();
 // 		pBox001->SetDrawType(Mesh::Point);
 		QMatrix4x4 mat;
-// 		mat.translate(60, 96, 0);
-		mat.translate(0, 0, 0);
+		mat.translate(60, 30, 0);
+// 		mat.translate(0, 0, 0);
 // 		mat.scale(2, 2, 2);
 		pBox001->SetWroldMat(mat);
 		pBox001->SetAllMeshesNormalMapTexture("./models/brickwall_normal.jpg");
@@ -239,7 +239,7 @@ void OpenWidget::initializeGL()
 	Model *pTeapot = m_modelMgrPtr->FindModelByName("defaultobject");
 	if (Q_NULLPTR != pTeapot) {
 		QMatrix4x4 mat;
-		mat.translate(20, 0, 0);
+		mat.translate(30, 0, 0);
 		mat.scale(5);
 		pTeapot->SetWroldMat(mat);
 	}
@@ -367,7 +367,7 @@ void OpenWidget::paintGL()
 	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
 	QMatrix4x4 matView = m_cam->GetViewMatrix();
 	QVector3D camPos = m_cam->GetCamPos().toVector3D();
-	matVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
+	matVP = matProj * m_cam->GetLightViewMatrix();
 
 	//-----Shadow render pass
 	CreateShadowMapFrameBufferTexture();
@@ -386,7 +386,7 @@ void OpenWidget::paintGL()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
 	//--------Deferred rendering g-buffer handle pass
-// 	CreateGBufferFrameBufferTextures();
+ 	CreateGBufferFrameBufferTextures();
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		qDebug() << "check frame buffer failed";
 		return;
@@ -394,24 +394,24 @@ void OpenWidget::paintGL()
 	ClearAndReset();
 	glViewport(0, 0, size().width(), size().height());
 
-	// enable shadow tex and bind it
-// 	glActiveTexture(GL_TEXTURE2);
-// 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
-// 	QMatrix4x4 matLightVP = matProj * m_cam->GetLightViewMatrix();
-// 	m_shaderHelperPtr->SetLightVPMat(matLightVP);
-
 	// update light info dynamicly
-// 	UpdateDynamicLightsInfo();
+ 	UpdateDynamicLightsInfo();
 	matVP = m_cam->GetVPMatrix();
 	for (unsigned int i = 0; i < modelNum; ++i)
 	{
+		// enable shadow tex and bind it(not with deferred render mode)
+// 		glActiveTexture(GL_TEXTURE2);
+// 		glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+// 		QMatrix4x4 matLightVP = matProj * m_cam->GetLightViewMatrix();
+// 		m_shaderHelperPtr->SetLightVPMat(matLightVP);
+
 		Model *mod = ModelMgr::Instance().GetModel(i);
 // 		mod->SetDrawType(Mesh::Line);
 
 		if (mod->GetModelName().compare("water") == 0) {
 			continue;
 		}
-// 		mod->SetShaderType(ShaderHelper::GBufferGeometry);
+ 		mod->SetShaderType(ShaderHelper::GBufferGeometry);
 		QMatrix4x4 matModel = mod->GetWorldMat();
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
@@ -419,21 +419,18 @@ void OpenWidget::paintGL()
 // 	return;// test skeleton anim
 
 	//----test add water wave during the deferred rendering g-buffer phase
-// 	Model *pWater = ModelMgr::Instance().FindModelByName("water");
-// 	if (Q_NULLPTR != pWater) {
-// 		pWater->SetShaderType(ShaderHelper::Water);
-// 		CheckError;
-// 		glActiveTexture(GL_TEXTURE3);
-// 		CheckError;
-// 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
-// 		CheckError;
-// 
-// 		QMatrix4x4 matModel = pWater->GetWorldMat();
-// // 		pWater->SetShaderType(ShaderHelper::GBufferGeometry);
-// 		pWater->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
-// 	}
-// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
-// 	CheckError;
+	Model *pWater = ModelMgr::Instance().FindModelByName("water");
+	if (Q_NULLPTR != pWater) {
+		pWater->SetShaderType(ShaderHelper::Water);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+		CheckError;
+
+		QMatrix4x4 matModel = pWater->GetWorldMat();
+		pWater->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
+	CheckError;
 
 	//--------SSAO buffer handle pass
 // 	CreateSSAOFrameBufferTextures();
@@ -494,7 +491,7 @@ void OpenWidget::paintGL()
 // 	DrawOriginalSceneWithShadow();
 
 	//--------Deferred rendering(last pass)
-// 	DrawDeferredShading();
+	DrawDeferredShading();
 }
 
 float OpenWidget::lerp(float a, float b, float f)
@@ -804,7 +801,6 @@ void OpenWidget::DrawDeferredShading()
 	// update light info dynamicly
 	UpdateAllLightsInfo();
 	UpdateDynamicLightsInfo();
-	m_shaderHelperPtr->SetAmbientSpecularColor(QVector3D(1, 1, 1), QVector3D(1, 1, 1));
 	auto camPos = m_cam->GetCamPos().toVector3D();
 	m_shaderHelperPtr->SetCamWorldPos(camPos);
 	QMatrix4x4 matLightVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();

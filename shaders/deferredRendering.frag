@@ -193,10 +193,12 @@ vec4 CalculateDirLight(Light light)
 
 	//return vec4(fogColor, 1);
 	//return vec4(accumulateFog, 1);
+
 	// original light mix
 	//return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + fogColor * fogDensity, 1);
+
 	// test light mix
-	return vec4(skyboxColor + specularRes + ambient + diffuse, 1);
+	return vec4(skyboxColor + ambient + (specularRes + diffuse) * shadowValue, 1);
 }
 
 vec4 CalculatePointLight(Light light)
