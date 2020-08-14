@@ -111,7 +111,7 @@ vec4 CalculateDirLight(Light light)
 
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
-	normal = normalize((transpose(inverse(inverse(viewMat)))) * vec4(normal, 1)).xyz;
+	normal = normalize(vec4(normal, 1) * viewMat).xyz;
 
 	//----test volumetric light
 	vec3 worldPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;

@@ -36,7 +36,6 @@ void main()
 	// This is very important, you can't use viewMat * worldNormal
 	// you must use inverse&transpose
 	normal = normalize((transpose(inverse(viewMat)) * vec4(worldNormal, 0)).xyz); 
-	//normal = normalize((viewMat * vec4(worldNormal, 0)).xyz);
 	gNormal = normal;
 
 	gAlbedo = texture(tex, uv).rgb;

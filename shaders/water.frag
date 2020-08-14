@@ -31,6 +31,7 @@ uniform sampler2D offScreenTex;
 uniform samplerCube skybox;
 
 uniform mat4x4 lightVPMat;
+uniform mat4x4 viewMat;
 
 uniform vec4 ambientColor;
 uniform vec4 specularColor;
@@ -197,7 +198,7 @@ void main()
 	vec2 speed = time * vec2(0.00001, 0.00001);
 
 	// Get "normal" from the normalmap
-	float scale = 12.0;
+	float scale = 2.0;
 	vec3 normal1 = texture(normalMap, uv + speed * scale).rgb;
 	vec3 normal2 = texture(normalMap, uv - speed * scale).rgb;
 	normal1 = normal1 * 2 - 1;
@@ -224,11 +225,16 @@ void main()
 	// 暂时使用天空盒rgb，不知道为什么上面的rgb相乘要报错，单独设置到这里都可以。。。。。
 	// 我目前怀疑跟HDR有关系，是不是乘法以后超过界限了？？？
 	reflColor = texture(skybox, skyUV).rgb;
+	reflColor = texture(tex, uv).rgb;
 
 	float fresnel = pow(1 - clamp(dot(viewDir, normal), 0.0, 1.0), 4);
 	vec3 finalColor = reflColor * fresnel + refrColor * (1 - fresnel);
 
-	gPosition = worldPos;
+	// change normal and worldPos to view space
+	normal = (transpose(inverse(viewMat)) * vec4(normal, 1)).xyz;
+	vec3 viewPos = mat3(viewMat) * worldPos;
+
+	gPosition = viewPos;
 	gNormal = normal;
-	gAlbedo = finalColor;
+	gAlbedo = refrColor;
 }
