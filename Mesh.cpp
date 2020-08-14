@@ -14,8 +14,6 @@ Mesh::Mesh()
 	, m_animId(0)
 {
 	initializeOpenGLFunctions();
-
-	m_normalmapTexID = TextureMgr::Instance().LoadTexture("./models/brickwall_normal.jpg");
 }
 
 Mesh::~Mesh()
@@ -524,7 +522,8 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	CheckError;
 
 	if (0 != m_skyboxTexID) {
-		m_shader.SetShaderType(ShaderHelper::SkyboxGBuffer);
+// 		m_shader.SetShaderType(ShaderHelper::SkyboxGBuffer);
+		m_shader.SetShaderType(ShaderHelper::Skybox);
 		CheckError;
 		glActiveTexture(GL_TEXTURE8);
 		CheckError;
@@ -551,6 +550,10 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	if (0 != m_normalmapTexID && 0 == m_skyboxTexID) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_normalmapTexID);
+		m_shader.SetHasNormalMap(true);
+	}
+	else {
+		m_shader.SetHasNormalMap(false);
 	}
 	CheckError;
 

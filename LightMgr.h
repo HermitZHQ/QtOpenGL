@@ -61,6 +61,7 @@ public:
 // 	int GetMaxLightNum() const;
 	int GetCurLightNum() const;
 	LightInfo& GetLightInfo(int index);
+	QVector3D GetDirLightPos() const;
 
 	const static int				m_maxLightNum = 100;
 protected:

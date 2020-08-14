@@ -63,7 +63,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 //----Shadow relevant
 float CalculateTheShadowValue()
-{	
+{
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
 	//normal = normalize((vec4(normal, 1) * inverse(viewMat)).xyz);
@@ -111,22 +111,23 @@ vec4 CalculateDirLight(Light light)
 
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
-	//normal = normalize((vec4(normal, 1) * inverse(viewMat)).xyz);
+	normal = normalize((transpose(inverse(inverse(viewMat)))) * vec4(normal, 1)).xyz;
 
 	//----test volumetric light
 	vec3 worldPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
 
 	//----fog(use the depth from camera to decide the fog density)
+	vec3 fogColor = vec3(0, 0, 0);
+	float fogDensity = 0.0;
 	//--first fog style(Depth Fog:distance from camera)
-	/**/
+	/*
 	vec3 diffPos = worldPos - camPosWorld;
 	float depth = length(diffPos);
 
-	vec3 fogColor = vec3(0.45, 0.45, 0.45);
-	float fogDensity = 0.0;
+	fogColor = vec3(0.45, 0.45, 0.45);
 	if (depth > 60.0){
 		fogDensity = min((depth - 60.0) / 60.0, 1.0);
-	}
+	}*/
 
 	//--second fog style(Height Fog: fog from the specify height)
 	/*
@@ -192,7 +193,10 @@ vec4 CalculateDirLight(Light light)
 
 	//return vec4(fogColor, 1);
 	//return vec4(accumulateFog, 1);
-	return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + fogColor * fogDensity, 1);
+	// original light mix
+	//return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + fogColor * fogDensity, 1);
+	// test light mix
+	return vec4(skyboxColor + specularRes + ambient + diffuse, 1);
 }
 
 vec4 CalculatePointLight(Light light)

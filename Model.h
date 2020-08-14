@@ -29,7 +29,8 @@ public:
 
 	void SetShaderType(ShaderHelper::eShaderType type);
 	void SetDrawType(Mesh::eDrawType type);
-	void SetNormalMapTexture(const QString &path);
+	void SetNormalMapTextureByMeshName(const QString &path, const QString &meshName);
+	void SetAllMeshesNormalMapTexture(const QString &path);
 	void Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 		QMatrix4x4 matOrtho);
 

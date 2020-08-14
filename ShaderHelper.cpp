@@ -112,6 +112,9 @@ void ShaderHelper::GetCommonUniformLocation()
 	}
 	CheckError;
 
+	// ----Tex
+	m_hasNormalMap[m_shaderType] = GetUniformLocation("hasNormalMap");
+
 	//----time
 	m_timeLoc[m_shaderType] = GetUniformLocation("time");
 	CheckError;
@@ -450,9 +453,13 @@ void ShaderHelper::Init()
 	memset(m_matLightVPLoc, -1, sizeof(m_matLightVPLoc));
 	memset(m_timeLoc, -1, sizeof(m_timeLoc));
 
+	// ----PBR
 	memset(m_metallic, -1, sizeof(m_metallic));
 	memset(m_roughness, -1, sizeof(m_roughness));
 	memset(m_ao, -1, sizeof(m_ao));
+
+	// ----Tex
+	memset(m_hasNormalMap, -1, sizeof(m_hasNormalMap));
 
 	//----bones
 	memset(m_bonesLoc, -1, sizeof(m_bonesLoc));
@@ -664,6 +671,13 @@ void ShaderHelper::SetPBR_AO(float ao)
 {
 	if (m_ao[m_shaderType] != -1) {
 		glUniform1f(m_ao[m_shaderType], ao);
+	}
+}
+
+void ShaderHelper::SetHasNormalMap(bool flag)
+{
+	if (m_hasNormalMap[m_shaderType] != -1) {
+		glUniform1i(m_hasNormalMap[m_shaderType], (int)flag);
 	}
 }
 

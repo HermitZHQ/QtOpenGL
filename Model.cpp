@@ -97,7 +97,18 @@ void Model::SetDrawType(Mesh::eDrawType type)
 	}
 }
 
-void Model::SetNormalMapTexture(const QString &path)
+void Model::SetNormalMapTextureByMeshName(const QString &path, const QString &meshName)
+{
+	for (auto &mesh : m_meshes)
+	{
+		if (mesh->GetName() == meshName) {
+			mesh->SetNormalMapTexture(path);
+			return;
+		}
+	}
+}
+
+void Model::SetAllMeshesNormalMapTexture(const QString &path)
 {
 	for (auto &mesh : m_meshes)
 	{

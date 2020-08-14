@@ -29,6 +29,8 @@ uniform mat4x4 lightVPMat;
 uniform vec4 ambientColor;
 uniform vec4 specularColor;
 
+uniform bool hasNormalMap;
+
 //----in vars
 in Vertex {
 	vec2 uv;
@@ -60,9 +62,15 @@ vec4 CalculateDirLight(Light light)
 	float shadowValue = CalculateTheShadowValue();
 
 	// Get "normal" from the normalmap
-	vec3 normal = texture(normalMap, uv).rgb;
-	normal = normal * 2 - 1;
-	normal = normalize(tangentToModelMat * normal);
+	vec3 normal;
+	if (hasNormalMap){		
+		normal = texture(normalMap, uv).rgb;
+		normal = normal * 2 - 1;
+		normal = normalize(tangentToModelMat * normal);
+	}
+	else{
+		normal = worldNormal;
+	}
 
 	vec3 ambient = ambientColor.rgb;
 	vec4 albedo = texture(tex, uv);
@@ -77,7 +85,7 @@ vec4 CalculateDirLight(Light light)
 	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
 
 	//return vec4(1, 0, 0, 1);
-	//return vec4(albedo);
+	//return vec4(shadowColor);
 	return vec4(ambient + (diffuse + specularRes) * shadowValue, 1);
 }
 

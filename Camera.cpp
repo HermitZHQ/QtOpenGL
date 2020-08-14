@@ -1,12 +1,13 @@
 #include "Camera.h"
 #include "QtMath"
 #include "QQuaternion"
+#include "LightMgr.h"
 
 Camera::Camera()
 	:m_nearClip(2.03f), m_farClip(10000.0f)
 	, m_fov(60.0f), m_aspectRatio(1.0f), m_orthoSize(155.5f)
 	, m_camPos(0, 50, -200, 1), m_lookAtPos(0, 0, 0, 1), m_camUpDir(0, 1, 0)
-	, m_camMoveSpeed(0.3f), m_camRotateSpeed(0.05f), m_camRotateEnable(false), m_speedBoost(false)
+	, m_camMoveSpeed(0.05f), m_camRotateSpeed(0.05f), m_camRotateEnable(false), m_speedBoost(false)
 {
 }
 
@@ -17,7 +18,8 @@ Camera::~Camera()
 QMatrix4x4 Camera::GetLightViewMatrix() const
 {
 	QMatrix4x4 matView;
-	QVector4D lightPos(100, 100, 100, 1);
+	QVector3D dirLightPos = LightMgr::Instance().GetDirLightPos();
+	QVector4D lightPos(dirLightPos.x(), dirLightPos.y(), dirLightPos.z(), 1);
 
 	QVector3D axisZ = QVector3D(1, 1, 1).normalized();
 	QVector3D axisX = (QVector3D::crossProduct(m_camUpDir, axisZ)).normalized();

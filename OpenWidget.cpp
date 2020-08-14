@@ -83,14 +83,14 @@ void OpenWidget::initializeGL()
 // 	TestGeometryPoints();
 	// test for a quad
 	{
-// 		const GLfloat g_vertices[6][2] = {
-// 			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
-// 			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
-// 		};
 		const GLfloat g_vertices[6][2] = {
-			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
-			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
+			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
 		};
+// 		const GLfloat g_vertices[6][2] = {
+// 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
+// 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+// 		};
 
 		const GLfloat g_uvs[6][2] = {
 			{0, 1}, {1, 1}, {0, 0}, //
@@ -144,21 +144,23 @@ void OpenWidget::initializeGL()
 	CheckError;
 
 	// load the light box
-// 	auto lightNum = LightMgr::Instance().GetCurLightNum();
-// 	for (int i = 0; i < lightNum; ++i)
-// 	{
-// 		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
-// 		if (lightInfo.isEnabled) {
-// 			QMatrix4x4 matModel;
-// 			matModel.translate(lightInfo.pos);
-// 			matModel.scale(0.1f);
-// 			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::Diffuse);
-// 			lightInfo.SetModel(mod);
-// 		}
-// 	}
+	auto lightNum = LightMgr::Instance().GetCurLightNum();
+	for (int i = 0; i < lightNum; ++i)
+	{
+		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
+		if (lightInfo.isEnabled) {
+			QMatrix4x4 matModel;
+			matModel.translate(lightInfo.pos);
+			matModel.scale(0.1f);
+			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::Diffuse);
+			lightInfo.SetModel(mod);
+		}
+	}
 
 	// test load model
 // 	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+	m_assimpPtr->LoadModel("./models/plane.obj");
+
 	m_assimpPtr->LoadModel("./models/Box001.obj");
 	m_assimpPtr->LoadModel("./models/plane2.obj");
 	m_assimpPtr->LoadModel("./models/plane3.obj");
@@ -180,14 +182,15 @@ void OpenWidget::initializeGL()
 		QMatrix4x4 mat;
 // 		mat.translate(0, 30, 0);
 // 		mat.rotate(90, QVector3D(0, 0, 1));
-// 		mat.scale(40, 40, 40);
+		mat.scale(40, 40, 40);
 		pMod->SetWroldMat(mat);
+		pMod->SetNormalMapTextureByMeshName("./models/brickwall_normal.jpg", "Plane001");
 	}
 	else {
 		pMod = m_modelMgrPtr->FindModelByName("water");
 		if (Q_NULLPTR != pMod)
 		{
-			pMod->SetNormalMapTexture("./textures/waterNormal.jpg");
+			pMod->SetNormalMapTextureByMeshName("./textures/waterNormal.jpg", "water");
 			QMatrix4x4 mat;
 			mat.scale(40, 40, 40);
 			pMod->SetWroldMat(mat);
@@ -198,9 +201,10 @@ void OpenWidget::initializeGL()
 	if (Q_NULLPTR != pMod2) {
 		QMatrix4x4 mat;
 		mat.translate(-90, 0, 0);
-		mat.rotate(90, QVector3D(0, 0, 1));
+		mat.rotate(-90, QVector3D(0, 0, 1));
 		mat.scale(10, 10, 10);
 		pMod2->SetWroldMat(mat);
+		pMod2->SetNormalMapTextureByMeshName("./models/brickwall_normal.jpg", "Plane002");
 	}
 	Model *pMod3 = m_modelMgrPtr->FindModelByName("Plane003");
 	if (Q_NULLPTR != pMod3) {
@@ -209,6 +213,7 @@ void OpenWidget::initializeGL()
 		mat.rotate(270, QVector3D(0, 0, 1));
 		mat.scale(10, 10, 10);
 		pMod3->SetWroldMat(mat);
+		pMod3->SetNormalMapTextureByMeshName("./models/brickwall_normal.jpg", "Plane003");
 	}
 
 
@@ -217,15 +222,18 @@ void OpenWidget::initializeGL()
 // 		pBox001->EnableProjTex();
 // 		pBox001->SetDrawType(Mesh::Point);
 		QMatrix4x4 mat;
-		mat.translate(60, 96, 0);
+// 		mat.translate(60, 96, 0);
+		mat.translate(0, 0, 0);
 // 		mat.scale(2, 2, 2);
 		pBox001->SetWroldMat(mat);
+		pBox001->SetAllMeshesNormalMapTexture("./models/brickwall_normal.jpg");
 	}
 	Model *pBox002 = m_modelMgrPtr->FindModelByName("Box002");
 	if (Q_NULLPTR != pBox002) {
 		QMatrix4x4 mat;
 		mat.translate(0, -37, 0);
 		pBox002->SetWroldMat(mat);
+		pBox002->SetAllMeshesNormalMapTexture("./models/brickwall_normal.jpg");
 	}
 
 	Model *pTeapot = m_modelMgrPtr->FindModelByName("defaultobject");
@@ -242,28 +250,12 @@ void OpenWidget::initializeGL()
 	}
 
 	// toufa body shitimoface eye
-	Model *pToufa = m_modelMgrPtr->FindModelByName("toufa");
-	if (Q_NULLPTR != pToufa) {
-		pToufa->SetNormalMapTexture("./models/dva/Map__11_Normal_Bump.png");
-// 		pToufa->SetNormalDebugEnable(true);
-	}
-
-	Model *pBody = m_modelMgrPtr->FindModelByName("body");
-	if (Q_NULLPTR != pBody) {
-		pBody->SetNormalMapTexture("./models/dva/Map__15_Normal_Bump.png");
-// 		pBody->SetNormalDebugEnable(true);
-	}
-
-	Model *pFace = m_modelMgrPtr->FindModelByName("shitimoface");
-	if (Q_NULLPTR != pFace) {
-		pFace->SetNormalMapTexture("./models/dva/Map__13_Normal_Bump.png");
-// 		pFace->SetNormalDebugEnable(true);
-	}
-
-	Model *pEye = m_modelMgrPtr->FindModelByName("eye");
-	if (Q_NULLPTR != pEye) {
-		pEye->SetNormalMapTexture("./models/dva/Map__18_Normal_Bump.png");
-// 		pEye->SetNormalDebugEnable(true);
+	pMod = m_modelMgrPtr->FindModelByName("toufa");
+	if (Q_NULLPTR != pMod) {
+// 		pMod->SetNormalMapTextureByMeshName("./models/dva/Map__11_Normal_Bump.png", "toufa");
+// 		pMod->SetNormalMapTextureByMeshName("./models/dva/Map__15_Normal_Bump.png", "body");
+// 		pMod->SetNormalMapTextureByMeshName("./models/dva/Map__13_Normal_Bump.png", "shitimoface");
+// 		pMod->SetNormalMapTextureByMeshName("./models/dva/Map__18_Normal_Bump.png", "eye");
 	}
 }
 
@@ -394,7 +386,7 @@ void OpenWidget::paintGL()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
 	//--------Deferred rendering g-buffer handle pass
-	CreateGBufferFrameBufferTextures();
+// 	CreateGBufferFrameBufferTextures();
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		qDebug() << "check frame buffer failed";
 		return;
@@ -402,8 +394,14 @@ void OpenWidget::paintGL()
 	ClearAndReset();
 	glViewport(0, 0, size().width(), size().height());
 
+	// enable shadow tex and bind it
+// 	glActiveTexture(GL_TEXTURE2);
+// 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+// 	QMatrix4x4 matLightVP = matProj * m_cam->GetLightViewMatrix();
+// 	m_shaderHelperPtr->SetLightVPMat(matLightVP);
+
 	// update light info dynamicly
-	UpdateDynamicLightsInfo();
+// 	UpdateDynamicLightsInfo();
 	matVP = m_cam->GetVPMatrix();
 	for (unsigned int i = 0; i < modelNum; ++i)
 	{
@@ -413,7 +411,7 @@ void OpenWidget::paintGL()
 		if (mod->GetModelName().compare("water") == 0) {
 			continue;
 		}
-		mod->SetShaderType(ShaderHelper::GBufferGeometry);
+// 		mod->SetShaderType(ShaderHelper::GBufferGeometry);
 		QMatrix4x4 matModel = mod->GetWorldMat();
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
@@ -421,21 +419,21 @@ void OpenWidget::paintGL()
 // 	return;// test skeleton anim
 
 	//----test add water wave during the deferred rendering g-buffer phase
-	Model *pWater = ModelMgr::Instance().FindModelByName("water");
-	if (Q_NULLPTR != pWater) {
-		pWater->SetShaderType(ShaderHelper::Water);
-		CheckError;
-		glActiveTexture(GL_TEXTURE3);
-		CheckError;
-		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
-		CheckError;
-
-		QMatrix4x4 matModel = pWater->GetWorldMat();
-// 		pWater->SetShaderType(ShaderHelper::GBufferGeometry);
-		pWater->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
-	CheckError;
+// 	Model *pWater = ModelMgr::Instance().FindModelByName("water");
+// 	if (Q_NULLPTR != pWater) {
+// 		pWater->SetShaderType(ShaderHelper::Water);
+// 		CheckError;
+// 		glActiveTexture(GL_TEXTURE3);
+// 		CheckError;
+// 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+// 		CheckError;
+// 
+// 		QMatrix4x4 matModel = pWater->GetWorldMat();
+// // 		pWater->SetShaderType(ShaderHelper::GBufferGeometry);
+// 		pWater->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+// 	}
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
+// 	CheckError;
 
 	//--------SSAO buffer handle pass
 // 	CreateSSAOFrameBufferTextures();
@@ -485,7 +483,7 @@ void OpenWidget::paintGL()
 // 	SwitchShader(ShaderHelper::FrameBuffer1);
 // 	glBindVertexArray(vao_quad);
 // 	glActiveTexture(GL_TEXTURE0);
-// 	glBindTexture(GL_TEXTURE_2D, m_ssaoBlurTex);
+// 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
 // 	glDrawArrays(GL_TRIANGLES, 0, 6);
 // 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 
@@ -496,7 +494,7 @@ void OpenWidget::paintGL()
 // 	DrawOriginalSceneWithShadow();
 
 	//--------Deferred rendering(last pass)
-	DrawDeferredShading();
+// 	DrawDeferredShading();
 }
 
 float OpenWidget::lerp(float a, float b, float f)
@@ -692,23 +690,28 @@ void OpenWidget::CreateShadowMapFrameBufferTexture()
 		}
 		glCreateFramebuffers(1, &m_shadowMapFbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
+		CheckError;
 	
 		auto wndSize = size();
 		glGenTextures(1, &m_shadowMapTexId);
 		glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+		CheckError;
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_shadowTexWidth, m_shadowTexHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		CheckError;
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		static float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+		CheckError;
 	
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMapTexId, 0);
 	// 	glDrawBuffer(GL_NONE);
 	// 	glReadBuffer(GL_NONE);
 	
 		glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+		CheckError;
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);

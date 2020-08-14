@@ -41,10 +41,16 @@ LightMgr::LightInfo& LightMgr::GetLightInfo(int index)
 	return m_lightInfoVec[index];
 }
 
+QVector3D LightMgr::GetDirLightPos() const
+{
+	return m_lightInfoVec[0].pos;
+}
+
 void LightMgr::Init()
 {
+	// must set the dir light first, because we will use the first light to be the default dir light
 	LightInfo dirLightInfo(true, true, false, 
-		QVector3D(1, 1, 1), QVector3D(150, 150, 150), QVector4D(2, 2, 2, 1), 0);
+		QVector3D(1, 1, 1), QVector3D(150, 150, 150), QVector4D(1, 1, 1, 1), 0);
 	AddLight(dirLightInfo);
 
 // 	LightInfo dirLightInfo2(true, false, true,

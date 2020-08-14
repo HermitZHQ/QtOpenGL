@@ -69,6 +69,9 @@ public:
 	void SetPBR_Roughness(float roughness);
 	void SetPBR_AO(float ao);
 
+	// ----Tex relevant
+	void SetHasNormalMap(bool flag);
+
 	//----SSAO relevant
 	void SetSSAOSamples(QVector<QVector3D> &sampleVec);
 
@@ -130,6 +133,9 @@ private:
 	GLint					m_metallic[maxShaderNum];
 	GLint					m_roughness[maxShaderNum];
 	GLint					m_ao[maxShaderNum];
+
+	// ----Tex
+	GLint					m_hasNormalMap[maxShaderNum];
 
 	GLint					m_timeLoc[maxShaderNum];
 
