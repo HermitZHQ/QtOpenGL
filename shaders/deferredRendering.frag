@@ -198,7 +198,7 @@ vec4 CalculateDirLight(Light light)
 	//return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + fogColor * fogDensity, 1);
 
 	// test light mix
-	return vec4(skyboxColor + ambient + (specularRes + diffuse) * shadowValue, 1);
+	return vec4(albedo, 1);
 }
 
 vec4 CalculatePointLight(Light light)

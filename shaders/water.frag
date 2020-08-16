@@ -198,7 +198,7 @@ void main()
 	vec2 speed = time * vec2(0.00001, 0.00001);
 
 	// Get "normal" from the normalmap
-	float scale = 2.0;
+	float scale = 12.0;
 	vec3 normal1 = texture(normalMap, uv + speed * scale).rgb;
 	vec3 normal2 = texture(normalMap, uv - speed * scale).rgb;
 	normal1 = normal1 * 2 - 1;
@@ -214,6 +214,9 @@ void main()
 	vec2 offsetUV = uv2 + normal.xy * 0.015;
 
 	vec3 albedo = texture(offScreenTex, offsetUV).rgb;
+	albedo = texture(offScreenTex, uv2).rgb;
+	//albedo = texture(offScreenTex, uv2).rgb;
+	//albedo = vec3(1, 0, 0);
 	vec3 refrColor = ambient * albedo.rgb * 0.3; // the color below the water should more darker
 
 	vec3 viewDir = normalize(camPosWorld - worldPos);
@@ -234,7 +237,12 @@ void main()
 	normal = (transpose(inverse(viewMat)) * vec4(normal, 1)).xyz;
 	vec3 viewPos = mat3(viewMat) * worldPos;
 
+	// ----output gbuffer
 	gPosition = viewPos;
+
 	gNormal = normal;
-	gAlbedo = refrColor;
+	//gNormal = worldNormal;
+
+	gAlbedo = vec3(albedo.z, albedo.z, albedo.z);
+	//gAlbedo = vec3(1, 1, 0);
 }

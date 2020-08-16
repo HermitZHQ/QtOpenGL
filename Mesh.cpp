@@ -522,10 +522,11 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	CheckError;
 
 	if (0 != m_skyboxTexID) {
-// 		m_shader.SetShaderType(ShaderHelper::SkyboxGBuffer);
-		m_shader.SetShaderType(ShaderHelper::Skybox);
+		m_shader.SetShaderType(ShaderHelper::SkyboxGBuffer);
+// 		m_shader.SetShaderType(ShaderHelper::Skybox);
 		CheckError;
-		glActiveTexture(GL_TEXTURE8);
+		// should learn more, I don't know why here....
+		glActiveTexture(GL_TEXTURE20);
 		CheckError;
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexID);
 		CheckError;

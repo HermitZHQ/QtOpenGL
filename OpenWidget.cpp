@@ -83,14 +83,14 @@ void OpenWidget::initializeGL()
 // 	TestGeometryPoints();
 	// test for a quad
 	{
-// 		const GLfloat g_vertices[6][2] = {
-// 			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
-// 			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
-// 		};
 		const GLfloat g_vertices[6][2] = {
-			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
-			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
+			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
 		};
+// 		const GLfloat g_vertices[6][2] = {
+// 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
+// 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+// 		};
 
 		const GLfloat g_uvs[6][2] = {
 			{0, 1}, {1, 1}, {0, 0}, //
@@ -186,15 +186,13 @@ void OpenWidget::initializeGL()
 		pMod->SetWroldMat(mat);
 		pMod->SetNormalMapTextureByMeshName("./models/brickwall_normal.jpg", "Plane001");
 	}
-	else {
-		pMod = m_modelMgrPtr->FindModelByName("water");
-		if (Q_NULLPTR != pMod)
-		{
-			pMod->SetNormalMapTextureByMeshName("./textures/waterNormal.jpg", "water");
-			QMatrix4x4 mat;
-			mat.scale(40, 40, 40);
-			pMod->SetWroldMat(mat);
-		}
+
+	pMod = m_modelMgrPtr->FindModelByName("water");
+	if (Q_NULLPTR != pMod) {
+		pMod->SetNormalMapTextureByMeshName("./textures/waterNormal.jpg", "water");
+		QMatrix4x4 mat;
+		mat.scale(40, 40, 40);
+		pMod->SetWroldMat(mat);
 	}
 
 	Model *pMod2 = m_modelMgrPtr->FindModelByName("Plane002");
@@ -370,20 +368,20 @@ void OpenWidget::paintGL()
 	matVP = matProj * m_cam->GetLightViewMatrix();
 
 	//-----Shadow render pass
-	CreateShadowMapFrameBufferTexture();
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		qDebug() << "check frame buffer failed";
-		return;
-	}
-	ClearAndReset();
-	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
-
-	for (unsigned int i = 0; i < modelNum; ++i)	{
-		Model *mod = ModelMgr::Instance().GetModel(i);
-		QMatrix4x4 matModel = mod->GetWorldMat();
-		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
+// 	CreateShadowMapFrameBufferTexture();
+// 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+// 		qDebug() << "check frame buffer failed";
+// 		return;
+// 	}
+// 	ClearAndReset();
+// 	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
+// 
+// 	for (unsigned int i = 0; i < modelNum; ++i)	{
+// 		Model *mod = ModelMgr::Instance().GetModel(i);
+// 		QMatrix4x4 matModel = mod->GetWorldMat();
+// 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+// 	}
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
 	//--------Deferred rendering g-buffer handle pass
  	CreateGBufferFrameBufferTextures();
@@ -415,6 +413,13 @@ void OpenWidget::paintGL()
 		QMatrix4x4 matModel = mod->GetWorldMat();
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
+
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+// 	SwitchShader(ShaderHelper::FrameBuffer1);
+// 	glBindVertexArray(vao_quad);
+// 	glActiveTexture(GL_TEXTURE0);
+// 	glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+// 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 // 	return;// test skeleton anim
 
@@ -480,7 +485,7 @@ void OpenWidget::paintGL()
 // 	SwitchShader(ShaderHelper::FrameBuffer1);
 // 	glBindVertexArray(vao_quad);
 // 	glActiveTexture(GL_TEXTURE0);
-// 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
+// 	glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
 // 	glDrawArrays(GL_TRIANGLES, 0, 6);
 // 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 
@@ -728,9 +733,10 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		glBindFramebuffer(GL_FRAMEBUFFER, m_gBufferFbo);
 
 		auto wndSize = size();
+		// Position
 		glGenTextures(1, &m_gBufferPosTex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferPosTex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, wndSize.width(), wndSize.height(), 0, GL_RGB, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		// This ensures we don't accidentally oversample position/depth values in screen-space outside the texture's default coordinate region
@@ -738,27 +744,34 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBufferPosTex, 0);
 
+		// Normal
 		glGenTextures(1, &m_gBufferNormalTex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferNormalTex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, wndSize.width(), wndSize.height(), 0, GL_RGB, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gBufferNormalTex, 0);
 
+		// Albedo
 		//----Use GL_RGBA16F to enable the HDR effect with albedo and skybox
 		glGenTextures(1, &m_gBufferAlbedoTex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gBufferAlbedoTex, 0);
 
+		// Skybox
 		glGenTextures(1, &m_gBufferSkyboxTex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferSkyboxTex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_gBufferSkyboxTex, 0);
+
+		// tell opengl which color attachments we'll use(of the framebuffer) for rendering
+		static unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+		glDrawBuffers(4, attachments);
 
 		//----render buffer for depth
 // 		GLuint rb;
@@ -768,21 +781,32 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 // 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rb);
 // 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
+		// you must create depth buffer for your fb, even you don't use it out here, otherwise your gbuffer won't show correctly
 		glGenTextures(1, &m_gBufferDepthTex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferDepthTex);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, wndSize.width(), wndSize.height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		// This ensures we don't accidentally oversample position/depth values in screen-space outside the texture's default coordinate region
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_gBufferDepthTex, 0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+
+		// create and attach depth buffer (renderbuffer), method 2 to create the depth buffer
+// 		unsigned int rboDepth;
+// 		glGenRenderbuffers(1, &rboDepth);
+// 		glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+// 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, wndSize.width(), wndSize.height());
+// 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+// 		// finally check if framebuffer is complete
+// 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+// 			AddTipInfo("Frame buffer not complete");
+// 		glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBufferFbo);
-
-	// tell opengl which color attachments we'll use(of the framebuffer) for rendering
-	unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-	glDrawBuffers(4, attachments);
 }
 
 void OpenWidget::DrawDeferredShading()
