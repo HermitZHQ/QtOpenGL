@@ -526,6 +526,8 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 // 		m_shader.SetShaderType(ShaderHelper::Skybox);
 		CheckError;
 		// should learn more, I don't know why here....
+		// find some clue from Nsigth tool, other texture index, such as 0(gl_texture0), already bind to gl_texture_2d
+		// so, you can't rebind it to another format tex
 		glActiveTexture(GL_TEXTURE20);
 		CheckError;
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexID);

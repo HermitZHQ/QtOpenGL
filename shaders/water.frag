@@ -217,7 +217,7 @@ void main()
 	vec2 offsetUV = uv2 + normal.xy * 0.015;
 
 	vec3 albedo = texture(offScreenTex, offsetUV).rgb;
-	albedo = texture(offScreenTex, uv2).rgb;
+	//albedo = texture(offScreenTex, uv2).rgb;
 	//albedo = vec3(1, 0, 0);
 	vec3 refrColor = ambient * albedo.rgb * 0.3; // the color below the water should more darker
 
@@ -245,6 +245,6 @@ void main()
 	gNormal = normal;
 	//gNormal = worldNormal;
 
-	gAlbedo = albedo;
+	gAlbedo = finalColor;
 	//gAlbedo = vec3(1, 1, 0);
 }

@@ -165,6 +165,7 @@ void OpenWidget::initializeGL()
 	m_assimpPtr->LoadModel("./models/plane2.obj");
 	m_assimpPtr->LoadModel("./models/plane3.obj");
 	m_assimpPtr->LoadModel("./models/teapot.obj");
+	m_assimpPtr->LoadModel("./models/Box002.obj");
 	m_assimpPtr->LoadModel("./models/dva/001.obj");
 
 	QMatrix4x4 matModel;
@@ -174,7 +175,6 @@ void OpenWidget::initializeGL()
 // 	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/piety.fbx", matModel, ShaderHelper::Diffuse);
 
 	m_assimpPtr->LoadModel("./models/skybox.obj");
-	m_assimpPtr->LoadModel("./models/Box002.obj");
 
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
@@ -237,7 +237,7 @@ void OpenWidget::initializeGL()
 	Model *pTeapot = m_modelMgrPtr->FindModelByName("defaultobject");
 	if (Q_NULLPTR != pTeapot) {
 		QMatrix4x4 mat;
-		mat.translate(30, 0, 0);
+		mat.translate(30, -50, 0);
 		mat.scale(5);
 		pTeapot->SetWroldMat(mat);
 	}
@@ -771,7 +771,7 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 //----Use GL_RGBA16F to enable the HDR effect with albedo and skybox
 		glGenTextures(1, &m_gBufferAlbedo2Tex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedo2Tex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, wndSize.width(), wndSize.height(), 0, GL_RGB, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		// This ensures we don't accidentally oversample position/depth values in screen-space outside the texture's default coordinate region
@@ -791,6 +791,7 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_gBufferSkyboxTex, 0);
 
 		// tell opengl which color attachments we'll use(of the framebuffer) for rendering
+		// you only need to set this once, because I can verify it from the Nsight tool
 		static unsigned int attachments[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
 		glDrawBuffers(5, attachments);
 
