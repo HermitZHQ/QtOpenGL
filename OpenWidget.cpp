@@ -17,7 +17,7 @@ OpenWidget::OpenWidget()
 	, m_matWorldLoc(0), m_worldCamPosLoc(0), m_query(0), m_sampleNum(0)
 	, m_offScreenFbo(0), m_shadowMapFbo(0), m_shadowTexWidth(4096), m_shadowTexHeight(4096)
 	, m_shaderHelperPtr(nullptr)
-	, m_gBufferFbo(0), m_gBufferPosTex(0), m_gBufferNormalTex(0), m_gBufferAlbedoTex(0), m_gBufferSkyboxTex(0)
+	, m_gBufferFbo(0), m_gBufferPosTex(0), m_gBufferNormalTex(0), m_gBufferAlbedoTex(0), m_gBufferSkyboxTex(0), m_gBufferAlbedo2Tex(0)
 	, m_gBufferDepthTex(0)
 	, m_ssaoFbo(0), m_ssaoTex(0)
 	, m_ssaoBlurFbo(0), m_ssaoBlurTex(0)
@@ -428,7 +428,7 @@ void OpenWidget::paintGL()
 	if (Q_NULLPTR != pWater) {
 		pWater->SetShaderType(ShaderHelper::Water);
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedo2Tex);
 		CheckError;
 
 		QMatrix4x4 matModel = pWater->GetWorldMat();
@@ -757,9 +757,30 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		glGenTextures(1, &m_gBufferAlbedoTex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// This ensures we don't accidentally oversample position/depth values in screen-space outside the texture's default coordinate region
+// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gBufferAlbedoTex, 0);
+
+		// Albedo2
+//----Use GL_RGBA16F to enable the HDR effect with albedo and skybox
+		glGenTextures(1, &m_gBufferAlbedo2Tex);
+		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedo2Tex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// This ensures we don't accidentally oversample position/depth values in screen-space outside the texture's default coordinate region
+// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, m_gBufferAlbedo2Tex, 0);
 
 		// Skybox
 		glGenTextures(1, &m_gBufferSkyboxTex);
@@ -770,8 +791,8 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_gBufferSkyboxTex, 0);
 
 		// tell opengl which color attachments we'll use(of the framebuffer) for rendering
-		static unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-		glDrawBuffers(4, attachments);
+		static unsigned int attachments[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+		glDrawBuffers(5, attachments);
 
 		//----render buffer for depth
 // 		GLuint rb;
@@ -784,7 +805,7 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		// you must create depth buffer for your fb, even you don't use it out here, otherwise your gbuffer won't show correctly
 		glGenTextures(1, &m_gBufferDepthTex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferDepthTex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, wndSize.width(), wndSize.height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, wndSize.width(), wndSize.height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		// This ensures we don't accidentally oversample position/depth values in screen-space outside the texture's default coordinate region
@@ -811,7 +832,7 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 
 void OpenWidget::DrawDeferredShading()
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 
 	// check if we are good to go
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {

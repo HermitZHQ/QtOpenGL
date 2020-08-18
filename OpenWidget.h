@@ -95,6 +95,7 @@ private:
 	GLuint						m_gBufferPosTex;
 	GLuint						m_gBufferNormalTex;
 	GLuint						m_gBufferAlbedoTex;
+	GLuint						m_gBufferAlbedo2Tex;
 	GLuint						m_gBufferSkyboxTex;
 	GLuint						m_gBufferDepthTex;
 

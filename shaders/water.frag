@@ -32,6 +32,7 @@ uniform samplerCube skybox;
 
 uniform mat4x4 lightVPMat;
 uniform mat4x4 viewMat;
+uniform mat4x4 projMat;
 
 uniform vec4 ambientColor;
 uniform vec4 specularColor;
@@ -209,13 +210,14 @@ void main()
 
 	// get the distortion refraction image
 	vec3 ambient = ambientColor.rgb;
-	vec2 uv2 = scrPos.xy / scrPos.w;
+
+	vec4 vpPos = projMat * viewMat * vec4(worldPos, 1);
+	vec2 uv2 = vpPos.xy / vpPos.w;
 	uv2 = uv2 * 0.5 + 0.5;
 	vec2 offsetUV = uv2 + normal.xy * 0.015;
 
 	vec3 albedo = texture(offScreenTex, offsetUV).rgb;
 	albedo = texture(offScreenTex, uv2).rgb;
-	//albedo = texture(offScreenTex, uv2).rgb;
 	//albedo = vec3(1, 0, 0);
 	vec3 refrColor = ambient * albedo.rgb * 0.3; // the color below the water should more darker
 
@@ -228,7 +230,7 @@ void main()
 	// 暂时使用天空盒rgb，不知道为什么上面的rgb相乘要报错，单独设置到这里都可以。。。。。
 	// 我目前怀疑跟HDR有关系，是不是乘法以后超过界限了？？？
 	reflColor = texture(skybox, skyUV).rgb;
-	reflColor = texture(tex, uv).rgb;
+	//reflColor = texture(tex, uv).rgb;
 
 	float fresnel = pow(1 - clamp(dot(viewDir, normal), 0.0, 1.0), 4);
 	vec3 finalColor = reflColor * fresnel + refrColor * (1 - fresnel);
@@ -243,6 +245,6 @@ void main()
 	gNormal = normal;
 	//gNormal = worldNormal;
 
-	gAlbedo = vec3(albedo.z, albedo.z, albedo.z);
+	gAlbedo = albedo;
 	//gAlbedo = vec3(1, 1, 0);
 }

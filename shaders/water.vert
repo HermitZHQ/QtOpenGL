@@ -32,7 +32,10 @@ void main()
 	worldPos = (mat_world * vec4(vPosition, 1)).xyz;
 
 	// get the screen pos
-	scrPos = gl_Position;
+	// Here is a huge bug...., you can't save the mvp pos in VS
+	// it will be (auto)interpolated, then send to the FS
+	// 我这里写中文且没有删除这个bug，就是为了留在这里给自己一个警醒，这个bug调试时间很长
+	//scrPos = gl_Position;
 
 	tangentToModelMat[0] = vTangent;
 	tangentToModelMat[1] = vBitangent;
