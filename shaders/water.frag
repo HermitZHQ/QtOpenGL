@@ -245,6 +245,8 @@ void main()
 	gNormal = normal;
 	//gNormal = worldNormal;
 
-	gAlbedo = finalColor;
+	vec3 color1 = texture(skybox, skyUV).rgb;
+	vec3 color2 = texture(tex, uv).rgb;
+	gAlbedo = color1 + color2;
 	//gAlbedo = vec3(1, 1, 0);
 }
