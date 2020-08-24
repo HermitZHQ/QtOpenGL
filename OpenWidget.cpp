@@ -144,29 +144,29 @@ void OpenWidget::initializeGL()
 	CheckError;
 
 	// load the light box
-	auto lightNum = LightMgr::Instance().GetCurLightNum();
-	for (int i = 0; i < lightNum; ++i)
-	{
-		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
-		if (lightInfo.isEnabled) {
-			QMatrix4x4 matModel;
-			matModel.translate(lightInfo.pos);
-			matModel.scale(0.1f);
-			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
-			lightInfo.SetModel(mod);
-		}
-	}
+// 	auto lightNum = LightMgr::Instance().GetCurLightNum();
+// 	for (int i = 0; i < lightNum; ++i)
+// 	{
+// 		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
+// 		if (lightInfo.isEnabled) {
+// 			QMatrix4x4 matModel;
+// 			matModel.translate(lightInfo.pos);
+// 			matModel.scale(0.1f);
+// 			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
+// 			lightInfo.SetModel(mod);
+// 		}
+// 	}
 
 	// test load model
  	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
 // 	m_assimpPtr->LoadModel("./models/plane.obj");
 
-	m_assimpPtr->LoadModel("./models/Box001.obj");
-	m_assimpPtr->LoadModel("./models/plane2.obj");
-	m_assimpPtr->LoadModel("./models/plane3.obj");
-	m_assimpPtr->LoadModel("./models/teapot.obj");
+// 	m_assimpPtr->LoadModel("./models/Box001.obj");
+// 	m_assimpPtr->LoadModel("./models/plane2.obj");
+// 	m_assimpPtr->LoadModel("./models/plane3.obj");
+// 	m_assimpPtr->LoadModel("./models/teapot.obj");
+// 	m_assimpPtr->LoadModel("./models/dva/001.obj");
 	m_assimpPtr->LoadModel("./models/Box002.obj");
-	m_assimpPtr->LoadModel("./models/dva/001.obj");
 
 	QMatrix4x4 matModel;
 // 	matModel.translate(QVector3D(0, 0, 30));
@@ -174,7 +174,7 @@ void OpenWidget::initializeGL()
 	matModel.scale(20);
 // 	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/piety.fbx", matModel, ShaderHelper::Diffuse);
 
-	m_assimpPtr->LoadModel("./models/skybox.obj");
+// 	m_assimpPtr->LoadModel("./models/skybox.obj");
 
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
