@@ -221,7 +221,13 @@ void ShaderHelper::GetCommonUniformLocation()
 
 	auto skyboxId = GetUniformLocation("skybox");// put skybox unit far away.....
 	if (-1 != skyboxId) {
- 		glUniform1i(skyboxId, 16);
+		// 即使设置了unit（并且激活了对应unit），在Nsight调试的时候，也会发现Unit0中可以同时存在一个
+		// tex2d和tex cubemap，那么是不是只有多cubemap的时候才需要设置呢？
+		// 遇到情况后可以用Nsight来验证
+
+		// 以为解决的最后，都还给我来个反转....，虽然unit0可以同时存在2d和cubemap，但是要不报错必须给cubemap另外设置unit才行！！
+		// 当然也不能和其他unit重复
+ 		glUniform1i(skyboxId, 18);
 	}
 	CheckError;
 

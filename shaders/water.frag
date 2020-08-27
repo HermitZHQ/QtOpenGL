@@ -247,6 +247,6 @@ void main()
 
 	vec3 color1 = texture(skybox, skyboxUV).rgb;
 	vec3 color2 = texture(tex, uv).rgb;
-	gAlbedo = color2;
+	gAlbedo = finalColor;
 	//gAlbedo = vec3(1, 1, 0);
 }

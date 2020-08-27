@@ -52,14 +52,16 @@ void Texture::LoadTexture(QString path)
 
 void Texture::LoadSkyboxTexture(QVector<QString> paths)
 {
-// 	glGenTextures(1, &m_texId);
-// 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_texId);
+	// 新方法：使用常规方式（我更熟悉的方式）来创建texture，cubemap在Nsight中调试就是正常的
+	glGenTextures(1, &m_texId);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_texId);
 	CheckError;
 
-	// 老方法：可以创建指定mipmap层级
-	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_texId);
-	glTextureStorage2D(m_texId, 10, GL_RGBA32F, 2048, 2048);
-	CheckError;
+	// 老方法：可以创建指定mipmap层级，但是不知道为什么创建出来的cubemap有问题
+	// 还是需要使用上面的新方法才能正常
+// 	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_texId);
+// 	glTextureStorage2D(m_texId, 10, GL_RGBA32F, 2048, 2048);
+// 	CheckError;
 
 // 	glGenTextures(1, &m_texId);
 // 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_texId);
@@ -95,6 +97,7 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 	CheckError;
 }
 
