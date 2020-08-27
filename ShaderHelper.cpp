@@ -221,7 +221,7 @@ void ShaderHelper::GetCommonUniformLocation()
 
 	auto skyboxId = GetUniformLocation("skybox");// put skybox unit far away.....
 	if (-1 != skyboxId) {
-// 		glUniform1i(skyboxId, 8);// why I should set it 2?? I don't understand here.....
+ 		glUniform1i(skyboxId, 16);
 	}
 	CheckError;
 

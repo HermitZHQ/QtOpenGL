@@ -52,10 +52,13 @@ void Texture::LoadTexture(QString path)
 
 void Texture::LoadSkyboxTexture(QVector<QString> paths)
 {
-	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_texId);
+// 	glGenTextures(1, &m_texId);
+// 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_texId);
 	CheckError;
-// 	glTextureStorage2D(m_texId, 10, GL_RGBA, 2048, 2048);
-	glTextureStorage2D(m_texId, 6, GL_RGBA32F, 2048, 2048);
+
+	// 老方法：可以创建指定mipmap层级
+	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_texId);
+	glTextureStorage2D(m_texId, 10, GL_RGBA32F, 2048, 2048);
 	CheckError;
 
 // 	glGenTextures(1, &m_texId);
@@ -93,8 +96,6 @@ void Texture::LoadSkyboxTexture(QVector<QString> paths)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	CheckError;
-
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 GLuint Texture::GetId() const

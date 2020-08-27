@@ -229,7 +229,7 @@ void main()
 	vec3 reflColor = texture(skybox, skyUV).rgb * texture(tex, uv).rgb;
 	// 暂时使用天空盒rgb，不知道为什么上面的rgb相乘要报错，单独设置到这里都可以。。。。。
 	// 我目前怀疑跟HDR有关系，是不是乘法以后超过界限了？？？
-	reflColor = texture(skybox, skyUV).rgb;
+	//reflColor = texture(skybox, skyUV).rgb;
 	//reflColor = texture(tex, uv).rgb;
 
 	float fresnel = pow(1 - clamp(dot(viewDir, normal), 0.0, 1.0), 4);
@@ -245,8 +245,8 @@ void main()
 	gNormal = normal;
 	//gNormal = worldNormal;
 
-	vec3 color1 = texture(skybox, skyUV).rgb;
+	vec3 color1 = texture(skybox, skyboxUV).rgb;
 	vec3 color2 = texture(tex, uv).rgb;
-	gAlbedo = color1 + color2;
+	gAlbedo = color2;
 	//gAlbedo = vec3(1, 1, 0);
 }
