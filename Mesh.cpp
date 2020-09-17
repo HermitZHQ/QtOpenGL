@@ -490,6 +490,11 @@ void Mesh::AddSpecularTexture(GLuint id)
 	m_specularTex1ID = id;
 }
 
+void Mesh::SetDiffuseTexture(const QString &path)
+{
+	m_diffuseTex1ID = TextureMgr::Instance().LoadTexture(path);
+}
+
 void Mesh::SetNormalMapTexture(const QString &path)
 {
 	m_normalmapTexID = TextureMgr::Instance().LoadTexture(path);

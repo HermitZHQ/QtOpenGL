@@ -144,27 +144,28 @@ void OpenWidget::initializeGL()
 	CheckError;
 
 	// load the light box
-// 	auto lightNum = LightMgr::Instance().GetCurLightNum();
-// 	for (int i = 0; i < lightNum; ++i)
-// 	{
-// 		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
-// 		if (lightInfo.isEnabled) {
-// 			QMatrix4x4 matModel;
-// 			matModel.translate(lightInfo.pos);
-// 			matModel.scale(0.1f);
-// 			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
-// 			lightInfo.SetModel(mod);
-// 		}
-// 	}
+	auto lightNum = LightMgr::Instance().GetCurLightNum();
+	for (int i = 0; i < lightNum; ++i)
+	{
+		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
+		if (lightInfo.isEnabled) {
+			QMatrix4x4 matModel;
+			matModel.translate(lightInfo.pos);
+			matModel.scale(0.1f);
+			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
+			lightInfo.SetModel(mod);
+		}
+	}
 
 	// test load model
- 	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
-// 	m_assimpPtr->LoadModel("./models/plane.obj");
+//  	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+	m_assimpPtr->LoadModel("./models/plane.obj");
 
-// 	m_assimpPtr->LoadModel("./models/Box001.obj");
-// 	m_assimpPtr->LoadModel("./models/plane2.obj");
-// 	m_assimpPtr->LoadModel("./models/plane3.obj");
-// 	m_assimpPtr->LoadModel("./models/teapot.obj");
+	m_assimpPtr->LoadModel("./models/largesphere.obj");
+	m_assimpPtr->LoadModel("./models/Box001.obj");
+	m_assimpPtr->LoadModel("./models/plane2.obj");
+	m_assimpPtr->LoadModel("./models/plane3.obj");
+	m_assimpPtr->LoadModel("./models/teapot.obj");
 // 	m_assimpPtr->LoadModel("./models/dva/001.obj");
 	m_assimpPtr->LoadModel("./models/Box002.obj");
 
@@ -214,13 +215,22 @@ void OpenWidget::initializeGL()
 		pMod3->SetNormalMapTextureByMeshName("./models/brickwall_normal.jpg", "Plane003");
 	}
 
+	Model *pSphere001 = m_modelMgrPtr->FindModelByName("Sphere001");
+	if (Q_NULLPTR != pSphere001) {
+		QMatrix4x4 mat;
+		mat.translate(0, 20, 0);
+// 		mat.scale(2, 2, 2);
+		pSphere001->SetWroldMat(mat);
+		pSphere001->SetAllMeshesNormalMapTexture("./models/brickwall_normal.jpg");
+		pSphere001->SetAllMeshesDiffuseTexture("./models/brickwall.jpg");
+	}
 
 	Model *pBox001 = m_modelMgrPtr->FindModelByName("Box001");
 	if (Q_NULLPTR != pBox001) {
 // 		pBox001->EnableProjTex();
 // 		pBox001->SetDrawType(Mesh::Point);
 		QMatrix4x4 mat;
-		mat.translate(60, 30, 0);
+		mat.translate(0, 40, 0);
 // 		mat.translate(0, 0, 0);
 // 		mat.scale(2, 2, 2);
 		pBox001->SetWroldMat(mat);
@@ -237,7 +247,7 @@ void OpenWidget::initializeGL()
 	Model *pTeapot = m_modelMgrPtr->FindModelByName("defaultobject");
 	if (Q_NULLPTR != pTeapot) {
 		QMatrix4x4 mat;
-		mat.translate(30, -50, 0);
+		mat.translate(30, 0, 0);
 		mat.scale(5);
 		pTeapot->SetWroldMat(mat);
 	}

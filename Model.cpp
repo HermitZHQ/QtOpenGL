@@ -84,6 +84,11 @@ void Model::SetNormalDebugEnable(bool bEnable)
 	m_enableNormalDebug = bEnable;
 }
 
+Material& Model::GetMaterial() {
+
+	return m_mat;
+}
+
 void Model::SetShaderType(ShaderHelper::eShaderType type)
 {
 	m_shaderType = type;
@@ -113,6 +118,14 @@ void Model::SetAllMeshesNormalMapTexture(const QString &path)
 	for (auto &mesh : m_meshes)
 	{
 		mesh->SetNormalMapTexture(path);
+	}
+}
+
+void Model::SetAllMeshesDiffuseTexture(const QString &path)
+{
+	for (auto &mesh : m_meshes)
+	{
+		mesh->SetDiffuseTexture(path);
 	}
 }
 

@@ -354,9 +354,11 @@
     <ClCompile Include="LightMgr.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainwindow.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelMgr.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="OpenWidget.cpp" />
     <ClCompile Include="PreDef.cpp" />
     <ClCompile Include="ShaderHelper.cpp" />
@@ -404,9 +406,11 @@
     <ClInclude Include="AssetImport.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="LightMgr.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelMgr.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="OpenWidget.h" />
     <ClInclude Include="PreDef.h" />
     <ClInclude Include="ShaderHelper.h" />

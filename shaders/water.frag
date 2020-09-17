@@ -236,8 +236,8 @@ void main()
 	vec3 finalColor = reflColor * fresnel + refrColor * (1 - fresnel);
 
 	// change normal and worldPos to view space
-	normal = (transpose(inverse(viewMat)) * vec4(normal, 1)).xyz;
-	vec3 viewPos = mat3(viewMat) * worldPos;
+	normal = normalize((transpose(inverse(viewMat)) * vec4(normal, 1)).xyz);
+	vec3 viewPos = (viewMat * vec4(worldPos, 1)).xyz;
 
 	// ----output gbuffer
 	gPosition = viewPos;

@@ -115,6 +115,7 @@ public:
 	//----texture
 	void SetDiffuseTexID(GLuint id);
 	void AddSpecularTexture(GLuint id);
+	void SetDiffuseTexture(const QString &path);
 	void SetNormalMapTexture(const QString &path);
 	GLuint GetTextureBuffer1() const;
 	void InitSkybox();

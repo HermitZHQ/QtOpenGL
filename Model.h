@@ -3,6 +3,7 @@
 #include "QMatrix4x4"
 #include "Mesh.h"
 #include "ShaderHelper.h"
+#include "Material.h"
 
 class LightMgr;
 class AnimationMgr;
@@ -16,7 +17,7 @@ public:
 	void AddMesh(Mesh *mesh);
 	unsigned int GetMeshNum() const;
 	Mesh* GetMesh(int index) const;
-
+	
 	void SetWroldMat(QMatrix4x4 worldMat);
 	QMatrix4x4 GetWorldMat() const;
 
@@ -27,10 +28,13 @@ public:
 	void EnableProjTex();
 	void SetNormalDebugEnable(bool bEnable);
 
+	Material& GetMaterial();
 	void SetShaderType(ShaderHelper::eShaderType type);
 	void SetDrawType(Mesh::eDrawType type);
 	void SetNormalMapTextureByMeshName(const QString &path, const QString &meshName);
 	void SetAllMeshesNormalMapTexture(const QString &path);
+	void SetAllMeshesDiffuseTexture(const QString &path);
+
 	void Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix4x4 matProj, QMatrix4x4 matView,
 		QMatrix4x4 matOrtho);
 
@@ -42,6 +46,7 @@ private:
 
 	AnimationMgr						*m_animationMgrPtr;
 
+	Material							m_mat;
 	ShaderHelper						*m_shaderHelperPtr;
 	LightMgr							*m_lightMgrPtr;
 

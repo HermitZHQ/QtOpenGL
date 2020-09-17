@@ -111,7 +111,11 @@ vec4 CalculateDirLight(Light light)
 
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
-	normal = normalize(vec4(normal, 1) * viewMat).xyz;
+	// 警示点：这里又犯了之前一个严重的错误，就是normalize对vec4和vec3使用的结果是完全不一样的
+	// 因为一个vec4的变量和矩阵进行计算后，你没有办法保证vec4中的w分量是0，这时候直接对vec4进行标量化就有问题
+	// 必须对vec3进行标量化的处理才是正确的，当normal不正确时的调试方式，我们可以采用定值的调试方法
+	// 比如在GBuffer的shader中，我们都传递的是vec3(1, 0, 0)和viewMat的组合结果（viewMat在前，且是逆转置）
+	normal = normalize((inverse(inverse(transpose(viewMat))) * vec4(normal, 0)).xyz);
 
 	//----test volumetric light
 	vec3 worldPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
@@ -166,7 +170,7 @@ vec4 CalculateDirLight(Light light)
 	vec3 albedo = texture(gBufferAlbedoTex, uv).rgb;
 	ambient = ambient * albedo * 0.75;
 
-	vec3 viewDir = normalize(camPosWorld - wPos);
+	vec3 viewDir = normalize(camPosWorld - worldPos);
 	vec3 halfDir = normalize(viewDir + light.dir);
 	vec3 diffuse = light.color.rgb * ambient.rgb * clamp(dot(light.dir, normal), 0.0, 1.0);
 
@@ -198,13 +202,18 @@ vec4 CalculateDirLight(Light light)
 	//return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + fogColor * fogDensity, 1);
 
 	// test light mix
-	return vec4(albedo + skyboxColor, 1);
+	//return vec4(specularRes, 1);
+	return vec4(albedo + skyboxColor + specularRes, 1);
 }
 
 vec4 CalculatePointLight(Light light)
 {
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
+
+	// 将pos和normal从view空间还原到世界空间
+	wPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
+	normal = normalize((inverse(transpose(inverse(viewMat))) * vec4(normal, 1)).xyz);
 
 	vec3 pointLightDir = light.pos - wPos;
 	float len = length(light.pos - wPos);
@@ -234,6 +243,10 @@ vec4 CalculateSpotLight(Light light)
 {	
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
+
+	// 将pos和normal从view空间还原到世界空间
+	wPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
+	normal = normalize((inverse(transpose(inverse(viewMat))) * vec4(normal, 1)).xyz);
 
 	vec3 spotLightDir = light.pos - wPos;
 	float len = length(spotLightDir);
@@ -272,10 +285,10 @@ void main()
 			fColor += CalculateDirLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && lights[i].isPoint){
-			//fColor += CalculatePointLight(lights[i]);
+			fColor += CalculatePointLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && !lights[i].isPoint && !lights[i].isDirectional){
-			//fColor += CalculateSpotLight(lights[i]);
+			fColor += CalculateSpotLight(lights[i]);
 		}
 	}
 }

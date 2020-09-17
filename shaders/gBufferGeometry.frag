@@ -36,7 +36,16 @@ void main()
 
 	// This is very important, you can't use viewMat * worldNormal
 	// you must use inverse&transpose
-	normal = normalize((transpose(inverse(viewMat)) * vec4(worldNormal, 0)).xyz); 
+	// 警示点：这里的逆转置必须要使用，否则结果的错误的，法线一定要使用逆转置来转换
+	// 在延迟渲染中取消这个效果的话，也不能只乘以viewMat的逆，必须是乘以逆转置的逆，才能正常
+	// 使用中文注释的地方都说明非常重要，不容错过
+	normal = normalize((transpose(inverse(viewMat)) * vec4(normal, 0)).xyz);
+	// 这里如果使用worldNormal的话，将看不出凹凸感，整个平面的反光非常的圆滑，看起来很假
+	//normal = normalize((transpose(inverse(viewMat)) * vec4(worldNormal, 0)).xyz); 
+
+	// for test, decompose the normal in deferred rendering fragment
+	//normal = normalize((transpose(inverse(viewMat)) * vec4(1, 0, 0, 0)).xyz); 
+
 	gNormal = normal;
 
 	gAlbedo = texture(tex, uv).rgb;
