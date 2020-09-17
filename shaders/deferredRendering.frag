@@ -54,12 +54,48 @@ in Vertex {
 	mat4x4 matWorld;
 };
 
+#define M_PI 3.1415926535897932384626433832795
+
 //--------------------------------------------------functions
 //----PBR relevant
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}  
+}
+
+float DistributionGGX(vec3 N, vec3 H, float roughness)
+{
+    float a      = roughness*roughness;
+    float a2     = a*a;
+    float NdotH  = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+	
+    float num   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = M_PI * denom * denom;
+	
+    return num / denom;
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
+
+    float num   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+	
+    return num / denom;
+}
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
+	
+    return ggx1 * ggx2;
+}
 
 //----Shadow relevant
 float CalculateTheShadowValue()
@@ -115,7 +151,10 @@ vec4 CalculateDirLight(Light light)
 	// 因为一个vec4的变量和矩阵进行计算后，你没有办法保证vec4中的w分量是0，这时候直接对vec4进行标量化就有问题
 	// 必须对vec3进行标量化的处理才是正确的，当normal不正确时的调试方式，我们可以采用定值的调试方法
 	// 比如在GBuffer的shader中，我们都传递的是vec3(1, 0, 0)和viewMat的组合结果（viewMat在前，且是逆转置）
-	normal = normalize((inverse(inverse(transpose(viewMat))) * vec4(normal, 0)).xyz);
+	//normal = normalize((inverse(inverse(transpose(viewMat))) * vec4(normal, 0)).xyz);
+
+	// 因为inverse两次相互抵消，而transpose可以通过左右换位来实现，最终可以简化为如下算式
+	normal = normalize((vec4(normal, 0) * viewMat).xyz);
 
 	//----test volumetric light
 	vec3 worldPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
@@ -231,6 +270,27 @@ vec4 CalculatePointLight(Light light)
 	vec3 viewDir = normalize(camPosWorld - wPos);
 	vec3 halfDir = normalize(viewDir + pointLightDir);
 	vec3 diffuse = light.color.rgb * albedo.rgb * clamp(dot(pointLightDir, normal), 0.0, 1.0);
+
+	//----PBR
+	vec3 F0 = vec3(0.04); 
+	F0 = mix(F0, albedo.rgb, metallic);
+	vec3 F = fresnelSchlick(max(dot(halfDir, viewDir), 0.0), F0);
+
+	float NDF = DistributionGGX(normal, halfDir, roughness);
+	float G = GeometrySmith(normal, viewDir, pointLightDir, roughness);
+
+	vec3 numerator    = NDF * G * F;
+	float denominator = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, pointLightDir), 0.0);
+	vec3 specular     = numerator / max(denominator, 0.001);
+
+	vec3 kS = F;// reflection
+	vec3 kD = vec3(1.0) - kS;// refraction
+	kD *= 1.0 - metallic;
+
+	float NdotL = max(dot(normal, pointLightDir), 0.0);
+    //Lo += (kD * albedo / M_PI + specular) * radiance * NdotL;
+	//----PBR return
+	//return vec4((kD * albedo.rgb / M_PI + specular) * vec3(1, 1, 1) * NdotL, 1);
 
 	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
 	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;

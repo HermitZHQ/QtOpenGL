@@ -50,7 +50,7 @@ void LightMgr::Init()
 {
 	// must set the dir light first, because we will use the first light to be the default dir light
 	LightInfo dirLightInfo(true, true, false, 
-		QVector3D(1, 1, 1), QVector3D(150, 150, 150), QVector4D(0.1, 0.1, 0.1, 1), 0);
+		QVector3D(1, 1, 1), QVector3D(150, 150, 150), QVector4D(0.6, 0.6, 0.6, 1), 0);
 	AddLight(dirLightInfo);
 
 	LightInfo dirLightInfo2(true, false, true,
