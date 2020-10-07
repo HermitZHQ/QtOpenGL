@@ -158,16 +158,40 @@ void OpenWidget::initializeGL()
 	}
 
 	// test load model
-//  	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
-	m_assimpPtr->LoadModel("./models/plane.obj");
-
-	m_assimpPtr->LoadModel("./models/largesphere.obj");
-	m_assimpPtr->LoadModel("./models/Box001.obj");
-	m_assimpPtr->LoadModel("./models/plane2.obj");
-	m_assimpPtr->LoadModel("./models/plane3.obj");
-	m_assimpPtr->LoadModel("./models/teapot.obj");
+//  m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+// 	m_assimpPtr->LoadModel("./models/plane.obj");
+// 
+// 	m_assimpPtr->LoadModel("./models/largesphere.obj");
+// 	m_assimpPtr->LoadModel("./models/Box001.obj");
+// 	m_assimpPtr->LoadModel("./models/plane2.obj");
+// 	m_assimpPtr->LoadModel("./models/plane3.obj");
+// 	m_assimpPtr->LoadModel("./models/teapot.obj");
 // 	m_assimpPtr->LoadModel("./models/dva/001.obj");
-	m_assimpPtr->LoadModel("./models/Box002.obj");
+// 	m_assimpPtr->LoadModel("./models/Box002.obj");
+
+	// create the sphere walls, left and right side----
+	int leftOffset = -30, rightOffset = 30;
+	int interval = 20;
+	int rowNum = 3, colNum = 3;
+	int zStartPos = interval * colNum / 2 * -1;
+	int yStartPos = 0;
+	QMatrix4x4 mat;
+	// left side
+	for (int row = 0; row < rowNum; ++row) {
+		for (int col = 0; col < colNum; ++col) {
+			mat.setToIdentity();
+			mat.translate(QVector3D(leftOffset, yStartPos + interval * (row % rowNum), zStartPos + interval * (col % colNum)));
+			m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/largesphere.obj", mat, ShaderHelper::Default);
+		}
+	}
+	// right side
+	for (int row = 0; row < rowNum; ++row) {
+		for (int col = 0; col < colNum; ++col) {
+			mat.setToIdentity();
+			mat.translate(QVector3D(rightOffset, yStartPos + interval * (row % rowNum), zStartPos + interval * (col % colNum)));
+			m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/largesphere.obj", mat, ShaderHelper::Default);
+		}
+	}
 
 	QMatrix4x4 matModel;
 // 	matModel.translate(QVector3D(0, 0, 30));
