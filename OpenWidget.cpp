@@ -891,7 +891,17 @@ void OpenWidget::DrawDeferredShading()
 	QMatrix4x4 matView = m_cam->GetViewMatrix();
 	m_shaderHelperPtr->SetMVPMatrix(matLightVP, matLightVP, matView, matProj);
 	m_shaderHelperPtr->SetAmbientSpecularColor(((MainWindow*)m_mainObj)->GetAmbientColor(), ((MainWindow*)m_mainObj)->GetSpecularColor());
-	m_shaderHelperPtr->SetPBR(0, 0, 0);
+
+	static int iCount = 0;
+	static float matallic = 0.05f;
+	if (iCount++ % 300 == 0) {
+		matallic += 0.05f;
+		if (matallic > 1.0f) {
+			iCount = 0;
+			matallic = 0.0f;
+		}
+	}
+	m_shaderHelperPtr->SetPBR(matallic, matallic, 0);
 
 
 	glBindVertexArray(vao_quad);

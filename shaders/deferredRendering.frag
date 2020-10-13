@@ -253,9 +253,10 @@ vec4 CalculatePointLight(Light light)
 	// 将pos和normal从view空间还原到世界空间
 	wPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
 	//normal = normalize((inverse(transpose(inverse(viewMat))) * vec4(normal, 0)).xyz);
-	normal = normalize((vec4(normal, 0) * viewMat).xyz);
+	// 目前整个PBR的效果已经实现了，但是最奇怪的地方在于高亮光斑在球的内部，需要把normal进行反向，这是唯一一个我暂时不理解的地方
+	normal = normalize((vec4(normal, 0) * viewMat).xyz) * -1;
 
-	vec3 pointLightDir = normalize(wPos - light.pos);
+	vec3 pointLightDir = normalize(light.pos - wPos);
 	float len = length(light.pos - wPos);
 
 	float attenuation = 1.0;
@@ -356,7 +357,7 @@ void main()
 
 	for(int i = 0; i < 8; ++i){
 		if (lights[i].isEnabled && lights[i].isDirectional){
-			//fColor += CalculateDirLight(lights[i]);
+			fColor += CalculateDirLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && lights[i].isPoint){
 			fColor += CalculatePointLight(lights[i]);

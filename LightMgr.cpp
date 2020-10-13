@@ -53,17 +53,18 @@ void LightMgr::Init()
 		QVector3D(1, 1, 1), QVector3D(150, 150, 150), QVector4D(0.2, 0.2, 0.2, 1), 0);
 	AddLight(dirLightInfo);
 
+	// 点光源是不需要light dir的，但是为了统一设置，还是需要随便填写一个，但是在shader的计算中是不起作用的
 	LightInfo dirLightInfo2(true, false, true,
-		QVector3D(-1, 1, 1), QVector3D(10, 20, -20), QVector4D(100, 100, 0, 1), 30);
+		QVector3D(-1, 1, 1), QVector3D(10, 20, -20), QVector4D(300, 300, 300, 1), 30);
 	AddLight(dirLightInfo2);
 // 	LightInfo dirLightInfo3(true, false, true,
-// 		QVector3D(-1, 1, 1), QVector3D(-10, 20, -20), QVector4D(0, 0, 1.5, 1), 30);
+// 		QVector3D(-1, 1, 1), QVector3D(-10, 20, -20), QVector4D(0, 0, 100, 1), 30);
 // 	AddLight(dirLightInfo3);
 // 	LightInfo dirLightInfo4(true, false, true,
-// 		QVector3D(-1, 1, 1), QVector3D(-10, 20, 20), QVector4D(0, 1.5, 0, 1), 30);
+// 		QVector3D(-1, 1, 1), QVector3D(-10, 20, 20), QVector4D(0, 100, 0, 1), 30);
 // 	AddLight(dirLightInfo4);
 // 	LightInfo dirLightInfo5(true, false, true,
-// 		QVector3D(-1, 1, 1), QVector3D(10, 20, 20), QVector4D(1.5, 0, 0, 1), 30);
+// 		QVector3D(-1, 1, 1), QVector3D(10, 20, 20), QVector4D(100, 0, 0, 1), 30);
 // 	AddLight(dirLightInfo5);
 
 // 	LightInfo dirLightInfo6(true, false, true,
