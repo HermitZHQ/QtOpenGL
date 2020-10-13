@@ -106,10 +106,10 @@ void ShaderHelper::GetCommonUniformLocation()
 	m_metallic[m_shaderType] = GetUniformLocation("metallic");
 	m_roughness[m_shaderType] = GetUniformLocation("roughness");
 	m_ao[m_shaderType] = GetUniformLocation("ao");
-	//if (m_metallic[m_shaderType] != -1) {
-	//	int i = 0;
-	//	++i;
-	//}
+	if (m_metallic[m_shaderType] != -1) {
+		int i = 0;
+		++i;
+	}
 	CheckError;
 
 	// ----Tex

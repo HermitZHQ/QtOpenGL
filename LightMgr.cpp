@@ -50,21 +50,21 @@ void LightMgr::Init()
 {
 	// must set the dir light first, because we will use the first light to be the default dir light
 	LightInfo dirLightInfo(true, true, false, 
-		QVector3D(1, 1, 1), QVector3D(150, 150, 150), QVector4D(0.6, 0.6, 0.6, 1), 0);
+		QVector3D(1, 1, 1), QVector3D(150, 150, 150), QVector4D(0.2, 0.2, 0.2, 1), 0);
 	AddLight(dirLightInfo);
 
 	LightInfo dirLightInfo2(true, false, true,
-		QVector3D(-1, 1, 1), QVector3D(20, 20, -20), QVector4D(1, 1, 0, 1), 30);
+		QVector3D(-1, 1, 1), QVector3D(10, 20, -20), QVector4D(100, 100, 0, 1), 30);
 	AddLight(dirLightInfo2);
-	LightInfo dirLightInfo3(true, false, true,
-		QVector3D(-1, 1, 1), QVector3D(-20, 20, -20), QVector4D(0, 0, 1.5, 1), 30);
-	AddLight(dirLightInfo3);
-	LightInfo dirLightInfo4(true, false, true,
-		QVector3D(-1, 1, 1), QVector3D(-20, 20, 20), QVector4D(0, 1.5, 0, 1), 30);
-	AddLight(dirLightInfo4);
-	LightInfo dirLightInfo5(true, false, true,
-		QVector3D(-1, 1, 1), QVector3D(20, 20, 20), QVector4D(1.5, 0, 0, 1), 30);
-	AddLight(dirLightInfo5);
+// 	LightInfo dirLightInfo3(true, false, true,
+// 		QVector3D(-1, 1, 1), QVector3D(-10, 20, -20), QVector4D(0, 0, 1.5, 1), 30);
+// 	AddLight(dirLightInfo3);
+// 	LightInfo dirLightInfo4(true, false, true,
+// 		QVector3D(-1, 1, 1), QVector3D(-10, 20, 20), QVector4D(0, 1.5, 0, 1), 30);
+// 	AddLight(dirLightInfo4);
+// 	LightInfo dirLightInfo5(true, false, true,
+// 		QVector3D(-1, 1, 1), QVector3D(10, 20, 20), QVector4D(1.5, 0, 0, 1), 30);
+// 	AddLight(dirLightInfo5);
 
 // 	LightInfo dirLightInfo6(true, false, true,
 // 		QVector3D(-1, 1, 1), QVector3D(40, 10, -40), QVector4D(1, 1, 0, 1), 40);

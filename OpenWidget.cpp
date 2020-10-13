@@ -239,15 +239,15 @@ void OpenWidget::initializeGL()
 		pMod3->SetNormalMapTextureByMeshName("./models/brickwall_normal.jpg", "Plane003");
 	}
 
-	Model *pSphere001 = m_modelMgrPtr->FindModelByName("Sphere001");
-	if (Q_NULLPTR != pSphere001) {
-		QMatrix4x4 mat;
-		mat.translate(0, 20, 0);
-// 		mat.scale(2, 2, 2);
-		pSphere001->SetWroldMat(mat);
-		pSphere001->SetAllMeshesNormalMapTexture("./models/brickwall_normal.jpg");
-		pSphere001->SetAllMeshesDiffuseTexture("./models/brickwall.jpg");
-	}
+//	Model *pSphere001 = m_modelMgrPtr->FindModelByName("Sphere001");
+//	if (Q_NULLPTR != pSphere001) {
+//		QMatrix4x4 mat;
+//		mat.translate(0, 20, 0);
+//// 		mat.scale(2, 2, 2);
+//		pSphere001->SetWroldMat(mat);
+//		pSphere001->SetAllMeshesNormalMapTexture("./models/brickwall_normal.jpg");
+//		pSphere001->SetAllMeshesDiffuseTexture("./models/brickwall.jpg");
+//	}
 
 	Model *pBox001 = m_modelMgrPtr->FindModelByName("Box001");
 	if (Q_NULLPTR != pBox001) {
@@ -891,6 +891,7 @@ void OpenWidget::DrawDeferredShading()
 	QMatrix4x4 matView = m_cam->GetViewMatrix();
 	m_shaderHelperPtr->SetMVPMatrix(matLightVP, matLightVP, matView, matProj);
 	m_shaderHelperPtr->SetAmbientSpecularColor(((MainWindow*)m_mainObj)->GetAmbientColor(), ((MainWindow*)m_mainObj)->GetSpecularColor());
+	m_shaderHelperPtr->SetPBR(0, 0, 0);
 
 
 	glBindVertexArray(vao_quad);

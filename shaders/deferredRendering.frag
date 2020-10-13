@@ -252,11 +252,11 @@ vec4 CalculatePointLight(Light light)
 
 	// 将pos和normal从view空间还原到世界空间
 	wPos = (inverse(viewMat) * vec4(wPos, 1)).xyz;
-	normal = normalize((inverse(transpose(inverse(viewMat))) * vec4(normal, 1)).xyz);
+	//normal = normalize((inverse(transpose(inverse(viewMat))) * vec4(normal, 0)).xyz);
+	normal = normalize((vec4(normal, 0) * viewMat).xyz);
 
-	vec3 pointLightDir = light.pos - wPos;
+	vec3 pointLightDir = normalize(wPos - light.pos);
 	float len = length(light.pos - wPos);
-	pointLightDir = normalize(pointLightDir);
 
 	float attenuation = 1.0;
 	// calculate the attenuation of point light
@@ -269,33 +269,47 @@ vec4 CalculatePointLight(Light light)
 
 	vec3 viewDir = normalize(camPosWorld - wPos);
 	vec3 halfDir = normalize(viewDir + pointLightDir);
-	vec3 diffuse = light.color.rgb * albedo.rgb * clamp(dot(pointLightDir, normal), 0.0, 1.0);
+	float dotRes = clamp(dot(pointLightDir, normal), 0.0, 1.0);
+	dotRes = dot(pointLightDir, normal);
+	vec3 diffuse = light.color.rgb * albedo.rgb * dotRes;
+	
+	//----specular light res
+	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
+	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
 
 	//----PBR
+	/**/
 	vec3 F0 = vec3(0.04); 
 	F0 = mix(F0, albedo.rgb, metallic);
-	vec3 F = fresnelSchlick(max(dot(halfDir, viewDir), 0.0), F0);
 
+	// cook-torrance BRDF
 	float NDF = DistributionGGX(normal, halfDir, roughness);
 	float G = GeometrySmith(normal, viewDir, pointLightDir, roughness);
+	vec3 F = fresnelSchlick(max(dot(halfDir, viewDir), 0.0), F0);
+
+	vec3 kS = F;// reflection
+	vec3 kD = vec3(1.0) - kS;// refraction
+	kD *= (1.0 - metallic);
 
 	vec3 numerator    = NDF * G * F;
 	float denominator = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, pointLightDir), 0.0);
 	vec3 specular     = numerator / max(denominator, 0.001);
 
-	vec3 kS = F;// reflection
-	vec3 kD = vec3(1.0) - kS;// refraction
-	kD *= 1.0 - metallic;
-
 	float NdotL = max(dot(normal, pointLightDir), 0.0);
+	// 原生累计光照公式
     //Lo += (kD * albedo / M_PI + specular) * radiance * NdotL;
 	//----PBR return
-	//return vec4((kD * albedo.rgb / M_PI + specular) * vec3(1, 1, 1) * NdotL, 1);
+	vec3 radiance = light.color.rgb * (1.0 / (len * len));
+	//return vec4(kS, 1);
 
-	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
-	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
+	vec3 color = (kD * albedo.rgb / M_PI + specular) * radiance * NdotL;
+	color = color / (color + vec3(1.0));
+	color = pow(color, vec3(1.0/2.2));
+	return vec4(color, 1);
+	
 
-	//return vec4(attenuation, 0, 0, 1);
+	//----Normal point light return
+	//return vec4(diffuse, 1);
 	return vec4((diffuse + specularRes) * attenuation, 1);
 }
 
@@ -342,7 +356,7 @@ void main()
 
 	for(int i = 0; i < 8; ++i){
 		if (lights[i].isEnabled && lights[i].isDirectional){
-			fColor += CalculateDirLight(lights[i]);
+			//fColor += CalculateDirLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && lights[i].isPoint){
 			fColor += CalculatePointLight(lights[i]);
