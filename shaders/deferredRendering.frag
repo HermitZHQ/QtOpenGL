@@ -357,7 +357,7 @@ void main()
 
 	for(int i = 0; i < 8; ++i){
 		if (lights[i].isEnabled && lights[i].isDirectional){
-			fColor += CalculateDirLight(lights[i]);
+			//fColor += CalculateDirLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && lights[i].isPoint){
 			fColor += CalculatePointLight(lights[i]);

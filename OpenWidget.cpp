@@ -893,9 +893,9 @@ void OpenWidget::DrawDeferredShading()
 	m_shaderHelperPtr->SetAmbientSpecularColor(((MainWindow*)m_mainObj)->GetAmbientColor(), ((MainWindow*)m_mainObj)->GetSpecularColor());
 
 	static int iCount = 0;
-	static float matallic = 0.05f;
-	if (iCount++ % 300 == 0) {
-		matallic += 0.05f;
+	static float matallic = 0.01f;
+	if (iCount++ % 100 == 0) {
+		matallic += 0.01f;
 		if (matallic > 1.0f) {
 			iCount = 0;
 			matallic = 0.0f;
