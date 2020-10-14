@@ -521,45 +521,38 @@ ShaderHelper::eShaderType ShaderHelper::GetShaderType() const
 
 void ShaderHelper::SetMVPMatrix(QMatrix4x4 &matMVP, QMatrix4x4 &matWorld, QMatrix4x4 &matView, QMatrix4x4 &matProj)
 {
-	if (m_matMVPLoc[m_shaderType] != -1)
-	{
+	if (m_matMVPLoc[m_shaderType] != -1) {
 		glUniformMatrix4fv(m_matMVPLoc[m_shaderType], 1, GL_FALSE, matMVP.data());
 	}
 
-	if (m_matWorldLoc[m_shaderType] != -1)
-	{
+	if (m_matWorldLoc[m_shaderType] != -1) {
 		glUniformMatrix4fv(m_matWorldLoc[m_shaderType], 1, GL_FALSE, matWorld.data());
 	}
-	if (m_matViewLoc[m_shaderType] != -1)
-	{
+	if (m_matViewLoc[m_shaderType] != -1) {
 		glUniformMatrix4fv(m_matViewLoc[m_shaderType], 1, GL_FALSE, matView.data());
 	}
-	if (m_matProjLoc[m_shaderType] != -1)
-	{
+	if (m_matProjLoc[m_shaderType] != -1) {
 		glUniformMatrix4fv(m_matProjLoc[m_shaderType], 1, GL_FALSE, matProj.data());
 	}
 }
 
 void ShaderHelper::SetCamWorldPos(QVector3D &camPos)
 {
-	if (m_worldCamPosLoc[m_shaderType] != -1)
-	{
+	if (m_worldCamPosLoc[m_shaderType] != -1) {
 		glUniform3f(m_worldCamPosLoc[m_shaderType], camPos.x(), camPos.y(), camPos.z());
 	}
 }
 
 void ShaderHelper::SetOrthoMat(QMatrix4x4 &matOrtho)
 {
-	if (m_matOrthoLoc[m_shaderType] != -1)
-	{
+	if (m_matOrthoLoc[m_shaderType] != -1) {
 		glUniformMatrix4fv(m_matOrthoLoc[m_shaderType], 1, GL_FALSE, matOrtho.data());
 	}
 }
 
 void ShaderHelper::SetLightVPMat(QMatrix4x4 &matLightVP)
 {
-	if (m_matLightVPLoc[m_shaderType] != -1)
-	{
+	if (m_matLightVPLoc[m_shaderType] != -1) {
 		glUniformMatrix4fv(m_matLightVPLoc[m_shaderType], 1, GL_FALSE, matLightVP.data());
 	}
 }
@@ -571,8 +564,7 @@ void ShaderHelper::SetBonesInfo(QVector<QMatrix4x4> &bonesInfoVec)
 		handleBoneNum = maxBoneNum;
 	}
 
-	for (int i = 0; i < bonesInfoVec.size(); ++i)
-	{
+	for (int i = 0; i < bonesInfoVec.size(); ++i) {
 		if (m_bonesLoc[m_shaderType][i] != -1) {
 			glUniformMatrix4fv(m_bonesLoc[m_shaderType][i], 1, GL_FALSE, bonesInfoVec[i].data());
 		}
@@ -582,8 +574,7 @@ void ShaderHelper::SetBonesInfo(QVector<QMatrix4x4> &bonesInfoVec)
 void ShaderHelper::SetTime(unsigned int time)
 {
 	static unsigned int t = 0;
-	if (m_timeLoc[m_shaderType] != -1)
-	{
+	if (m_timeLoc[m_shaderType] != -1) {
 		glUniform1ui(m_timeLoc[m_shaderType], t);
 		++t;
 	}
@@ -694,8 +685,7 @@ void ShaderHelper::SetSSAOSamples(QVector<QVector3D> &sampleVec)
 		return;
 	}
 
-	for (int i = 0; i < ShaderHelper::ssaoSampleNum; ++i)
-	{
+	for (int i = 0; i < ShaderHelper::ssaoSampleNum; ++i) {
 		if (-1 != m_ssaoSamples[m_shaderType][i]) {
 			glUniform3f(m_ssaoSamples[m_shaderType][i], sampleVec[i].x(), sampleVec[i].y(), sampleVec[i].z());
 		}

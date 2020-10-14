@@ -145,20 +145,20 @@ void OpenWidget::initializeGL()
 
 	// load the light box
 	auto lightNum = LightMgr::Instance().GetCurLightNum();
-	for (int i = 0; i < lightNum; ++i)
-	{
-		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
-		if (lightInfo.isEnabled) {
-			QMatrix4x4 matModel;
-			matModel.translate(lightInfo.pos);
-			matModel.scale(0.1f);
-			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
-			lightInfo.SetModel(mod);
-		}
-	}
+// 	for (int i = 0; i < lightNum; ++i)
+// 	{
+// 		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
+// 		if (lightInfo.isEnabled) {
+// 			QMatrix4x4 matModel;
+// 			matModel.translate(lightInfo.pos);
+// 			matModel.scale(0.1f);
+// 			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
+// 			lightInfo.SetModel(mod);
+// 		}
+// 	}
 
 	// test load model
-//  m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
 // 	m_assimpPtr->LoadModel("./models/plane.obj");
 // 
 // 	m_assimpPtr->LoadModel("./models/largesphere.obj");
@@ -167,30 +167,33 @@ void OpenWidget::initializeGL()
 // 	m_assimpPtr->LoadModel("./models/plane3.obj");
 // 	m_assimpPtr->LoadModel("./models/teapot.obj");
 // 	m_assimpPtr->LoadModel("./models/dva/001.obj");
-// 	m_assimpPtr->LoadModel("./models/Box002.obj");
+	m_assimpPtr->LoadModel("./models/Box002.obj");
 
 	// create the sphere walls, left and right side----
-	int leftOffset = -30, rightOffset = 30;
-	int interval = 20;
-	int rowNum = 3, colNum = 3;
-	int zStartPos = interval * colNum / 2 * -1;
-	int yStartPos = 0;
-	QMatrix4x4 mat;
-	// left side
-	for (int row = 0; row < rowNum; ++row) {
-		for (int col = 0; col < colNum; ++col) {
-			mat.setToIdentity();
-			mat.translate(QVector3D(leftOffset, yStartPos + interval * (row % rowNum), zStartPos + interval * (col % colNum)));
-			m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/largesphere.obj", mat, ShaderHelper::Default);
-		}
-	}
-	// right side
-	for (int row = 0; row < rowNum; ++row) {
-		for (int col = 0; col < colNum; ++col) {
-			mat.setToIdentity();
-			mat.translate(QVector3D(rightOffset, yStartPos + interval * (row % rowNum), zStartPos + interval * (col % colNum)));
-			m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/largesphere.obj", mat, ShaderHelper::Default);
-		}
+	// ----PBR relevant
+	{
+// 		int leftOffset = -30, rightOffset = 30;
+// 		int interval = 20;
+// 		int rowNum = 3, colNum = 3;
+// 		int zStartPos = interval * colNum / 2 * -1;
+// 		int yStartPos = 0;
+// 		QMatrix4x4 mat;
+// 		// left side
+// 		for (int row = 0; row < rowNum; ++row) {
+// 			for (int col = 0; col < colNum; ++col) {
+// 				mat.setToIdentity();
+// 				mat.translate(QVector3D(leftOffset, yStartPos + interval * (row % rowNum), zStartPos + interval * (col % colNum)));
+// 				m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/largesphere.obj", mat, ShaderHelper::Default);
+// 			}
+// 		}
+// 		// right side
+// 		for (int row = 0; row < rowNum; ++row) {
+// 			for (int col = 0; col < colNum; ++col) {
+// 				mat.setToIdentity();
+// 				mat.translate(QVector3D(rightOffset, yStartPos + interval * (row % rowNum), zStartPos + interval * (col % colNum)));
+// 				m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/largesphere.obj", mat, ShaderHelper::Default);
+// 			}
+// 		}
 	}
 
 	QMatrix4x4 matModel;
@@ -199,7 +202,7 @@ void OpenWidget::initializeGL()
 	matModel.scale(20);
 // 	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/piety.fbx", matModel, ShaderHelper::Diffuse);
 
-	m_assimpPtr->LoadModel("./models/skybox.obj");
+// 	m_assimpPtr->LoadModel("./models/skybox.obj");
 
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
@@ -892,6 +895,7 @@ void OpenWidget::DrawDeferredShading()
 	m_shaderHelperPtr->SetMVPMatrix(matLightVP, matLightVP, matView, matProj);
 	m_shaderHelperPtr->SetAmbientSpecularColor(((MainWindow*)m_mainObj)->GetAmbientColor(), ((MainWindow*)m_mainObj)->GetSpecularColor());
 
+	// ----Adjust PBR dynamically
 	static int iCount = 0;
 	static float matallic = 0.01f;
 	if (iCount++ % 100 == 0) {
