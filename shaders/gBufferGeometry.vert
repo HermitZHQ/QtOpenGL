@@ -42,7 +42,7 @@ void main()
 	vec3 worldView = worldPos - worldCamPos;
 	worldNormal = normalize(vNormal * inverse(mat3(mat_world)));
 	skyboxUV = reflect(worldView, worldNormal);
-	skyboxUV = worldView - 2 * dot(worldNormal, worldView) * worldNormal;
+	//skyboxUV = worldView - 2 * dot(worldNormal, worldView) * worldNormal;
 
 	uv = vUV;
 	worldMat = mat_world;

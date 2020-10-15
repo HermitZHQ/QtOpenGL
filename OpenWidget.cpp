@@ -202,7 +202,7 @@ void OpenWidget::initializeGL()
 	matModel.scale(20);
 // 	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/piety.fbx", matModel, ShaderHelper::Diffuse);
 
-// 	m_assimpPtr->LoadModel("./models/skybox.obj");
+	m_assimpPtr->LoadModel("./models/skybox.obj");
 
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
@@ -465,7 +465,8 @@ void OpenWidget::paintGL()
 	if (Q_NULLPTR != pWater) {
 		pWater->SetShaderType(ShaderHelper::Water);
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedo2Tex);
+		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
+		glGenerateMipmap(GL_TEXTURE_2D);
 		CheckError;
 
 		QMatrix4x4 matModel = pWater->GetWorldMat();
@@ -793,14 +794,16 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		//----Use GL_RGBA16F to enable the HDR effect with albedo and skybox
 		glGenTextures(1, &m_gBufferAlbedoTex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wndSize.width(), wndSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, wndSize.width(), wndSize.height(), 0, GL_RGB, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		// This ensures we don't accidentally oversample position/depth values in screen-space outside the texture's default coordinate region
-// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// 这是一个可能会造成tex取值闪烁的重要函数，之前水面下的闪烁就和这个有关
+		// 但是，它的调用地点应该在设置完有效内容后再进行生成，这里生成的话就是一个空的（无效的）Mipmap
+// 		glGenerateMipmap(GL_TEXTURE_2D);
+// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gBufferAlbedoTex, 0);
 
@@ -809,13 +812,13 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		glGenTextures(1, &m_gBufferAlbedo2Tex);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedo2Tex);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, wndSize.width(), wndSize.height(), 0, GL_RGB, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		// This ensures we don't accidentally oversample position/depth values in screen-space outside the texture's default coordinate region
-// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-// 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+// 		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, m_gBufferAlbedo2Tex, 0);
 

@@ -11,7 +11,8 @@
 using namespace Assimp;
 
 unsigned int ppsteps = 
-// aiProcess_CalcTangentSpace | // calculate tangents and bitangents if possible，居然对圆形有bug，圆形用这个生成tan和bitan都是错误的，需要注意
+ aiProcess_CalcTangentSpace | // calculate tangents and bitangents if possible，居然对圆形有bug，圆形用这个生成tan和bitan都是错误的，需要注意
+	// 还需要注意的是，这里不开启的话，又会影响水面的NormalMap的计算结果，不开就是错误的.....，这尼玛的
 //aiProcess_JoinIdenticalVertices | // join identical vertices/ optimize indexing
 //aiProcess_ValidateDataStructure | // perform a full validation of the loader's output
 //aiProcess_ImproveCacheLocality | // improve the cache locality of the output vertices

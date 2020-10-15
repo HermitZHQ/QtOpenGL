@@ -199,13 +199,15 @@ void main()
 	vec2 speed = time * vec2(0.00001, 0.00001);
 
 	// Get "normal" from the normalmap
-	float scale = 12.0;
+	float scale = 6.0;
 	vec3 normal1 = texture(normalMap, uv + speed * scale).rgb;
 	vec3 normal2 = texture(normalMap, uv - speed * scale).rgb;
-	normal1 = normal1 * 2 - 1;
-	normal2 = normal2 * 2 - 1;
+	normal1 =  (normal1 * 2 - 1);
+	normal2 =  (normal2 * 2 - 1);
 
-	vec3 normal = (normal1 + normal2);
+	vec3 normal = normal1 + normal2;
+	// 这里是个严重的错误点，因为gBuffer中已经把normal转到了view空间中了，这里的乘法已经不正确了
+	// 好的，原来这里没有错，因为gBuffer中并没有处理water的normal，所有是需要转换的
 	normal = normalize(tangentToModelMat * normal);
 
 	// get the distortion refraction image
@@ -214,7 +216,7 @@ void main()
 	vec4 vpPos = projMat * viewMat * vec4(worldPos, 1);
 	vec2 uv2 = vpPos.xy / vpPos.w;
 	uv2 = uv2 * 0.5 + 0.5;
-	vec2 offsetUV = uv2 + normal.xy * 0.015;
+	vec2 offsetUV = uv2 + normal.xy * 0.005;// 最后一个参数是控制扭曲幅度的
 
 	vec3 albedo = texture(offScreenTex, offsetUV).rgb;
 	//albedo = texture(offScreenTex, uv2).rgb;
@@ -222,24 +224,20 @@ void main()
 	vec3 refrColor = ambient * albedo.rgb * 0.3; // the color below the water should more darker
 
 	vec3 viewDir = normalize(camPosWorld - worldPos);
-	vec3 halfDir = normalize(viewDir + lights[0].dir);
-	vec3 diffuse = lights[0].color.rgb * ambient.rgb * clamp(dot(lights[0].dir, normal), 0.0, 1.0);
-
+	//vec3 halfDir = normalize(viewDir + lights[0].dir);
+	//vec3 diffuse = lights[0].color.rgb * ambient.rgb * clamp(dot(lights[0].dir, normal), 0.0, 1.0);
+	
+	//normal = normalize(texture(normalMap, uv).rgb * mat3(viewMat));
+	//normal = texture(normalMap, uv).rgb;
 	vec3 skyUV = reflect(-viewDir, normal);
 	vec3 reflColor = texture(skybox, skyUV).rgb * texture(tex, uv).rgb;
-	// 暂时使用天空盒rgb，不知道为什么上面的rgb相乘要报错，单独设置到这里都可以。。。。。
-	// 我目前怀疑跟HDR有关系，是不是乘法以后超过界限了？？？
-	//reflColor = texture(skybox, skyUV).rgb;
-	//reflColor = texture(tex, uv).rgb;
 
 	float fresnel = pow(1 - clamp(dot(viewDir, normal), 0.0, 1.0), 4);
 	vec3 finalColor = reflColor * fresnel + refrColor * (1 - fresnel);
 
-	// change normal and worldPos to view space
-	normal = normalize((transpose(inverse(viewMat)) * vec4(normal, 1)).xyz);
-	vec3 viewPos = (viewMat * vec4(worldPos, 1)).xyz;
 
 	// ----output gbuffer
+	vec3 viewPos = (viewMat * vec4(worldPos, 1)).xyz;
 	gPosition = viewPos;
 
 	gNormal = normal;
@@ -248,5 +246,5 @@ void main()
 	vec3 color1 = texture(skybox, skyboxUV).rgb;
 	vec3 color2 = texture(tex, uv).rgb;
 	gAlbedo = finalColor;
-	//gAlbedo = vec3(1, 1, 0);
+	//gAlbedo = vec3(1, 0, 0);
 }
