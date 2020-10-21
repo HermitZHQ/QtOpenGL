@@ -10,6 +10,7 @@
 #include "ModelMgr.h"
 #include "TextureMgr.h"
 #include "LightMgr.h"
+#include "Cube.h"
 
 
 OpenWidget::OpenWidget()
@@ -118,6 +119,7 @@ void OpenWidget::initializeGL()
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
 		CheckError;
 		glEnableVertexAttribArray(0);
+
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(GLfloat) * 12));
 		CheckError;
 		glEnableVertexAttribArray(1);
@@ -144,7 +146,7 @@ void OpenWidget::initializeGL()
 	CheckError;
 
 	// load the light box
-	auto lightNum = LightMgr::Instance().GetCurLightNum();
+// 	auto lightNum = LightMgr::Instance().GetCurLightNum();
 // 	for (int i = 0; i < lightNum; ++i)
 // 	{
 // 		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
@@ -165,8 +167,8 @@ void OpenWidget::initializeGL()
 // 	m_assimpPtr->LoadModel("./models/Box001.obj");
 // 	m_assimpPtr->LoadModel("./models/plane2.obj");
 // 	m_assimpPtr->LoadModel("./models/plane3.obj");
-// 	m_assimpPtr->LoadModel("./models/teapot.obj");
-// 	m_assimpPtr->LoadModel("./models/dva/001.obj");
+	m_assimpPtr->LoadModel("./models/teapot.obj");
+	m_assimpPtr->LoadModel("./models/dva/001.obj");
 	m_assimpPtr->LoadModel("./models/Box002.obj");
 
 	// create the sphere walls, left and right side----
@@ -277,6 +279,8 @@ void OpenWidget::initializeGL()
 		mat.translate(30, 0, 0);
 		mat.scale(5);
 		pTeapot->SetWroldMat(mat);
+		// must generate aabb mesh manual
+		pTeapot->GenerateAABBMesh();
 	}
 
 	Model *pSkybox = m_modelMgrPtr->FindModelByName("skybox");
@@ -291,6 +295,7 @@ void OpenWidget::initializeGL()
 // 		pMod->SetNormalMapTextureByMeshName("./models/dva/Map__15_Normal_Bump.png", "body");
 // 		pMod->SetNormalMapTextureByMeshName("./models/dva/Map__13_Normal_Bump.png", "shitimoface");
 // 		pMod->SetNormalMapTextureByMeshName("./models/dva/Map__18_Normal_Bump.png", "eye");
+		pMod->GenerateAABBMesh();
 	}
 }
 
@@ -441,6 +446,7 @@ void OpenWidget::paintGL()
 // 		m_shaderHelperPtr->SetLightVPMat(matLightVP);
 
 		Model *mod = ModelMgr::Instance().GetModel(i);
+		// 开启线框模式
 // 		mod->SetDrawType(Mesh::Line);
 
 		if (mod->GetModelName().compare("water") == 0) {

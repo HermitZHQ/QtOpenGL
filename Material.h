@@ -1,13 +1,13 @@
 #pragma once
 #include "Object.h"
 
-class Material : Object
+class Material : public Object
 {
 public:
 	Material();
 	~Material();
 
-	virtual QString GetClassName() const override;
+// 	QString GetClassName() const;
 
 	void SetMetallic(float metallic);
 	float GetMetallic() const;
@@ -15,6 +15,9 @@ public:
 	float GetRoughness() const;
 	void SetAO(float ao);
 	float GetAO() const;
+
+
+	virtual QString GetStaticClassName() const override;
 
 private:
 	float						m_metallic;

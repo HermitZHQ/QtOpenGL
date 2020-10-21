@@ -1,5 +1,6 @@
 #include "Model.h"
 #include "Mesh.h"
+#include "Cube.h"
 #include "LightMgr.h"
 #include "AnimationMgr.h"
 #include <windows.h>
@@ -9,6 +10,7 @@ Model::Model()
 	, m_enableNormalDebug(false)
 	, m_animationMgrPtr(&AnimationMgr::Instance())
 	, m_time(GetTickCount())
+	, m_aabbMesh(nullptr)
 {
 	m_worldMat.setToIdentity();
 
@@ -63,6 +65,22 @@ QString Model::GetModelName() const
 	return m_name;
 }
 
+AABB Model::GetAABB()
+{
+	m_aabb.GenerateFromModel(this);
+	return m_aabb;
+}
+
+void Model::GenerateAABBMesh()
+{
+	if (nullptr == m_aabbMesh) {
+		auto aabb = GetAABB();
+		Cube cube(aabb.GetMinPos(), aabb.GetMaxPos());
+		m_aabbMesh = cube.CreateMesh();
+		m_aabbMesh->SetDrawType(Mesh::Line);
+	}
+}
+
 void Model::EnableSkybox()
 {
 	for (auto &mesh : m_meshes)
@@ -86,7 +104,7 @@ void Model::SetNormalDebugEnable(bool bEnable)
 
 Material& Model::GetMaterial() {
 
-	return m_mat;
+	return m_material;
 }
 
 void Model::SetShaderType(ShaderHelper::eShaderType type)
@@ -153,11 +171,17 @@ void Model::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatri
 		m_animationMgrPtr->UpdateAnimation(mesh->GetAnimId(), m_time / 1000.0f);
 		mesh->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 
+		// Geometry normal display
 		if (m_enableNormalDebug) {
 			m_shaderHelperPtr->SetShaderType(ShaderHelper::Geometry);
 			mesh->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 			m_shaderHelperPtr->SetShaderType(m_shaderType);
 		}
+	}
+
+	// aabb box
+	if (m_aabbMesh) {
+		m_aabbMesh->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
 
 	m_time = GetTickCount();

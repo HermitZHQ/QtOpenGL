@@ -59,7 +59,7 @@ AssetImport::~AssetImport()
 {
 }
 
-int AssetImport::LoadModel(const char *path)
+Model* AssetImport::LoadModel(const char *path)
 {
 	InitScene(path);
 
@@ -74,7 +74,7 @@ int AssetImport::LoadModel(const char *path)
 
 	HandleChildNode(m_scene, m_scene->mRootNode, mod);
 
-	return 0;
+	return mod;
 }
 
 Model* AssetImport::LoadModelWithModelMatrixAndShaderType(const char *path, QMatrix4x4 &matModel, ShaderHelper::eShaderType type)
@@ -165,10 +165,10 @@ int AssetImport::HandleChildNode(const aiScene *scene, aiNode *node, Model *mod)
 				const aiBone *bone = mesh->mBones[j];
 
 				// for test
-				if (bone->mName == aiString("mouse")) {
-					int iy = 0;
-					++iy;
-				}
+				//if (bone->mName == aiString("mouse")) {
+				//	int iy = 0;
+				//	++iy;
+				//}
 
 				for (unsigned int k = 0; k < bone->mNumWeights; ++k)
 				{

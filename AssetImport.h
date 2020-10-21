@@ -23,7 +23,7 @@ public:
 		return ins;
 	}
 
-	int LoadModel(const char *path);
+	Model* LoadModel(const char *path);
 	Model* LoadModelWithModelMatrixAndShaderType(const char *path, QMatrix4x4 &matModel, ShaderHelper::eShaderType type);
 	int HandleChildNode(const aiScene *scene, aiNode *node, Model *mod);
 	int HandleMeshMaterial(aiMaterial *mat, Mesh *mesh);

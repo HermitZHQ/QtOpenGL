@@ -4,6 +4,7 @@
 #include "Mesh.h"
 #include "ShaderHelper.h"
 #include "Material.h"
+#include "AABB.h"
 
 class LightMgr;
 class AnimationMgr;
@@ -24,6 +25,9 @@ public:
 	void SetModelName(QString str);
 	QString GetModelName() const;
 
+	AABB GetAABB();
+	void GenerateAABBMesh();
+
 	void EnableSkybox();
 	void EnableProjTex();
 	void SetNormalDebugEnable(bool bEnable);
@@ -41,14 +45,16 @@ public:
 private:
 	QString								m_name;
 	QVector<Mesh*>						m_meshes;
+	Mesh								*m_aabbMesh;
 	QMatrix4x4							m_worldMat;
 	ShaderHelper::eShaderType			m_shaderType;
 
 	AnimationMgr						*m_animationMgrPtr;
 
-	Material							m_mat;
+	Material							m_material;
 	ShaderHelper						*m_shaderHelperPtr;
 	LightMgr							*m_lightMgrPtr;
+	AABB								m_aabb;
 
 	bool								m_enableNormalDebug;
 

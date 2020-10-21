@@ -53,15 +53,18 @@
     <Filter Include="Common">
       <UniqueIdentifier>{52e438ec-e863-4359-a1f5-e47ffc7541ea}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Model">
+      <UniqueIdentifier>{e334f862-960c-4272-b140-569c983376f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BaseShape">
+      <UniqueIdentifier>{69e96a96-d279-46b6-895f-104233352bb0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mainwindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ShaderHelper.cpp">
@@ -71,24 +74,6 @@
       <Filter>Camera</Filter>
     </ClCompile>
     <ClCompile Include="AssetImport.cpp">
-      <Filter>AssetImport</Filter>
-    </ClCompile>
-    <ClCompile Include="ModelMgr.cpp">
-      <Filter>AssetImport</Filter>
-    </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>AssetImport</Filter>
-    </ClCompile>
-    <ClCompile Include="Model.cpp">
-      <Filter>AssetImport</Filter>
-    </ClCompile>
-    <ClCompile Include="Texture.cpp">
-      <Filter>AssetImport</Filter>
-    </ClCompile>
-    <ClCompile Include="PreDef.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureMgr.cpp">
       <Filter>AssetImport</Filter>
     </ClCompile>
     <ClCompile Include="LightMgr.cpp">
@@ -102,6 +87,33 @@
     </ClCompile>
     <ClCompile Include="Object.cpp">
       <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelMgr.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureMgr.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PreDef.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AABB.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Cube.cpp">
+      <Filter>BaseShape</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -135,23 +147,8 @@
     <ClInclude Include="AssetImport.h">
       <Filter>AssetImport</Filter>
     </ClInclude>
-    <ClInclude Include="ModelMgr.h">
-      <Filter>AssetImport</Filter>
-    </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>AssetImport</Filter>
-    </ClInclude>
-    <ClInclude Include="Model.h">
-      <Filter>AssetImport</Filter>
-    </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>AssetImport</Filter>
-    </ClInclude>
     <ClInclude Include="PreDef.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureMgr.h">
-      <Filter>AssetImport</Filter>
     </ClInclude>
     <ClInclude Include="LightMgr.h">
       <Filter>Light</Filter>
@@ -164,6 +161,27 @@
     </ClInclude>
     <ClInclude Include="Object.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelMgr.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureMgr.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="AABB.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Cube.h">
+      <Filter>BaseShape</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

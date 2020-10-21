@@ -10,11 +10,11 @@ Material::Material()
 Material::~Material() {
 
 }
-
-QString Material::GetClassName() const {
-
-	return "Material";
-}
+// 
+// QString Material::GetClassName() const {
+// 
+// 	return "Material";
+// }
 
 void Material::SetMetallic(float metallic) {
 
@@ -44,4 +44,9 @@ void Material::SetAO(float ao) {
 float Material::GetAO() const {
 
 	return m_ao;
+}
+
+QString Material::GetStaticClassName() const
+{
+	return "Material";
 }

@@ -7,6 +7,6 @@ public:
 	Object();
 	virtual ~Object();
 
-	virtual QString GetClassName() const = 0;
+	virtual QString GetStaticClassName() const = 0;
 };
 

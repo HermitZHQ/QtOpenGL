@@ -348,9 +348,11 @@
     </QtUic>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AABB.cpp" />
     <ClCompile Include="AnimationMgr.cpp" />
     <ClCompile Include="AssetImport.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Cube.cpp" />
     <ClCompile Include="LightMgr.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainwindow.cpp" />
@@ -402,9 +404,11 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AABB.h" />
     <ClInclude Include="AnimationMgr.h" />
     <ClInclude Include="AssetImport.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Cube.h" />
     <ClInclude Include="LightMgr.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
