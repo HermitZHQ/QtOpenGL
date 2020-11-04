@@ -29,7 +29,8 @@ void AABB::GenerateFromModel(Model *mod)
 	for (auto i = 0; i < meshNum; ++i) {
 		Mesh *mesh = mod->GetMesh(i);
 		const float *vertexPtr = mesh->GetVertices();
-		auto vertexNum = mesh->GetVerticesNum();
+        // 这里需要注意下，开始我的包围盒不对，就是因为我的接口已经把顶点数除以3了，所以这里的总数是需要乘3的
+		auto vertexNum = mesh->GetVerticesNum() * 3;
 		if (!bInitFlag) {
 			minX = maxX = vertexPtr[0];
 			minY = maxY = vertexPtr[1];
