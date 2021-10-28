@@ -29,7 +29,9 @@ public slots:
 	void Start();
 	void OnBtnSetSpecular();
 	void OnBtnSetAmbient();
+    void OnBtnStartDynamicCloud();
 	void OnSliderMouseSpeedChanged(int value);
+    void OnSliderMeltChanged(int value);
 
 private:
     Ui::MainWindow *ui;
@@ -38,5 +40,6 @@ private:
 	QTimer							*m_delayStartTimer;
 	QVector4D						m_ambientColor;
 	QVector4D						m_specularColor;
+    float                           m_melt_threshold;
 };
 #endif // MAINWINDOW_H

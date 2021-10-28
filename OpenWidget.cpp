@@ -21,6 +21,7 @@ OpenWidget::OpenWidget()
 	, m_gBufferDepthTex(0)
 	, m_ssaoFbo(0), m_ssaoTex(0)
 	, m_ssaoBlurFbo(0), m_ssaoBlurTex(0)
+    , m_meltThreshold(0)
 {
 	m_cam = new Camera();
 
@@ -75,6 +76,9 @@ void OpenWidget::TestGeometryPoints()
 GLuint vao_quad = 0;
 GLuint texId = 0;
 GLuint vao_quad2 = 0;// for motion blur
+GLuint vao_quad2_tex1 = 0;
+GLuint vao_quad2_tex2 = 0;
+GLuint vao_quad2_tex3 = 0;
 const uint max_motion_blur_tex = 11;
 GLuint vao_tex_arr_motion_blur[11];
 void OpenWidget::initializeGL()
@@ -129,9 +133,8 @@ void OpenWidget::initializeGL()
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         //--------------------------------------------------
-        for (int i = 0; i < max_motion_blur_tex; ++i) {
-            vao_tex_arr_motion_blur[i] = TextureMgr::Instance().LoadTexture(Q8("./textures/motionBlur/motionBlur%1.png").arg(i + 1));
-        }
+        vao_quad2_tex1 = TextureMgr::Instance().LoadTexture("./textures/dynamic_cloud/cloud3.jpg");
+        vao_quad2_tex2 = TextureMgr::Instance().LoadTexture("./textures/dynamic_cloud/cloud3.jpg");
         glGenVertexArrays(1, &vao_quad2);
         glBindVertexArray(vao_quad2);
         CheckError;
@@ -193,7 +196,7 @@ void OpenWidget::initializeGL()
 // 
 // 	m_assimpPtr->LoadModel("./models/largesphere.obj");
 // 	m_assimpPtr->LoadModel("./models/Box001.obj");
-    m_assimpPtr->LoadModel("./models/plane2.obj");
+    //m_assimpPtr->LoadModel("./models/plane2.obj");
     //m_assimpPtr->LoadModel("./models/plane3.obj");
 	//m_assimpPtr->LoadModel("./models/teapot.obj");
 	//m_assimpPtr->LoadModel("./models/dva/001.obj");
@@ -486,30 +489,25 @@ void OpenWidget::paintGL()
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
 
-    // draw quad2(motion blur)
-    static int delay_count = 0;
-    static int index = 0;
-    int index1 = index;
-    int index2 = (index1 - 1) < 0 ? index1 : (index1 - 1);
-    int index3 = (index2 - 1) < 0 ? index2 : (index2 - 1);
+    // draw quad2
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     SwitchShader(ShaderHelper::ScreenQuad);
+    if (m_startDynamicCloudFlag) {
+        ShaderHelper::Instance().SetMeltThreshold(m_meltThreshold);
+        m_meltThreshold += 0.0001f;
+    }
     glBindVertexArray(vao_quad2);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, vao_tex_arr_motion_blur[index1]);
+    glBindTexture(GL_TEXTURE_2D, vao_quad2_tex1);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, vao_tex_arr_motion_blur[index2]);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, vao_tex_arr_motion_blur[index3]);
+    glBindTexture(GL_TEXTURE_2D, vao_quad2_tex2);
+    //glActiveTexture(GL_TEXTURE2);
+    //glBindTexture(GL_TEXTURE_2D, vao_quad2_tex3);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
-    if (++delay_count % 150 == 0) {
-	    ++index;
-	    if (index > max_motion_blur_tex) {
-	        index = 0;
-	    }
-    }
 
 // 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 // 	SwitchShader(ShaderHelper::FrameBuffer1);
@@ -1146,6 +1144,16 @@ void OpenWidget::ChangeMouseMoveSpeed(int value)
 	if (Q_NULLPTR != m_cam) {
 		m_cam->SetMouseMoveSpeed(value);
 	}
+}
+
+void OpenWidget::ChangeMeltThreshold(float value)
+{
+    m_meltThreshold = value;
+}
+
+void OpenWidget::StartDynamicCloud()
+{
+    m_startDynamicCloudFlag = true;
 }
 
 void OpenWidget::UpdateKeys()

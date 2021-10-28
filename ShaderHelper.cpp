@@ -100,6 +100,7 @@ void ShaderHelper::GetCommonUniformLocation()
 	//----material
 	m_ambientColorLoc[m_shaderType] = GetUniformLocation("ambientColor");
 	m_specularColorLoc[m_shaderType] = GetUniformLocation("specularColor");
+    m_meltLoc[m_shaderType] = GetUniformLocation("meltThreshold");
 	CheckError;
 
 	//----PBR params
@@ -482,6 +483,7 @@ void ShaderHelper::Init()
 	memset(m_matOrthoLoc, -1, sizeof(m_matOrthoLoc));
 	memset(m_ambientColorLoc, -1, sizeof(m_ambientColorLoc));
 	memset(m_specularColorLoc, -1, sizeof(m_specularColorLoc));
+    memset(m_meltLoc, -1, sizeof(m_meltLoc));
 	memset(m_matLightVPLoc, -1, sizeof(m_matLightVPLoc));
 	memset(m_timeLoc, -1, sizeof(m_timeLoc));
 
@@ -661,6 +663,13 @@ void ShaderHelper::SetLightsInfo(const LightMgr::LightInfo &info, int index)
 	if (m_spotLightOuterCutoff[m_shaderType][index] != -1) {
 		glUniform1f(m_spotLightOuterCutoff[m_shaderType][index], info.outerCutoff);
 	}
+}
+
+void ShaderHelper::SetMeltThreshold(float threshold)
+{
+    if (m_meltLoc[m_shaderType] != -1) {
+        glUniform1f(m_meltLoc[m_shaderType], threshold);
+    }
 }
 
 void ShaderHelper::SetPBR(float metallic, float roughness, float ao)

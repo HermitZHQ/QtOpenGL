@@ -21,6 +21,8 @@ public:
 		m_mainObj = obj;
 	}
 	void ChangeMouseMoveSpeed(int value);
+    void ChangeMeltThreshold(float value);
+    void StartDynamicCloud();
 	void UpdateKeys();
 
 protected:
@@ -107,5 +109,8 @@ private:
 
 	GLuint						m_ssaoBlurFbo;
 	GLuint						m_ssaoBlurTex;
+
+    float                       m_meltThreshold;
+    bool                        m_startDynamicCloudFlag = false;
 };
 

@@ -34,6 +34,7 @@ public:
     QSlider *slid_G;
     QSlider *slid_B;
     QSlider *slid_A;
+    QPushButton *btn_start_dynamic_cloud;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -92,12 +93,16 @@ public:
         slid_A->setMaximum(255);
         slid_A->setValue(230);
         slid_A->setOrientation(Qt::Horizontal);
+        btn_start_dynamic_cloud = new QPushButton(centralwidget);
+        btn_start_dynamic_cloud->setObjectName(QString::fromUtf8("btn_start_dynamic_cloud"));
+        btn_start_dynamic_cloud->setGeometry(QRect(460, 120, 141, 28));
         MainWindow->setCentralWidget(centralwidget);
 
         retranslateUi(MainWindow);
         QObject::connect(slid_MouseSpeed, SIGNAL(valueChanged(int)), MainWindow, SLOT(OnSliderMouseSpeedChanged(int)));
         QObject::connect(btn_Ambient, SIGNAL(clicked()), MainWindow, SLOT(OnBtnSetAmbient()));
         QObject::connect(btn_Specular, SIGNAL(clicked()), MainWindow, SLOT(OnBtnSetSpecular()));
+        QObject::connect(btn_start_dynamic_cloud, SIGNAL(clicked()), MainWindow, SLOT(OnBtnStartDynamicCloud()));
 
         QMetaObject::connectSlotsByName(MainWindow);
     } // setupUi
@@ -109,6 +114,7 @@ public:
         btn_Ambient->setText(QApplication::translate("MainWindow", "SetAmbient", nullptr));
         label->setText(QApplication::translate("MainWindow", "MouseSpeed", nullptr));
         label_2->setText(QApplication::translate("MainWindow", "Color", nullptr));
+        btn_start_dynamic_cloud->setText(QApplication::translate("MainWindow", "StartDynamicCloud", nullptr));
     } // retranslateUi
 
 };

@@ -31,6 +31,8 @@ uniform vec4 specularColor;
 
 uniform bool hasNormalMap;
 
+uniform float meltThreshold;
+
 //----in vars
 in Vertex {
 	vec2 uv;
@@ -169,7 +171,21 @@ void main()
 		}
 	}
 	
-	fColor =  vec4(1, 1, 0, 0);
-	fColor = texture(tex, uv) * 0.6 + texture(normalMap, uv) * 0.3 + texture(shadowMap, uv) * 0.1;
+	float melt_threshold = texture(tex, uv).r;
+	if (melt_threshold < meltThreshold){
+		fColor = texture(shadowMap, uv);
+	}
+	else{
+		fColor = texture(normalMap, uv);
+	}
+
+	vec2 new_uv_layer_top = uv;
+	vec2 new_uv_layer_bottom = uv;
+	new_uv_layer_top.x += meltThreshold / 2.0f;
+	new_uv_layer_bottom.x += meltThreshold / 5.0f;
+	new_uv_layer_bottom.y += meltThreshold / 10.0f;
+	fColor = texture(tex, new_uv_layer_bottom) * 0.5 + texture(normalMap, new_uv_layer_top) * 0.5;
+
+	//fColor =  vec4(1, 1, 0, 0);
 	//fColor = vec4(lights[0].color);
 }

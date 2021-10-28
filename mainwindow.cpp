@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 	, m_openWidgetPtr(Q_NULLPTR), m_layoutV(Q_NULLPTR)
 	, m_ambientColor(1, 1, 1, 1), m_specularColor(1, 1, 1, 1)
+    , m_melt_threshold(0.0f)
 {
 	ui->setupUi(this);
 
@@ -82,6 +83,15 @@ void MainWindow::OnBtnSetAmbient()
 	m_ambientColor[3] = ui->slid_A->value() / 255.0f;
 }
 
+void MainWindow::OnBtnStartDynamicCloud()
+{
+    if (Q_NULLPTR == m_openWidgetPtr) {
+        return;
+    }
+
+    m_openWidgetPtr->StartDynamicCloud();
+}
+
 void MainWindow::OnSliderMouseSpeedChanged(int value)
 {
 	if (Q_NULLPTR == m_openWidgetPtr) {
@@ -89,4 +99,13 @@ void MainWindow::OnSliderMouseSpeedChanged(int value)
 	}
 
 	m_openWidgetPtr->ChangeMouseMoveSpeed(value);
+}
+
+void MainWindow::OnSliderMeltChanged(int value)
+{
+    if (Q_NULLPTR == m_openWidgetPtr) {
+        return;
+    }
+
+    m_openWidgetPtr->ChangeMeltThreshold(value / 100.0f);
 }

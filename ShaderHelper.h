@@ -65,6 +65,8 @@ public:
 	void SetAmbientSpecularColor(QVector4D ambient, QVector4D specular);
 	void SetLightsInfo(const LightMgr::LightInfo &info, int index);
 
+    void SetMeltThreshold(float threshold);
+
 	//----PBR relevant
 	void SetPBR(float metallic, float roughness, float ao);
 	void SetPBR_Metallic(float metallic);
@@ -111,7 +113,7 @@ protected:
 private:
 	ShaderHelper();
 
-	const static int		maxShaderNum = 20;
+	const static int		maxShaderNum = 50;
 	const static int		maxBoneNum = 200;
 	GLuint					m_programs[maxShaderNum];
 	eShaderType				m_shaderType;
@@ -132,6 +134,7 @@ private:
 
 	GLint					m_ambientColorLoc[maxShaderNum];
 	GLint					m_specularColorLoc[maxShaderNum];
+    GLint                   m_meltLoc[maxShaderNum];
 
 	//----PBR params
 	GLint					m_metallic[maxShaderNum];
