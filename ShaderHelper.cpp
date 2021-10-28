@@ -443,6 +443,32 @@ void ShaderHelper::InitGeometryShader()
 	GetCommonUniformLocation();
 }
 
+void ShaderHelper::InitMotionBlurShader()
+{
+    m_shaderType = MotionBlur;
+
+    ShaderHelper::ShaderInfo info[] = {
+        {GL_VERTEX_SHADER, "./shaders/motionBlur.vert"},
+        {GL_FRAGMENT_SHADER, "./shaders/motionBlur.frag"}
+    };
+    m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+    GetCommonUniformLocation();
+}
+
+void ShaderHelper::InitScreenQuadShader()
+{
+    m_shaderType = ScreenQuad;
+
+    ShaderHelper::ShaderInfo info[] = {
+        {GL_VERTEX_SHADER, "./shaders/screenQuad.vert"},
+        {GL_FRAGMENT_SHADER, "./shaders/screenQuad.frag"}
+    };
+    m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+    GetCommonUniformLocation();
+}
+
 void ShaderHelper::Init()
 {
 	initializeOpenGLFunctions();
@@ -503,6 +529,8 @@ void ShaderHelper::Init()
 	InitSSAOShader();
 	InitSSAOBlurShader();
 	InitGeometryShader();
+    InitMotionBlurShader();
+    InitScreenQuadShader();
 
 	m_shaderType = Default;
 	Use();

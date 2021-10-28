@@ -169,6 +169,6 @@ void main()
 		}
 	}
 	
-	fColor =  vec4(1, 0, 0, 0);
+	fColor =  vec4(1, 1, 0, 0);
 	//fColor = vec4(lights[0].color);
 }

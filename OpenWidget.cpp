@@ -12,7 +12,6 @@
 #include "LightMgr.h"
 #include "Cube.h"
 
-
 OpenWidget::OpenWidget()
 	:m_mainObj(Q_NULLPTR), m_cam(Q_NULLPTR)
 	, m_matWorldLoc(0), m_worldCamPosLoc(0), m_query(0), m_sampleNum(0)
@@ -75,6 +74,9 @@ void OpenWidget::TestGeometryPoints()
 
 GLuint vao_quad = 0;
 GLuint texId = 0;
+GLuint vao_quad2 = 0;// for motion blur
+const uint max_motion_blur_tex = 11;
+GLuint vao_tex_arr_motion_blur[11];
 void OpenWidget::initializeGL()
 {
 	initializeOpenGLFunctions();
@@ -84,14 +86,14 @@ void OpenWidget::initializeGL()
 // 	TestGeometryPoints();
 	// test for a quad
 	{
-		const GLfloat g_vertices[6][2] = {
-			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
-			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
-		};
-// 		const GLfloat g_vertices[6][2] = {
-// 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
-// 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
-// 		};
+		//const GLfloat g_vertices[6][2] = {
+		//	{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
+		//	{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
+		//};
+ 		const GLfloat g_vertices[6][2] = {
+ 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
+ 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+ 		};
 
 		const GLfloat g_uvs[6][2] = {
 			{0, 1}, {1, 1}, {0, 0}, //
@@ -125,6 +127,32 @@ void OpenWidget::initializeGL()
 		glEnableVertexAttribArray(1);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        //--------------------------------------------------
+        for (int i = 0; i < max_motion_blur_tex; ++i) {
+            vao_tex_arr_motion_blur[i] = TextureMgr::Instance().LoadTexture(Q8("./textures/motionBlur/motionBlur%1.png").arg(i + 1));
+        }
+        glGenVertexArrays(1, &vao_quad2);
+        glBindVertexArray(vao_quad2);
+        CheckError;
+
+        vbo = 0;
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 24, nullptr, GL_STATIC_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 12, g_vertices);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 12, sizeof(GLfloat) * 12, g_uvs);
+        CheckError;
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        CheckError;
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(GLfloat) * 12));
+        CheckError;
+        glEnableVertexAttribArray(1);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 // 	glEnable(GL_CULL_FACE);
@@ -160,16 +188,17 @@ void OpenWidget::initializeGL()
 // 	}
 
 	// test load model
-	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
-// 	m_assimpPtr->LoadModel("./models/plane.obj");
+	//m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+ 	//m_assimpPtr->LoadModel("./models/plane.obj");
 // 
 // 	m_assimpPtr->LoadModel("./models/largesphere.obj");
 // 	m_assimpPtr->LoadModel("./models/Box001.obj");
-// 	m_assimpPtr->LoadModel("./models/plane2.obj");
-// 	m_assimpPtr->LoadModel("./models/plane3.obj");
-	m_assimpPtr->LoadModel("./models/teapot.obj");
-	m_assimpPtr->LoadModel("./models/dva/001.obj");
-	m_assimpPtr->LoadModel("./models/Box002.obj");
+    m_assimpPtr->LoadModel("./models/plane2.obj");
+    //m_assimpPtr->LoadModel("./models/plane3.obj");
+	//m_assimpPtr->LoadModel("./models/teapot.obj");
+	//m_assimpPtr->LoadModel("./models/dva/001.obj");
+ //   m_assimpPtr->LoadModel("./models/Box002.obj"); 
+ //   m_assimpPtr->LoadModel("./models/Zombie Walk.fbx");
 
 	// create the sphere walls, left and right side----
 	// ----PBR relevant
@@ -204,7 +233,7 @@ void OpenWidget::initializeGL()
 	matModel.scale(20);
 // 	auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/piety.fbx", matModel, ShaderHelper::Diffuse);
 
-	m_assimpPtr->LoadModel("./models/skybox.obj");
+	//m_assimpPtr->LoadModel("./models/skybox.obj");
 
 	Model *pMod = m_modelMgrPtr->FindModelByName("Plane001");
 	if (Q_NULLPTR != pMod) {
@@ -228,8 +257,8 @@ void OpenWidget::initializeGL()
 	Model *pMod2 = m_modelMgrPtr->FindModelByName("Plane002");
 	if (Q_NULLPTR != pMod2) {
 		QMatrix4x4 mat;
-		mat.translate(-90, 0, 0);
-		mat.rotate(-90, QVector3D(0, 0, 1));
+		mat.translate(0, 0, -100);
+		mat.rotate(-90, QVector3D(1, 0, 0));
 		mat.scale(10, 10, 10);
 		pMod2->SetWroldMat(mat);
 		pMod2->SetNormalMapTextureByMeshName("./models/brickwall_normal.jpg", "Plane002");
@@ -426,11 +455,11 @@ void OpenWidget::paintGL()
 // 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
 	//--------Deferred rendering g-buffer handle pass
- 	CreateGBufferFrameBufferTextures();
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		qDebug() << "check frame buffer failed";
-		return;
-	}
+ //	CreateGBufferFrameBufferTextures();
+	//if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+	//	qDebug() << "check frame buffer failed";
+	//	return;
+	//}
 	ClearAndReset();
 	glViewport(0, 0, size().width(), size().height());
 
@@ -452,10 +481,35 @@ void OpenWidget::paintGL()
 		if (mod->GetModelName().compare("water") == 0) {
 			continue;
 		}
- 		mod->SetShaderType(ShaderHelper::GBufferGeometry);
+ 		mod->SetShaderType(ShaderHelper::Default);
 		QMatrix4x4 matModel = mod->GetWorldMat();
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
+
+    // draw quad2(motion blur)
+    static int delay_count = 0;
+    static int index = 0;
+    int index1 = index;
+    int index2 = (index1 - 1) < 0 ? index1 : (index1 - 1);
+    int index3 = (index2 - 1) < 0 ? index2 : (index2 - 1);
+
+    SwitchShader(ShaderHelper::ScreenQuad);
+    glBindVertexArray(vao_quad2);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, vao_tex_arr_motion_blur[index1]);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, vao_tex_arr_motion_blur[index2]);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, vao_tex_arr_motion_blur[index3]);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+
+    if (++delay_count % 150 == 0) {
+	    ++index;
+	    if (index > max_motion_blur_tex) {
+	        index = 0;
+	    }
+    }
 
 // 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 // 	SwitchShader(ShaderHelper::FrameBuffer1);
@@ -478,7 +532,7 @@ void OpenWidget::paintGL()
 		QMatrix4x4 matModel = pWater->GetWorldMat();
 		pWater->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
-	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
+	//glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
 	CheckError;
 
 	//--------SSAO buffer handle pass
@@ -540,7 +594,7 @@ void OpenWidget::paintGL()
 // 	DrawOriginalSceneWithShadow();
 
 	//--------Deferred rendering(last pass)
-	DrawDeferredShading();
+	//DrawDeferredShading();
 }
 
 float OpenWidget::lerp(float a, float b, float f)

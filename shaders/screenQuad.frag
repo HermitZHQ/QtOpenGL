@@ -159,16 +159,17 @@ void main()
 {
 	for(int i = 0; i < 8; ++i){
 		if (lights[i].isEnabled && lights[i].isDirectional){
-			fColor += CalculateDirLight(lights[i]);
+			//fColor += CalculateDirLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && lights[i].isPoint){
-			fColor += CalculatePointLight(lights[i]);
+			//fColor += CalculatePointLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && !lights[i].isPoint && !lights[i].isDirectional){
-			fColor += CalculateSpotLight(lights[i]);
+			//fColor += CalculateSpotLight(lights[i]);
 		}
 	}
 	
-	fColor =  vec4(1, 0, 0, 0);
+	fColor =  vec4(1, 1, 0, 0);
+	fColor = texture(tex, uv) * 0.6 + texture(normalMap, uv) * 0.3 + texture(shadowMap, uv) * 0.1;
 	//fColor = vec4(lights[0].color);
 }

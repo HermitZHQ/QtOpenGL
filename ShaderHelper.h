@@ -26,6 +26,8 @@ public:
 		SSAO,
 		SSAOBlur,
 		Geometry,
+        MotionBlur,
+        ScreenQuad,
 	};
 
 	struct ShaderInfo 
@@ -103,6 +105,8 @@ protected:
 	void InitSSAOShader();
 	void InitSSAOBlurShader();
 	void InitGeometryShader();
+    void InitMotionBlurShader();
+    void InitScreenQuadShader();
 
 private:
 	ShaderHelper();

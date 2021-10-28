@@ -53,5 +53,5 @@ void main()
 	fColor = vec4(ambient + diffuse, 1);
 	//fColor = vec4(albedo.rgb, 1);
 	//fColor = albedo;
-	//fColor = vec4(1, 1, 0, 1);
+	fColor = vec4(1, 1, 0, 1);
 }
