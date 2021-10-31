@@ -30,8 +30,19 @@ public slots:
 	void OnBtnSetSpecular();
 	void OnBtnSetAmbient();
     void OnBtnStartDynamicCloud();
+	void on_btn_start_dynamic_cloud_clicked();
 	void OnSliderMouseSpeedChanged(int value);
     void OnSliderMeltChanged(int value);
+
+private slots:
+	void update_insta_data();
+    void on_slid_start_r_valueChanged(int value);
+
+    void on_slid_end_r_valueChanged(int value);
+
+    void on_slid_map_start_r_valueChanged(int value);
+
+    void on_slid_map_end_r_valueChanged(int value);
 
 private:
     Ui::MainWindow *ui;

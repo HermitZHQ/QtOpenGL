@@ -14,32 +14,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="btn_Specular">
-    <property name="geometry">
-     <rect>
-      <x>370</x>
-      <y>70</y>
-      <width>111</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>SetSpecular</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_Ambient">
-    <property name="geometry">
-     <rect>
-      <x>370</x>
-      <y>40</y>
-      <width>111</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>SetAmbient</string>
-    </property>
-   </widget>
    <widget class="QListWidget" name="list_info">
     <property name="geometry">
      <rect>
@@ -50,11 +24,24 @@
      </rect>
     </property>
    </widget>
-   <widget class="QSlider" name="slid_MouseSpeed">
+   <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>40</y>
+      <x>200</x>
+      <y>20</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>start_r</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="slid_start_r">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
       <width>160</width>
       <height>22</height>
      </rect>
@@ -63,195 +50,124 @@
      <number>1</number>
     </property>
     <property name="maximum">
-     <number>100</number>
+     <number>1000</number>
     </property>
     <property name="value">
-     <number>15</number>
+     <number>380</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QSlider" name="slid_end_r">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>91</width>
-      <height>21</height>
+      <x>20</x>
+      <y>50</y>
+      <width>160</width>
+      <height>22</height>
      </rect>
     </property>
-    <property name="text">
-     <string>MouseSpeed</string>
+    <property name="minimum">
+     <number>1</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="value">
+     <number>600</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="label_2">
+   <widget class="QSlider" name="slid_map_start_r">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>10</y>
+      <x>20</x>
+      <y>80</y>
+      <width>160</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>1</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="value">
+     <number>190</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QSlider" name="slid_map_end_r">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>110</y>
+      <width>160</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>1</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="value">
+     <number>450</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>50</y>
       <width>101</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>Color</string>
+     <string>end_r</string>
     </property>
    </widget>
-   <widget class="QSlider" name="slid_R">
+   <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>40</y>
-      <width>160</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-    <property name="value">
-     <number>230</number>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QSlider" name="slid_G">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>70</y>
-      <width>160</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-    <property name="value">
-     <number>230</number>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QSlider" name="slid_B">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>100</y>
-      <width>160</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-    <property name="value">
-     <number>230</number>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QSlider" name="slid_A">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>130</y>
-      <width>160</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-    <property name="value">
-     <number>230</number>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_start_dynamic_cloud">
-    <property name="geometry">
-     <rect>
-      <x>460</x>
-      <y>120</y>
-      <width>141</width>
-      <height>28</height>
+      <x>200</x>
+      <y>80</y>
+      <width>101</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>StartDynamicCloud</string>
+     <string>map_start_r</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>110</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>map_end_r</string>
     </property>
    </widget>
   </widget>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>slid_MouseSpeed</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>OnSliderMouseSpeedChanged(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>10</x>
-     <y>61</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>212</x>
-     <y>128</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btn_Ambient</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>OnBtnSetAmbient()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>264</x>
-     <y>109</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>224</x>
-     <y>86</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btn_Specular</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>OnBtnSetSpecular()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>219</x>
-     <y>147</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>224</x>
-     <y>188</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <slots>
   <slot>OnSliderMouseSpeedChanged(int)</slot>
   <slot>OnBtnSetAmbient()</slot>

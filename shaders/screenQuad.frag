@@ -32,6 +32,12 @@ uniform vec4 specularColor;
 uniform bool hasNormalMap;
 
 uniform float meltThreshold;
+uniform mat4x4 insta360;
+
+const vec2 solution = vec2(800, 600);
+const vec2 center = solution / 2.0f;
+const float midx = solution.x / 2.0f;
+const float len_deg = midx / 180.0f;
 
 //----in vars
 in Vertex {
@@ -44,147 +50,58 @@ in Vertex {
 	mat3x3 tangentToModelMat;
 };
 
-float CalculateTheShadowValue()
-{	
-	vec4 posInLightSpace = lightVPMat * vec4(worldPos, 1);
-	posInLightSpace = posInLightSpace / posInLightSpace.w;
-	posInLightSpace = (posInLightSpace + 1.0) / 2.0;
-	float vertexDepth = posInLightSpace.z;
-	float depth = texture(shadowMap, posInLightSpace.xy).x;
-
-	float bias = 0.000001;
-	//float bias = max(0.000005 * (1.0 - dot(worldNormal, vec3(1, 1, 1))), 0.000001);
-	return (depth < vertexDepth - bias ? 0.05 : 1);
-}
-
-vec4 CalculateDirLight(Light light)
-{
-	light.dir = normalize(light.dir);
-
-	float shadowValue = CalculateTheShadowValue();
-
-	// Get "normal" from the normalmap
-	vec3 normal;
-	if (hasNormalMap){		
-		normal = texture(normalMap, uv).rgb;
-		normal = normal * 2 - 1;
-		normal = normalize(tangentToModelMat * normal);
-	}
-	else{
-		normal = worldNormal;
-	}
-
-	vec3 ambient = ambientColor.rgb;
-	vec4 albedo = texture(tex, uv);
-	//vec4 albedo = texture(tex, uv) * 0.5 + texture(skybox, skyboxUV) * 0.5;
-	ambient = ambient * 0.75 * albedo.rgb;
-
-	vec3 viewDir = normalize(camPosWorld - worldPos);
-	vec3 halfDir = normalize(viewDir + light.dir);
-	vec3 diffuse = light.color.rgb * ambient.rgb * clamp(dot(light.dir, normal), 0.0, 1.0);
-
-	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
-	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
-
-	//return vec4(1, 0, 0, 1);
-	//return vec4(shadowColor);
-	return vec4(ambient + (diffuse + specularRes) * shadowValue, 1);
-}
-
-vec4 CalculatePointLight(Light light)
-{
-	vec3 pointLightDir = light.pos - worldPos;
-	float len = length(light.pos - worldPos);
-	pointLightDir = normalize(pointLightDir);
-
-	float attenuation = 1.0;
-	// calculate the attenuation of point light
-	attenuation = 1 / (light.constant + light.linear * len + light.quadratic * (len * len));
-	if (len > light.radius){
-		//attenuation = 0.0;
-	}
-
-	// Get "normal" from the normalmap
-	vec3 normal = texture(normalMap, uv).rgb;
-	normal = normal * 2 - 1;
-	normal = normalize(tangentToModelMat * normal);
-
-	vec4 albedo = texture(tex, uv);
-
-	vec3 viewDir = normalize(camPosWorld - worldPos);
-	vec3 halfDir = normalize(viewDir + pointLightDir);
-	vec3 diffuse = light.color.rgb * albedo.rgb * clamp(dot(pointLightDir, normal), 0.0, 1.0);
-
-	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
-	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
-
-	//return vec4(attenuation, 0, 0, 1);
-	return vec4((diffuse + specularRes) * attenuation, 1);
-}
-
-vec4 CalculateSpotLight(Light light)
-{
-	vec3 spotLightDir = light.pos - worldPos;
-	float len = length(spotLightDir);
-	spotLightDir = normalize(spotLightDir);
-	light.dir = normalize(light.dir);
-	float vertexRadian = dot(light.dir, spotLightDir);
-
-	float attenuation = 1.0;
-	// calculate the attenuation of point light
-	float phi = light.innerCutoff - light.outerCutoff;
-	float theta = vertexRadian - light.outerCutoff;
-	attenuation = clamp((theta / phi), 0.0, 1.0);
-	if (vertexRadian < light.outerCutoff){
-		//attenuation = 0.0;
-	}
-
-	// Get "normal" from the normalmap
-	vec3 normal = texture(normalMap, uv).rgb;
-	normal = normal * 2 - 1;
-	normal = normalize(tangentToModelMat * normal);
-
-	vec4 albedo = texture(tex, uv);
-
-	vec3 viewDir = normalize(camPosWorld - worldPos);
-	vec3 halfDir = normalize(viewDir + spotLightDir);
-	vec3 diffuse = light.color.rgb * albedo.rgb * clamp(dot(spotLightDir, normal), 0.0, 1.0);
-
-	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
-	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
-
-	//return vec4(vertexRadian / 255.0, vertexRadian / 255.0, vertexRadian / 255.0, 1);
-	return vec4((diffuse + specularRes) * attenuation, 1);
-}
-
 void main()
-{
-	for(int i = 0; i < 8; ++i){
-		if (lights[i].isEnabled && lights[i].isDirectional){
-			//fColor += CalculateDirLight(lights[i]);
-		}
-		else if (lights[i].isEnabled && lights[i].isPoint){
-			//fColor += CalculatePointLight(lights[i]);
-		}
-		else if (lights[i].isEnabled && !lights[i].isPoint && !lights[i].isDirectional){
-			//fColor += CalculateSpotLight(lights[i]);
-		}
-	}
-	
+{	
 	float melt_threshold = texture(tex, uv).r;
 	if (melt_threshold < meltThreshold){
-		fColor = texture(shadowMap, uv);
+		//fColor = texture(shadowMap, uv);
 	}
 	else{
-		fColor = texture(normalMap, uv);
+		//fColor = texture(normalMap, uv);
 	}
 
-	vec2 new_uv_layer_top = uv;
-	vec2 new_uv_layer_bottom = uv;
-	new_uv_layer_top.x += meltThreshold / 2.0f;
-	new_uv_layer_bottom.x += meltThreshold / 5.0f;
-	new_uv_layer_bottom.y += meltThreshold / 10.0f;
-	fColor = texture(tex, new_uv_layer_bottom) * 0.5 + texture(normalMap, new_uv_layer_top) * 0.5;
+	fColor = texture(tex, uv);
+
+	// test area1(here we just just simple area, y axis bigger than some val)
+	vec2 xy = gl_FragCoord.xy;
+
+	// red the outside area first(for test)
+	if (length(xy - center) > center.y){
+		//fColor = vec4(1, 0, 0, 0);
+	}
+
+	float start_r = insta360[0][0];
+	float end_r = insta360[0][1];
+	float area_width = end_r - start_r;
+	float map_start_r = insta360[0][2];
+	float map_end_r = insta360[0][3];
+	float map_area_width = map_end_r - map_start_r;
+	float map_rate = area_width / map_area_width;
+
+	// l&r circle
+	float r = length(xy - center);
+	if (r > map_start_r && r < map_end_r) {
+		vec2 y_axis = vec2(0, 1);
+		float off_rad = acos(dot(y_axis, normalize(xy - center)));
+		float dir = xy.x > center.x ? 1.0f : -1.0f;
+
+		// cur x,y: (original)x + sin(), (original)y - cos()
+		float ox = center.x + degrees(off_rad) * len_deg * dir;
+		float oy = start_r + (r - map_start_r) * map_rate;
+
+		fColor = texture(tex, vec2(ox / solution.x, 1.0 - oy / solution.y));
+		//fColor = vec4(off_rad, 0, 0, 0);
+		if (degrees(off_rad) > 30.0f){
+			//fColor = vec4(1, 0, 0, 0);
+		}
+	}
+
+	// test vector dot angle
+	vec2 y = vec2(0, 1);
+	vec2 v2 = normalize(vec2(1, 1));
+	if (degrees(acos(dot(y, v2))) > 45.02f) {
+		//fColor = vec4(1, 1, 0, 0);
+	}
 
 	//fColor =  vec4(1, 1, 0, 0);
 	//fColor = vec4(lights[0].color);

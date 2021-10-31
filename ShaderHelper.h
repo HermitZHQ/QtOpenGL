@@ -66,6 +66,7 @@ public:
 	void SetLightsInfo(const LightMgr::LightInfo &info, int index);
 
     void SetMeltThreshold(float threshold);
+	void SetInsta360(QMatrix4x4 mat);
 
 	//----PBR relevant
 	void SetPBR(float metallic, float roughness, float ao);
@@ -135,6 +136,7 @@ private:
 	GLint					m_ambientColorLoc[maxShaderNum];
 	GLint					m_specularColorLoc[maxShaderNum];
     GLint                   m_meltLoc[maxShaderNum];
+	GLint					m_insta360Loc[maxShaderNum];
 
 	//----PBR params
 	GLint					m_metallic[maxShaderNum];

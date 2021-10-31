@@ -101,6 +101,7 @@ void ShaderHelper::GetCommonUniformLocation()
 	m_ambientColorLoc[m_shaderType] = GetUniformLocation("ambientColor");
 	m_specularColorLoc[m_shaderType] = GetUniformLocation("specularColor");
     m_meltLoc[m_shaderType] = GetUniformLocation("meltThreshold");
+	m_insta360Loc[m_shaderType] = GetUniformLocation("insta360");
 	CheckError;
 
 	//----PBR params
@@ -484,6 +485,7 @@ void ShaderHelper::Init()
 	memset(m_ambientColorLoc, -1, sizeof(m_ambientColorLoc));
 	memset(m_specularColorLoc, -1, sizeof(m_specularColorLoc));
     memset(m_meltLoc, -1, sizeof(m_meltLoc));
+	memset(m_insta360Loc, -1, sizeof(m_insta360Loc));
 	memset(m_matLightVPLoc, -1, sizeof(m_matLightVPLoc));
 	memset(m_timeLoc, -1, sizeof(m_timeLoc));
 
@@ -670,6 +672,13 @@ void ShaderHelper::SetMeltThreshold(float threshold)
     if (m_meltLoc[m_shaderType] != -1) {
         glUniform1f(m_meltLoc[m_shaderType], threshold);
     }
+}
+
+void ShaderHelper::SetInsta360(QMatrix4x4 mat)
+{
+	if (m_insta360Loc[m_shaderType] != -1) {
+		glUniformMatrix4fv(m_insta360Loc[m_shaderType], 1, GL_FALSE, mat.data());
+	}
 }
 
 void ShaderHelper::SetPBR(float metallic, float roughness, float ao)

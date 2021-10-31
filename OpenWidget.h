@@ -5,6 +5,7 @@
 #include "QGLWidget"
 #include "QTimer"
 #include "ShaderHelper.h"
+#include "QMatrix4x4"
 
 class Camera;
 class Mesh;
@@ -23,6 +24,7 @@ public:
 	void ChangeMouseMoveSpeed(int value);
     void ChangeMeltThreshold(float value);
     void StartDynamicCloud();
+	void ChangeInsta360(QMatrix4x4 mat);
 	void UpdateKeys();
 
 protected:
@@ -112,5 +114,6 @@ private:
 
     float                       m_meltThreshold;
     bool                        m_startDynamicCloudFlag = false;
+	QMatrix4x4					m_insta360;
 };
 

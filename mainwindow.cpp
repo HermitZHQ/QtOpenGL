@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include "OpenWidget.h"
 #include <QtOpenGL/QGLFormat>
 #include "QLayout"
@@ -8,6 +7,8 @@
 #include "QPushButton"
 #include "ShaderHelper.h"
 #include "QTimer"
+#include "ui_mainwindow.h"
+#include "QMatrix4x4"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -69,18 +70,18 @@ void MainWindow::Start()
 
 void MainWindow::OnBtnSetSpecular()
 {
-	m_specularColor[0] = ui->slid_R->value() / 255.0f;
-	m_specularColor[1] = ui->slid_G->value() / 255.0f;
-	m_specularColor[2] = ui->slid_B->value() / 255.0f;
-	m_specularColor[3] = ui->slid_A->value() / 255.0f;
+	//m_specularColor[0] = ui->slid_R->value() / 255.0f;
+	//m_specularColor[1] = ui->slid_G->value() / 255.0f;
+	//m_specularColor[2] = ui->slid_B->value() / 255.0f;
+	//m_specularColor[3] = ui->slid_A->value() / 255.0f;
 }
 
 void MainWindow::OnBtnSetAmbient()
 {
-	m_ambientColor[0] = ui->slid_R->value() / 255.0f;
-	m_ambientColor[1] = ui->slid_G->value() / 255.0f;
-	m_ambientColor[2] = ui->slid_B->value() / 255.0f;
-	m_ambientColor[3] = ui->slid_A->value() / 255.0f;
+	//m_ambientColor[0] = ui->slid_R->value() / 255.0f;
+	//m_ambientColor[1] = ui->slid_G->value() / 255.0f;
+	//m_ambientColor[2] = ui->slid_B->value() / 255.0f;
+	//m_ambientColor[3] = ui->slid_A->value() / 255.0f;
 }
 
 void MainWindow::OnBtnStartDynamicCloud()
@@ -109,3 +110,67 @@ void MainWindow::OnSliderMeltChanged(int value)
 
     m_openWidgetPtr->ChangeMeltThreshold(value / 100.0f);
 }
+
+void MainWindow::update_insta_data()
+{
+	int start_r = ui->slid_start_r->value();
+	int end_r = ui->slid_end_r->value();
+	int map_start_r = ui->slid_map_start_r->value();
+	int map_end_r = ui->slid_map_end_r->value();
+
+	QMatrix4x4 mat;
+	mat.setToIdentity();
+	mat.setColumn(0, QVector4D(start_r, end_r, map_start_r, map_end_r));
+
+	m_openWidgetPtr->ChangeInsta360(mat);
+}
+
+void MainWindow::on_btn_start_dynamic_cloud_clicked()
+{
+    if (Q_NULLPTR == m_openWidgetPtr) {
+        return;
+    }
+
+    m_openWidgetPtr->StartDynamicCloud();
+}
+
+
+void MainWindow::on_slid_start_r_valueChanged(int value)
+{
+	if (Q_NULLPTR == m_openWidgetPtr) {
+		return;
+	}
+
+	update_insta_data();
+}
+
+
+void MainWindow::on_slid_end_r_valueChanged(int value)
+{
+	if (Q_NULLPTR == m_openWidgetPtr) {
+		return;
+	}
+
+	update_insta_data();
+}
+
+
+void MainWindow::on_slid_map_start_r_valueChanged(int value)
+{
+	if (Q_NULLPTR == m_openWidgetPtr) {
+		return;
+	}
+
+	update_insta_data();
+}
+
+
+void MainWindow::on_slid_map_end_r_valueChanged(int value)
+{
+	if (Q_NULLPTR == m_openWidgetPtr) {
+		return;
+	}
+
+	update_insta_data();
+}
+
