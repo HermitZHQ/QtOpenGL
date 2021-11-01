@@ -127,3 +127,12 @@ void MainWindow::on_slid_water_valueChanged(int value)
 
     m_openWidgetPtr->ChangeInkWater(value);
 }
+
+void MainWindow::on_slid_blur_valueChanged(int value)
+{
+    if (Q_NULLPTR == m_openWidgetPtr) {
+        return;
+    }
+
+    m_openWidgetPtr->ChangeMeltThreshold(value);
+}

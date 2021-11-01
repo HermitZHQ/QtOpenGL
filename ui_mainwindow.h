@@ -30,6 +30,8 @@ public:
     QSlider *slid_quant;
     QSlider *slid_water;
     QLabel *label_3;
+    QSlider *slid_blur;
+    QLabel *label_4;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -57,20 +59,30 @@ public:
         slid_quant = new QSlider(centralwidget);
         slid_quant->setObjectName(QString::fromUtf8("slid_quant"));
         slid_quant->setGeometry(QRect(190, 40, 160, 22));
-        slid_quant->setMinimum(2);
-        slid_quant->setMaximum(6);
-        slid_quant->setValue(6);
+        slid_quant->setMinimum(1);
+        slid_quant->setMaximum(10);
+        slid_quant->setValue(8);
         slid_quant->setOrientation(Qt::Horizontal);
         slid_water = new QSlider(centralwidget);
         slid_water->setObjectName(QString::fromUtf8("slid_water"));
         slid_water->setGeometry(QRect(190, 70, 160, 22));
-        slid_water->setMinimum(8);
-        slid_water->setMaximum(64);
-        slid_water->setValue(64);
+        slid_water->setMinimum(1);
+        slid_water->setMaximum(10);
+        slid_water->setValue(3);
         slid_water->setOrientation(Qt::Horizontal);
         label_3 = new QLabel(centralwidget);
         label_3->setObjectName(QString::fromUtf8("label_3"));
         label_3->setGeometry(QRect(370, 70, 101, 21));
+        slid_blur = new QSlider(centralwidget);
+        slid_blur->setObjectName(QString::fromUtf8("slid_blur"));
+        slid_blur->setGeometry(QRect(190, 10, 160, 22));
+        slid_blur->setMinimum(10);
+        slid_blur->setMaximum(500);
+        slid_blur->setValue(200);
+        slid_blur->setOrientation(Qt::Horizontal);
+        label_4 = new QLabel(centralwidget);
+        label_4->setObjectName(QString::fromUtf8("label_4"));
+        label_4->setGeometry(QRect(370, 10, 101, 21));
         MainWindow->setCentralWidget(centralwidget);
 
         retranslateUi(MainWindow);
@@ -83,8 +95,9 @@ public:
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", nullptr));
         label->setText(QApplication::translate("MainWindow", "MouseSpeed", nullptr));
-        label_2->setText(QApplication::translate("MainWindow", "Quant", nullptr));
-        label_3->setText(QApplication::translate("MainWindow", "Water", nullptr));
+        label_2->setText(QApplication::translate("MainWindow", "Gray_threshold", nullptr));
+        label_3->setText(QApplication::translate("MainWindow", "Gray_rate", nullptr));
+        label_4->setText(QApplication::translate("MainWindow", "Blur", nullptr));
     } // retranslateUi
 
 };
