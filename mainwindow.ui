@@ -14,32 +14,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="btn_Specular">
-    <property name="geometry">
-     <rect>
-      <x>370</x>
-      <y>70</y>
-      <width>111</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>SetSpecular</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_Ambient">
-    <property name="geometry">
-     <rect>
-      <x>370</x>
-      <y>40</y>
-      <width>111</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>SetAmbient</string>
-    </property>
-   </widget>
    <widget class="QListWidget" name="list_info">
     <property name="geometry">
      <rect>
@@ -88,17 +62,17 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>10</y>
+      <x>370</x>
+      <y>40</y>
       <width>101</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>Color</string>
+     <string>Quant</string>
     </property>
    </widget>
-   <widget class="QSlider" name="slid_R">
+   <widget class="QSlider" name="slid_quant">
     <property name="geometry">
      <rect>
       <x>190</x>
@@ -108,19 +82,19 @@
      </rect>
     </property>
     <property name="minimum">
-     <number>0</number>
+     <number>2</number>
     </property>
     <property name="maximum">
-     <number>255</number>
+     <number>6</number>
     </property>
     <property name="value">
-     <number>230</number>
+     <number>6</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QSlider" name="slid_G">
+   <widget class="QSlider" name="slid_water">
     <property name="geometry">
      <rect>
       <x>190</x>
@@ -130,73 +104,29 @@
      </rect>
     </property>
     <property name="minimum">
-     <number>0</number>
+     <number>8</number>
     </property>
     <property name="maximum">
-     <number>255</number>
+     <number>64</number>
     </property>
     <property name="value">
-     <number>230</number>
+     <number>64</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QSlider" name="slid_B">
+   <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>100</y>
-      <width>160</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-    <property name="value">
-     <number>230</number>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QSlider" name="slid_A">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>130</y>
-      <width>160</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-    <property name="value">
-     <number>230</number>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_start_dynamic_cloud">
-    <property name="geometry">
-     <rect>
-      <x>460</x>
-      <y>120</y>
-      <width>141</width>
-      <height>28</height>
+      <x>370</x>
+      <y>70</y>
+      <width>101</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>StartDynamicCloud</string>
+     <string>Water</string>
     </property>
    </widget>
   </widget>
@@ -216,38 +146,6 @@
     <hint type="destinationlabel">
      <x>212</x>
      <y>128</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btn_Ambient</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>OnBtnSetAmbient()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>264</x>
-     <y>109</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>224</x>
-     <y>86</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btn_Specular</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>OnBtnSetSpecular()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>219</x>
-     <y>147</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>224</x>
-     <y>188</y>
     </hint>
    </hints>
   </connection>

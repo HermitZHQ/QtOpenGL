@@ -101,6 +101,8 @@ void ShaderHelper::GetCommonUniformLocation()
 	m_ambientColorLoc[m_shaderType] = GetUniformLocation("ambientColor");
 	m_specularColorLoc[m_shaderType] = GetUniformLocation("specularColor");
     m_meltLoc[m_shaderType] = GetUniformLocation("meltThreshold");
+    m_inkQuant[m_shaderType] = GetUniformLocation("uQuantLevel");
+    m_inkWater[m_shaderType] = GetUniformLocation("uWaterPower");
 	CheckError;
 
 	//----PBR params
@@ -484,6 +486,8 @@ void ShaderHelper::Init()
 	memset(m_ambientColorLoc, -1, sizeof(m_ambientColorLoc));
 	memset(m_specularColorLoc, -1, sizeof(m_specularColorLoc));
     memset(m_meltLoc, -1, sizeof(m_meltLoc));
+    memset(m_inkQuant, -1, sizeof(m_inkQuant));
+    memset(m_inkWater, -1, sizeof(m_inkWater));
 	memset(m_matLightVPLoc, -1, sizeof(m_matLightVPLoc));
 	memset(m_timeLoc, -1, sizeof(m_timeLoc));
 
@@ -669,6 +673,20 @@ void ShaderHelper::SetMeltThreshold(float threshold)
 {
     if (m_meltLoc[m_shaderType] != -1) {
         glUniform1f(m_meltLoc[m_shaderType], threshold);
+    }
+}
+
+void ShaderHelper::SetInkQuant(float val)
+{
+    if (m_inkQuant[m_shaderType] != -1) {
+        glUniform1f(m_inkQuant[m_shaderType], val);
+    }
+}
+
+void ShaderHelper::SetInkWater(float val)
+{
+    if (m_inkWater[m_shaderType] != -1) {
+        glUniform1f(m_inkWater[m_shaderType], val);
     }
 }
 

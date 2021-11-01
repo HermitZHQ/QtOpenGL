@@ -133,8 +133,8 @@ void OpenWidget::initializeGL()
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         //--------------------------------------------------
-        vao_quad2_tex1 = TextureMgr::Instance().LoadTexture("./textures/dynamic_cloud/cloud3.jpg");
-        vao_quad2_tex2 = TextureMgr::Instance().LoadTexture("./textures/dynamic_cloud/cloud3.jpg");
+        vao_quad2_tex1 = TextureMgr::Instance().LoadTexture("./textures/ink/person1.png");
+        vao_quad2_tex2 = TextureMgr::Instance().LoadTexture("./textures/water_noise.jpg");
         glGenVertexArrays(1, &vao_quad2);
         glBindVertexArray(vao_quad2);
         CheckError;
@@ -498,6 +498,8 @@ void OpenWidget::paintGL()
         ShaderHelper::Instance().SetMeltThreshold(m_meltThreshold);
         m_meltThreshold += 0.0001f;
     }
+    ShaderHelper::Instance().SetInkQuant(m_inkQuant);
+    ShaderHelper::Instance().SetInkWater(m_inkWater);
     glBindVertexArray(vao_quad2);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, vao_quad2_tex1);
@@ -1149,6 +1151,16 @@ void OpenWidget::ChangeMouseMoveSpeed(int value)
 void OpenWidget::ChangeMeltThreshold(float value)
 {
     m_meltThreshold = value;
+}
+
+void OpenWidget::ChangeInkQuant(float value)
+{
+    m_inkQuant = value;
+}
+
+void OpenWidget::ChangeInkWater(float water)
+{
+    m_inkWater = water;
 }
 
 void OpenWidget::StartDynamicCloud()

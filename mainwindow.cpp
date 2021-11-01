@@ -69,18 +69,18 @@ void MainWindow::Start()
 
 void MainWindow::OnBtnSetSpecular()
 {
-	m_specularColor[0] = ui->slid_R->value() / 255.0f;
-	m_specularColor[1] = ui->slid_G->value() / 255.0f;
-	m_specularColor[2] = ui->slid_B->value() / 255.0f;
-	m_specularColor[3] = ui->slid_A->value() / 255.0f;
+// 	m_specularColor[0] = ui->slid_R->value() / 255.0f;
+// 	m_specularColor[1] = ui->slid_G->value() / 255.0f;
+// 	m_specularColor[2] = ui->slid_B->value() / 255.0f;
+// 	m_specularColor[3] = ui->slid_A->value() / 255.0f;
 }
 
 void MainWindow::OnBtnSetAmbient()
 {
-	m_ambientColor[0] = ui->slid_R->value() / 255.0f;
-	m_ambientColor[1] = ui->slid_G->value() / 255.0f;
-	m_ambientColor[2] = ui->slid_B->value() / 255.0f;
-	m_ambientColor[3] = ui->slid_A->value() / 255.0f;
+// 	m_ambientColor[0] = ui->slid_R->value() / 255.0f;
+// 	m_ambientColor[1] = ui->slid_G->value() / 255.0f;
+// 	m_ambientColor[2] = ui->slid_B->value() / 255.0f;
+// 	m_ambientColor[3] = ui->slid_A->value() / 255.0f;
 }
 
 void MainWindow::OnBtnStartDynamicCloud()
@@ -108,4 +108,22 @@ void MainWindow::OnSliderMeltChanged(int value)
     }
 
     m_openWidgetPtr->ChangeMeltThreshold(value / 100.0f);
+}
+
+void MainWindow::on_slid_quant_valueChanged(int value)
+{
+    if (Q_NULLPTR == m_openWidgetPtr) {
+        return;
+    }
+
+    m_openWidgetPtr->ChangeInkQuant(value);
+}
+
+void MainWindow::on_slid_water_valueChanged(int value)
+{
+    if (Q_NULLPTR == m_openWidgetPtr) {
+        return;
+    }
+
+    m_openWidgetPtr->ChangeInkWater(value);
 }

@@ -22,6 +22,8 @@ public:
 	}
 	void ChangeMouseMoveSpeed(int value);
     void ChangeMeltThreshold(float value);
+    void ChangeInkQuant(float value);
+    void ChangeInkWater(float water);
     void StartDynamicCloud();
 	void UpdateKeys();
 
@@ -112,5 +114,7 @@ private:
 
     float                       m_meltThreshold;
     bool                        m_startDynamicCloudFlag = false;
+    float                       m_inkQuant = 2.0f;//2-6
+    float                       m_inkWater = 8.0f;//8-64
 };
 

@@ -14,7 +14,6 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QListWidget>
 #include <QtWidgets/QMainWindow>
-#include <QtWidgets/QPushButton>
 #include <QtWidgets/QSlider>
 #include <QtWidgets/QWidget>
 
@@ -24,17 +23,13 @@ class Ui_MainWindow
 {
 public:
     QWidget *centralwidget;
-    QPushButton *btn_Specular;
-    QPushButton *btn_Ambient;
     QListWidget *list_info;
     QSlider *slid_MouseSpeed;
     QLabel *label;
     QLabel *label_2;
-    QSlider *slid_R;
-    QSlider *slid_G;
-    QSlider *slid_B;
-    QSlider *slid_A;
-    QPushButton *btn_start_dynamic_cloud;
+    QSlider *slid_quant;
+    QSlider *slid_water;
+    QLabel *label_3;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -43,12 +38,6 @@ public:
         MainWindow->resize(642, 443);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
-        btn_Specular = new QPushButton(centralwidget);
-        btn_Specular->setObjectName(QString::fromUtf8("btn_Specular"));
-        btn_Specular->setGeometry(QRect(370, 70, 111, 28));
-        btn_Ambient = new QPushButton(centralwidget);
-        btn_Ambient->setObjectName(QString::fromUtf8("btn_Ambient"));
-        btn_Ambient->setGeometry(QRect(370, 40, 111, 28));
         list_info = new QListWidget(centralwidget);
         list_info->setObjectName(QString::fromUtf8("list_info"));
         list_info->setGeometry(QRect(0, 160, 641, 281));
@@ -64,45 +53,28 @@ public:
         label->setGeometry(QRect(10, 10, 91, 21));
         label_2 = new QLabel(centralwidget);
         label_2->setObjectName(QString::fromUtf8("label_2"));
-        label_2->setGeometry(QRect(190, 10, 101, 21));
-        slid_R = new QSlider(centralwidget);
-        slid_R->setObjectName(QString::fromUtf8("slid_R"));
-        slid_R->setGeometry(QRect(190, 40, 160, 22));
-        slid_R->setMinimum(0);
-        slid_R->setMaximum(255);
-        slid_R->setValue(230);
-        slid_R->setOrientation(Qt::Horizontal);
-        slid_G = new QSlider(centralwidget);
-        slid_G->setObjectName(QString::fromUtf8("slid_G"));
-        slid_G->setGeometry(QRect(190, 70, 160, 22));
-        slid_G->setMinimum(0);
-        slid_G->setMaximum(255);
-        slid_G->setValue(230);
-        slid_G->setOrientation(Qt::Horizontal);
-        slid_B = new QSlider(centralwidget);
-        slid_B->setObjectName(QString::fromUtf8("slid_B"));
-        slid_B->setGeometry(QRect(190, 100, 160, 22));
-        slid_B->setMinimum(0);
-        slid_B->setMaximum(255);
-        slid_B->setValue(230);
-        slid_B->setOrientation(Qt::Horizontal);
-        slid_A = new QSlider(centralwidget);
-        slid_A->setObjectName(QString::fromUtf8("slid_A"));
-        slid_A->setGeometry(QRect(190, 130, 160, 22));
-        slid_A->setMinimum(0);
-        slid_A->setMaximum(255);
-        slid_A->setValue(230);
-        slid_A->setOrientation(Qt::Horizontal);
-        btn_start_dynamic_cloud = new QPushButton(centralwidget);
-        btn_start_dynamic_cloud->setObjectName(QString::fromUtf8("btn_start_dynamic_cloud"));
-        btn_start_dynamic_cloud->setGeometry(QRect(460, 120, 141, 28));
+        label_2->setGeometry(QRect(370, 40, 101, 21));
+        slid_quant = new QSlider(centralwidget);
+        slid_quant->setObjectName(QString::fromUtf8("slid_quant"));
+        slid_quant->setGeometry(QRect(190, 40, 160, 22));
+        slid_quant->setMinimum(2);
+        slid_quant->setMaximum(6);
+        slid_quant->setValue(6);
+        slid_quant->setOrientation(Qt::Horizontal);
+        slid_water = new QSlider(centralwidget);
+        slid_water->setObjectName(QString::fromUtf8("slid_water"));
+        slid_water->setGeometry(QRect(190, 70, 160, 22));
+        slid_water->setMinimum(8);
+        slid_water->setMaximum(64);
+        slid_water->setValue(64);
+        slid_water->setOrientation(Qt::Horizontal);
+        label_3 = new QLabel(centralwidget);
+        label_3->setObjectName(QString::fromUtf8("label_3"));
+        label_3->setGeometry(QRect(370, 70, 101, 21));
         MainWindow->setCentralWidget(centralwidget);
 
         retranslateUi(MainWindow);
         QObject::connect(slid_MouseSpeed, SIGNAL(valueChanged(int)), MainWindow, SLOT(OnSliderMouseSpeedChanged(int)));
-        QObject::connect(btn_Ambient, SIGNAL(clicked()), MainWindow, SLOT(OnBtnSetAmbient()));
-        QObject::connect(btn_Specular, SIGNAL(clicked()), MainWindow, SLOT(OnBtnSetSpecular()));
-        QObject::connect(btn_start_dynamic_cloud, SIGNAL(clicked()), MainWindow, SLOT(OnBtnStartDynamicCloud()));
 
         QMetaObject::connectSlotsByName(MainWindow);
     } // setupUi
@@ -110,11 +82,9 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", nullptr));
-        btn_Specular->setText(QApplication::translate("MainWindow", "SetSpecular", nullptr));
-        btn_Ambient->setText(QApplication::translate("MainWindow", "SetAmbient", nullptr));
         label->setText(QApplication::translate("MainWindow", "MouseSpeed", nullptr));
-        label_2->setText(QApplication::translate("MainWindow", "Color", nullptr));
-        btn_start_dynamic_cloud->setText(QApplication::translate("MainWindow", "StartDynamicCloud", nullptr));
+        label_2->setText(QApplication::translate("MainWindow", "Quant", nullptr));
+        label_3->setText(QApplication::translate("MainWindow", "Water", nullptr));
     } // retranslateUi
 
 };

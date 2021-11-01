@@ -33,6 +33,11 @@ public slots:
 	void OnSliderMouseSpeedChanged(int value);
     void OnSliderMeltChanged(int value);
 
+private slots:
+    void on_slid_quant_valueChanged(int value);
+
+    void on_slid_water_valueChanged(int value);
+
 private:
     Ui::MainWindow *ui;
 	OpenWidget						*m_openWidgetPtr;
