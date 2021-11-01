@@ -133,7 +133,7 @@ void OpenWidget::initializeGL()
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         //--------------------------------------------------
-        vao_quad2_tex1 = TextureMgr::Instance().LoadTexture("./textures/dynamic_cloud/cloud3.jpg");
+        vao_quad2_tex1 = TextureMgr::Instance().LoadTexture("./textures/dynamic_cloud/mountain.jpg");
         vao_quad2_tex2 = TextureMgr::Instance().LoadTexture("./textures/dynamic_cloud/cloud3.jpg");
         glGenVertexArrays(1, &vao_quad2);
         glBindVertexArray(vao_quad2);

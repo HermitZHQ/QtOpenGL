@@ -44,148 +44,115 @@ in Vertex {
 	mat3x3 tangentToModelMat;
 };
 
-float CalculateTheShadowValue()
-{	
-	vec4 posInLightSpace = lightVPMat * vec4(worldPos, 1);
-	posInLightSpace = posInLightSpace / posInLightSpace.w;
-	posInLightSpace = (posInLightSpace + 1.0) / 2.0;
-	float vertexDepth = posInLightSpace.z;
-	float depth = texture(shadowMap, posInLightSpace.xy).x;
+const float cloudscale = 1.1;
+const float speed = 0.03;
+const float clouddark = 0.5;
+const float cloudlight = 0.3;
+const float cloudcover = 0.2;
+const float cloudalpha = 8.0;
+const float skytint = 0.5;
+const vec3 skycolour1 = vec3(0.2, 0.4, 0.6);
+const vec3 skycolour2 = vec3(0.4, 0.7, 1.0);
+const vec2 iResolution = vec2(800, 600);
 
-	float bias = 0.000001;
-	//float bias = max(0.000005 * (1.0 - dot(worldNormal, vec3(1, 1, 1))), 0.000001);
-	return (depth < vertexDepth - bias ? 0.05 : 1);
+const mat2 m = mat2( 1.6,  1.2, -1.2,  1.6 );
+
+vec2 hash( vec2 p ) {
+	p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)));
+	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
 }
 
-vec4 CalculateDirLight(Light light)
-{
-	light.dir = normalize(light.dir);
-
-	float shadowValue = CalculateTheShadowValue();
-
-	// Get "normal" from the normalmap
-	vec3 normal;
-	if (hasNormalMap){		
-		normal = texture(normalMap, uv).rgb;
-		normal = normal * 2 - 1;
-		normal = normalize(tangentToModelMat * normal);
-	}
-	else{
-		normal = worldNormal;
-	}
-
-	vec3 ambient = ambientColor.rgb;
-	vec4 albedo = texture(tex, uv);
-	//vec4 albedo = texture(tex, uv) * 0.5 + texture(skybox, skyboxUV) * 0.5;
-	ambient = ambient * 0.75 * albedo.rgb;
-
-	vec3 viewDir = normalize(camPosWorld - worldPos);
-	vec3 halfDir = normalize(viewDir + light.dir);
-	vec3 diffuse = light.color.rgb * ambient.rgb * clamp(dot(light.dir, normal), 0.0, 1.0);
-
-	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
-	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
-
-	//return vec4(1, 0, 0, 1);
-	//return vec4(shadowColor);
-	return vec4(ambient + (diffuse + specularRes) * shadowValue, 1);
+float noise( in vec2 p ) {
+    const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+    const float K2 = 0.211324865; // (3-sqrt(3))/6;
+	vec2 i = floor(p + (p.x+p.y)*K1);	
+    vec2 a = p - i + (i.x+i.y)*K2;
+    vec2 o = (a.x>a.y) ? vec2(1.0,0.0) : vec2(0.0,1.0); //vec2 of = 0.5 + 0.5*vec2(sign(a.x-a.y), sign(a.y-a.x));
+    vec2 b = a - o + K2;
+	vec2 c = a - 1.0 + 2.0*K2;
+    vec3 h = max(0.5-vec3(dot(a,a), dot(b,b), dot(c,c) ), 0.0 );
+	vec3 n = h*h*h*h*vec3( dot(a,hash(i+0.0)), dot(b,hash(i+o)), dot(c,hash(i+1.0)));
+    return dot(n, vec3(70.0));	
 }
 
-vec4 CalculatePointLight(Light light)
-{
-	vec3 pointLightDir = light.pos - worldPos;
-	float len = length(light.pos - worldPos);
-	pointLightDir = normalize(pointLightDir);
-
-	float attenuation = 1.0;
-	// calculate the attenuation of point light
-	attenuation = 1 / (light.constant + light.linear * len + light.quadratic * (len * len));
-	if (len > light.radius){
-		//attenuation = 0.0;
+float fbm(vec2 n) {
+	float total = 0.0, amplitude = 0.1;
+	for (int i = 0; i < 7; i++) {
+		total += noise(n) * amplitude;
+		n = m * n;
+		amplitude *= 0.4;
 	}
-
-	// Get "normal" from the normalmap
-	vec3 normal = texture(normalMap, uv).rgb;
-	normal = normal * 2 - 1;
-	normal = normalize(tangentToModelMat * normal);
-
-	vec4 albedo = texture(tex, uv);
-
-	vec3 viewDir = normalize(camPosWorld - worldPos);
-	vec3 halfDir = normalize(viewDir + pointLightDir);
-	vec3 diffuse = light.color.rgb * albedo.rgb * clamp(dot(pointLightDir, normal), 0.0, 1.0);
-
-	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
-	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
-
-	//return vec4(attenuation, 0, 0, 1);
-	return vec4((diffuse + specularRes) * attenuation, 1);
+	return total;
 }
 
-vec4 CalculateSpotLight(Light light)
-{
-	vec3 spotLightDir = light.pos - worldPos;
-	float len = length(spotLightDir);
-	spotLightDir = normalize(spotLightDir);
-	light.dir = normalize(light.dir);
-	float vertexRadian = dot(light.dir, spotLightDir);
+// -----------------------------------------------
 
-	float attenuation = 1.0;
-	// calculate the attenuation of point light
-	float phi = light.innerCutoff - light.outerCutoff;
-	float theta = vertexRadian - light.outerCutoff;
-	attenuation = clamp((theta / phi), 0.0, 1.0);
-	if (vertexRadian < light.outerCutoff){
-		//attenuation = 0.0;
-	}
-
-	// Get "normal" from the normalmap
-	vec3 normal = texture(normalMap, uv).rgb;
-	normal = normal * 2 - 1;
-	normal = normalize(tangentToModelMat * normal);
-
-	vec4 albedo = texture(tex, uv);
-
-	vec3 viewDir = normalize(camPosWorld - worldPos);
-	vec3 halfDir = normalize(viewDir + spotLightDir);
-	vec3 diffuse = light.color.rgb * albedo.rgb * clamp(dot(spotLightDir, normal), 0.0, 1.0);
-
-	float spec = pow(max(dot(halfDir, normal), 0.0), 512);
-	vec3 specularRes = light.color.rgb * specularColor.rgb * spec;
-
-	//return vec4(vertexRadian / 255.0, vertexRadian / 255.0, vertexRadian / 255.0, 1);
-	return vec4((diffuse + specularRes) * attenuation, 1);
-}
-
-void main()
-{
-	for(int i = 0; i < 8; ++i){
-		if (lights[i].isEnabled && lights[i].isDirectional){
-			//fColor += CalculateDirLight(lights[i]);
-		}
-		else if (lights[i].isEnabled && lights[i].isPoint){
-			//fColor += CalculatePointLight(lights[i]);
-		}
-		else if (lights[i].isEnabled && !lights[i].isPoint && !lights[i].isDirectional){
-			//fColor += CalculateSpotLight(lights[i]);
-		}
-	}
+void main() {
+    vec2 p = gl_FragCoord.xy / iResolution.xy;
+	vec2 screen_uv = p*vec2(iResolution.x/iResolution.y,1.0);
+	float iTime = meltThreshold * 10.0f;
+    float time = iTime * speed;
+    float q = fbm(screen_uv * cloudscale * 0.5);
+    
+    //ridged noise shape
+	float r = 0.0;
+	screen_uv *= cloudscale;
+    screen_uv -= q - time;
+    float weight = 0.8;
+    for (int i=0; i<8; i++){
+		r += abs(weight*noise( screen_uv ));
+        screen_uv = m*screen_uv + time;
+		weight *= 0.7;
+    }
+    
+    //noise shape
+	float f = 0.0;
+    screen_uv = p*vec2(iResolution.x/iResolution.y,1.0);
+	screen_uv *= cloudscale;
+    screen_uv -= q - time;
+    weight = 0.7;
+    for (int i=0; i<8; i++){
+		f += weight*noise( screen_uv );
+        screen_uv = m*screen_uv + time;
+		weight *= 0.6;
+    }
+    
+    f *= r + f;
+    
+    //noise colour
+    float c = 0.0;
+    time = iTime * speed * 2.0;
+    screen_uv = p*vec2(iResolution.x/iResolution.y,1.0);
+	screen_uv *= cloudscale*2.0;
+    screen_uv -= q - time;
+    weight = 0.4;
+    for (int i=0; i<7; i++){
+		c += weight*noise( screen_uv );
+        screen_uv = m*screen_uv + time;
+		weight *= 0.6;
+    }
+    
+    //noise ridge colour
+    float c1 = 0.0;
+    time = iTime * speed * 3.0;
+    screen_uv = p*vec2(iResolution.x/iResolution.y,1.0);
+	screen_uv *= cloudscale*3.0;
+    screen_uv -= q - time;
+    weight = 0.4;
+    for (int i=0; i<7; i++){
+		c1 += abs(weight*noise( screen_uv ));
+        screen_uv = m*screen_uv + time;
+		weight *= 0.6;
+    }
 	
-	float melt_threshold = texture(tex, uv).r;
-	if (melt_threshold < meltThreshold){
-		fColor = texture(shadowMap, uv);
-	}
-	else{
-		fColor = texture(normalMap, uv);
-	}
-
-	vec2 new_uv_layer_top = uv;
-	vec2 new_uv_layer_bottom = uv;
-	new_uv_layer_top.x += meltThreshold / 2.0f;
-	new_uv_layer_bottom.x += meltThreshold / 5.0f;
-	new_uv_layer_bottom.y += meltThreshold / 10.0f;
-	fColor = texture(tex, new_uv_layer_bottom) * 0.5 + texture(normalMap, new_uv_layer_top) * 0.5;
-
-	//fColor =  vec4(1, 1, 0, 0);
-	//fColor = vec4(lights[0].color);
+    c += c1;
+    
+    vec3 skycolour = mix(skycolour2, skycolour1, p.y);
+    vec3 cloudcolour = vec3(1.1, 1.1, 0.9) * clamp((clouddark + cloudlight*c), 0.0, 1.0);
+   
+    f = cloudcover + cloudalpha*f*r;
+    
+    vec3 result = mix(skycolour, clamp(skytint * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0)) * 0.5 + texture(tex, uv).xyz * 0.5;
+    
+	fColor = vec4( result, 1.0 );
 }
