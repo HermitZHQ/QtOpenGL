@@ -69,7 +69,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Gray_threshold</string>
+     <string>strength</string>
     </property>
    </widget>
    <widget class="QSlider" name="slid_quant">
@@ -85,10 +85,10 @@
      <number>1</number>
     </property>
     <property name="maximum">
-     <number>10</number>
+     <number>100</number>
     </property>
     <property name="value">
-     <number>8</number>
+     <number>5</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -107,10 +107,10 @@
      <number>1</number>
     </property>
     <property name="maximum">
-     <number>10</number>
+     <number>100</number>
     </property>
     <property name="value">
-     <number>3</number>
+     <number>50</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -126,7 +126,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Gray_rate</string>
+     <string>sample num</string>
     </property>
    </widget>
    <widget class="QSlider" name="slid_blur">
@@ -139,10 +139,10 @@
      </rect>
     </property>
     <property name="minimum">
-     <number>10</number>
+     <number>1</number>
     </property>
     <property name="maximum">
-     <number>500</number>
+     <number>359</number>
     </property>
     <property name="value">
      <number>200</number>
@@ -161,7 +161,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Blur</string>
+     <string>angle</string>
     </property>
    </widget>
   </widget>
