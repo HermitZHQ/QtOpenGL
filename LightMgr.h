@@ -62,6 +62,9 @@ public:
 	int GetCurLightNum() const;
 	LightInfo& GetLightInfo(int index);
 	QVector3D GetDirLightPos() const;
+    void SetDirLightPos(const QVector3D &pos);
+    QVector3D GetDirLightDir() const;
+    void SetDirLightDir(const QVector3D &dir);
 
 	const static int				m_maxLightNum = 100;
 protected:

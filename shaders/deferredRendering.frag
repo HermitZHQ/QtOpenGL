@@ -113,7 +113,8 @@ float CalculateTheShadowValue()
 
 	float bias = 0.00015;
 	//float bias = max(0.000005 * (1.0 - dot(normal, vec3(1, 1, 1))), 0.000001);
-	return (depth < vertexDepth - bias ? 0.05 : 1);
+	//return depth;// test depth map texture
+	return ((depth < (vertexDepth - bias)) ? 0.05 : 1);
 }
 
 float CalculateTheShadowValueWithWorldPos(vec3 worldPos)
@@ -144,6 +145,7 @@ vec4 CalculateDirLight(Light light)
 	light.dir = normalize(light.dir);
 
 	float shadowValue = CalculateTheShadowValue();
+	//return vec4(shadowValue, shadowValue, shadowValue, 1);
 
 	vec3 normal = texture(gBufferNormalTex, uv).xyz;
 	vec3 wPos = texture(gBufferPosTex, uv).xyz;
@@ -185,6 +187,8 @@ vec4 CalculateDirLight(Light light)
 	vec3 ray = worldPos - camPosWorld;
 	float rayLen = length(ray);
 	vec3 rayDir = normalize(ray);
+	// 使用平行光方向代替片元和摄像机之间的方向，应该是错误的，因为算散射的方程要求light和view的dot
+	//rayDir = light.dir;
 
 	const int steps = 40;
 	float stepLen = rayLen / steps;
@@ -193,10 +197,12 @@ vec4 CalculateDirLight(Light light)
 	vec3 curPos = camPosWorld;
 
 	vec3 accumulateFog = vec3(0, 0, 0);
+	vec3 sunColor = vec3(2, 2, 0.6);// vec3(1, 1, 0.3)
+	float worldPosShadowVal = 0;
 	for(int i = 0; i < steps; ++i){
-		shadowValue = CalculateTheShadowValueWithWorldPos(curPos);
-		if (shadowValue > 0.99){
-			accumulateFog += ComputeScattering(dot(rayDir, light.dir)) * vec3(1, 1, 0.3);
+		worldPosShadowVal = CalculateTheShadowValueWithWorldPos(curPos);
+		if (worldPosShadowVal > 0.99){
+			accumulateFog += ComputeScattering(dot(rayDir, light.dir)) * sunColor;
 		}
 		curPos += step;
 	}
@@ -234,15 +240,20 @@ vec4 CalculateDirLight(Light light)
     // SSAO
 	float occlusion = texture(ssaoBlurTex, uv).r;
 
+	//shadowValue = CalculateTheShadowValueWithWorldPos(worldPos);
 	//return vec4(fogColor, 1);
+	vec3 mix_color = albedo * shadowValue + skyboxColor;
+	//return vec4(texture(shadowMap, uv));
+	//return vec4(shadowValue, shadowValue, shadowValue, 1);
 	//return vec4(accumulateFog, 1);
+	return vec4(mix_color + accumulateFog, 1);
 
 	// original light mix
 	//return vec4(skyboxColor + specularRes + ambient * occlusion + diffuse + fogColor * fogDensity, 1);
 
 	// test light mix
 	//return vec4(albedo, 1);
-	return vec4(albedo + skyboxColor + specularRes, 1);
+	return vec4(albedo + skyboxColor + specularRes + accumulateFog, 1);
 }
 
 vec4 CalculatePointLight(Light light)
@@ -363,7 +374,7 @@ void main()
 			//fColor += CalculatePointLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && !lights[i].isPoint && !lights[i].isDirectional){
-			fColor += CalculateSpotLight(lights[i]);
+			//fColor += CalculateSpotLight(lights[i]);
 		}
 	}
 }

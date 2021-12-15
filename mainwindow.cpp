@@ -43,6 +43,24 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 }
 
+void MainWindow::UpdateDirLightDir()
+{
+    float x = ui->edt_light_dir_x->text().toFloat();
+    float y = ui->edt_light_dir_y->text().toFloat();
+    float z = ui->edt_light_dir_z->text().toFloat();
+
+    LightMgr::Instance().SetDirLightDir(QVector3D(x, y, z));
+}
+
+void MainWindow::UpdateDirLightPos()
+{
+    float x = ui->edt_light_pos_x->text().toFloat();
+    float y = ui->edt_light_pos_y->text().toFloat();
+    float z = ui->edt_light_pos_z->text().toFloat();
+
+    LightMgr::Instance().SetDirLightPos(QVector3D(x, y, z));
+}
+
 QVector4D MainWindow::GetAmbientColor()
 {
 	return m_ambientColor;
@@ -89,4 +107,34 @@ void MainWindow::OnSliderMouseSpeedChanged(int value)
 	}
 
 	m_openWidgetPtr->ChangeMouseMoveSpeed(value);
+}
+
+void MainWindow::on_edt_light_dir_x_returnPressed()
+{
+    UpdateDirLightDir();
+}
+
+void MainWindow::on_edt_light_dir_y_returnPressed()
+{
+    UpdateDirLightDir();
+}
+
+void MainWindow::on_edt_light_dir_z_returnPressed()
+{
+    UpdateDirLightDir();
+}
+
+void MainWindow::on_edt_light_pos_x_returnPressed()
+{
+    UpdateDirLightPos();
+}
+
+void MainWindow::on_edt_light_pos_y_returnPressed()
+{
+    UpdateDirLightPos();
+}
+
+void MainWindow::on_edt_light_pos_z_returnPressed()
+{
+    UpdateDirLightPos();
 }

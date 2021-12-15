@@ -84,14 +84,15 @@ void OpenWidget::initializeGL()
 // 	TestGeometryPoints();
 	// test for a quad
 	{
-		const GLfloat g_vertices[6][2] = {
-			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
-			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
-		};
-// 		const GLfloat g_vertices[6][2] = {
-// 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
-// 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
-// 		};
+        // 这里使用的quad就是延迟渲染使用的两个三角面片，第一个中间有条裂纹，第二个是完全拼接的
+		//const GLfloat g_vertices[6][2] = {
+		//	{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
+		//	{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
+		//};
+ 		const GLfloat g_vertices[6][2] = {
+ 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
+ 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
+ 		};
 
 		const GLfloat g_uvs[6][2] = {
 			{0, 1}, {1, 1}, {0, 0}, //
@@ -146,30 +147,31 @@ void OpenWidget::initializeGL()
 	CheckError;
 
 	// load the light box
-// 	auto lightNum = LightMgr::Instance().GetCurLightNum();
-// 	for (int i = 0; i < lightNum; ++i)
-// 	{
-// 		auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
-// 		if (lightInfo.isEnabled) {
-// 			QMatrix4x4 matModel;
-// 			matModel.translate(lightInfo.pos);
-// 			matModel.scale(0.1f);
-// 			auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
-// 			lightInfo.SetModel(mod);
-// 		}
-// 	}
+    auto lightNum = LightMgr::Instance().GetCurLightNum();
+    for (int i = 0; i < lightNum; ++i)
+    {
+        auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
+        if (lightInfo.isEnabled) {
+            QMatrix4x4 matModel;
+            matModel.translate(lightInfo.pos);
+            matModel.scale(0.1f);
+            auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
+            lightInfo.SetModel(mod);
+        }
+    }
 
 	// test load model
-	m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
-// 	m_assimpPtr->LoadModel("./models/plane.obj");
+    m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+    m_assimpPtr->LoadModel("./models/plane.obj");
 // 
 // 	m_assimpPtr->LoadModel("./models/largesphere.obj");
-// 	m_assimpPtr->LoadModel("./models/Box001.obj");
-// 	m_assimpPtr->LoadModel("./models/plane2.obj");
-// 	m_assimpPtr->LoadModel("./models/plane3.obj");
-	m_assimpPtr->LoadModel("./models/teapot.obj");
-	m_assimpPtr->LoadModel("./models/dva/001.obj");
-	m_assimpPtr->LoadModel("./models/Box002.obj");
+    m_assimpPtr->LoadModel("./models/Box001.obj");
+    m_assimpPtr->LoadModel("./models/plane2.obj");
+    m_assimpPtr->LoadModel("./models/plane3.obj");
+    m_assimpPtr->LoadModel("./models/teapot.obj");
+    m_assimpPtr->LoadModel("./models/dva/001.obj");
+    m_assimpPtr->LoadModel("./models/Box002.obj");
+    //m_assimpPtr->LoadModel("./models/Sponza/Sponza.obj");
 
 	// create the sphere walls, left and right side----
 	// ----PBR relevant
@@ -216,6 +218,14 @@ void OpenWidget::initializeGL()
 		pMod->SetWroldMat(mat);
 		pMod->SetNormalMapTextureByMeshName("./models/brickwall_normal.jpg", "Plane001");
 	}
+
+    // use this model to test volumetric light effect
+    pMod = m_modelMgrPtr->FindModelByName("sponza_00");
+    if (Q_NULLPTR != pMod) {
+        QMatrix4x4 mat;
+        mat.scale(0.1, 0.1, 0.1);
+        pMod->SetWroldMat(mat);
+    }
 
 	pMod = m_modelMgrPtr->FindModelByName("water");
 	if (Q_NULLPTR != pMod) {
@@ -407,23 +417,28 @@ void OpenWidget::paintGL()
 	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
 	QMatrix4x4 matView = m_cam->GetViewMatrix();
 	QVector3D camPos = m_cam->GetCamPos().toVector3D();
-	matVP = matProj * m_cam->GetLightViewMatrix();
+    // shadow should use light vp mat(restore to normal vp, after shadow pass)
+    // 这里之前出了一个非常严重的问题，应该是我随手改的，那就是对于平行光来说，我们的lightVP里的投影，应该使用正交投影，除非是其他光源
+    // 而我这里用成了projection的矩阵，没有和最后pass中设置的orthoganal对应起来
+    matVP = matOrtho * m_cam->GetLightViewMatrix();
+    // 使用透视的细节我有点忘了，使用正交的话，阴影表现很正常，但是光源的位置改变就不能起效了，这里应该还有点问题
+    //matVP = matProj * m_cam->GetLightViewMatrix();
 
 	//-----Shadow render pass
-// 	CreateShadowMapFrameBufferTexture();
-// 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-// 		qDebug() << "check frame buffer failed";
-// 		return;
-// 	}
-// 	ClearAndReset();
-// 	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
-// 
-// 	for (unsigned int i = 0; i < modelNum; ++i)	{
-// 		Model *mod = ModelMgr::Instance().GetModel(i);
-// 		QMatrix4x4 matModel = mod->GetWorldMat();
-// 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
-// 	}
-// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
+ 	CreateShadowMapFrameBufferTexture();
+ 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+ 		qDebug() << "check frame buffer failed";
+ 		return;
+ 	}
+ 	ClearAndReset();
+ 	glViewport(0, 0, m_shadowTexWidth, m_shadowTexHeight);
+ 
+ 	for (unsigned int i = 0; i < modelNum; ++i)	{
+ 		Model *mod = ModelMgr::Instance().GetModel(i);
+ 		QMatrix4x4 matModel = mod->GetWorldMat();
+ 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
+ 	}
+ 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
 	//--------Deferred rendering g-buffer handle pass
  	CreateGBufferFrameBufferTextures();
@@ -895,13 +910,16 @@ void OpenWidget::DrawDeferredShading()
 	UpdateDynamicLightsInfo();
 	auto camPos = m_cam->GetCamPos().toVector3D();
 	m_shaderHelperPtr->SetCamWorldPos(camPos);
-	QMatrix4x4 matLightVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
+    // 由于是平行光，所以用的正交投影吗？？（经过验证，使用正交的阴影不正确????，模拟摄像机的话，应该还是要用透视投影???）
+    QMatrix4x4 matLightVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
+    //matLightVP = m_cam->GetProjectionMatrix() * m_cam->GetLightViewMatrix();
 	m_shaderHelperPtr->SetLightVPMat(matLightVP);
 	QMatrix4x4 matVP = m_cam->GetVPMatrix();
 	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
 	QMatrix4x4 matOrtho = m_cam->GetOrthographicMatrix();
 	QMatrix4x4 matView = m_cam->GetViewMatrix();
-	m_shaderHelperPtr->SetMVPMatrix(matLightVP, matLightVP, matView, matProj);
+    QMatrix4x4 modelMat = QMatrix4x4();
+	m_shaderHelperPtr->SetMVPMatrix(matVP, modelMat, matView, matProj);
 	m_shaderHelperPtr->SetAmbientSpecularColor(((MainWindow*)m_mainObj)->GetAmbientColor(), ((MainWindow*)m_mainObj)->GetSpecularColor());
 
 	// ----Adjust PBR dynamically

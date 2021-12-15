@@ -22,7 +22,9 @@ QMatrix4x4 Camera::GetLightViewMatrix() const
 // 	dirLightPos = QVector3D(200, 200, 200);
 	QVector4D lightPos(dirLightPos.x(), dirLightPos.y(), dirLightPos.z(), 1);
 
-	QVector3D axisZ = QVector3D(1, 1, 1).normalized();
+    // 这里才是真正用到光方向的地方，目前是写死的，所以不正确，我们需要和lightMgr中的方向联动
+	//QVector3D axisZ = QVector3D(1, 1, 1).normalized();
+    QVector3D axisZ = LightMgr::Instance().GetDirLightDir();
 	QVector3D axisX = (QVector3D::crossProduct(m_camUpDir, axisZ)).normalized();
 	QVector3D axisY = QVector3D::crossProduct(axisZ, axisX);
 

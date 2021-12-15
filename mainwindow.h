@@ -25,11 +25,23 @@ public:
 protected:
 	virtual void resizeEvent(QResizeEvent *event) override;
 
+private:
+    void UpdateDirLightDir();
+    void UpdateDirLightPos();
+
 public slots:
 	void Start();
 	void OnBtnSetSpecular();
 	void OnBtnSetAmbient();
 	void OnSliderMouseSpeedChanged(int value);
+
+private slots:
+    void on_edt_light_dir_x_returnPressed();
+    void on_edt_light_dir_y_returnPressed();
+    void on_edt_light_dir_z_returnPressed();
+    void on_edt_light_pos_x_returnPressed();
+    void on_edt_light_pos_y_returnPressed();
+    void on_edt_light_pos_z_returnPressed();
 
 private:
     Ui::MainWindow *ui;

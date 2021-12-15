@@ -12,6 +12,7 @@
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QListWidget>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>
@@ -34,6 +35,16 @@ public:
     QSlider *slid_G;
     QSlider *slid_B;
     QSlider *slid_A;
+    QLabel *label_3;
+    QLineEdit *edt_light_dir_x;
+    QLineEdit *edt_light_dir_y;
+    QLineEdit *edt_light_dir_z;
+    QLabel *label_4;
+    QLabel *label_5;
+    QLabel *label_6;
+    QLineEdit *edt_light_pos_x;
+    QLineEdit *edt_light_pos_z;
+    QLineEdit *edt_light_pos_y;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -92,6 +103,36 @@ public:
         slid_A->setMaximum(255);
         slid_A->setValue(230);
         slid_A->setOrientation(Qt::Horizontal);
+        label_3 = new QLabel(centralwidget);
+        label_3->setObjectName(QString::fromUtf8("label_3"));
+        label_3->setGeometry(QRect(10, 70, 131, 21));
+        edt_light_dir_x = new QLineEdit(centralwidget);
+        edt_light_dir_x->setObjectName(QString::fromUtf8("edt_light_dir_x"));
+        edt_light_dir_x->setGeometry(QRect(10, 90, 31, 20));
+        edt_light_dir_y = new QLineEdit(centralwidget);
+        edt_light_dir_y->setObjectName(QString::fromUtf8("edt_light_dir_y"));
+        edt_light_dir_y->setGeometry(QRect(10, 110, 31, 20));
+        edt_light_dir_z = new QLineEdit(centralwidget);
+        edt_light_dir_z->setObjectName(QString::fromUtf8("edt_light_dir_z"));
+        edt_light_dir_z->setGeometry(QRect(10, 130, 31, 20));
+        label_4 = new QLabel(centralwidget);
+        label_4->setObjectName(QString::fromUtf8("label_4"));
+        label_4->setGeometry(QRect(50, 90, 16, 21));
+        label_5 = new QLabel(centralwidget);
+        label_5->setObjectName(QString::fromUtf8("label_5"));
+        label_5->setGeometry(QRect(50, 110, 16, 21));
+        label_6 = new QLabel(centralwidget);
+        label_6->setObjectName(QString::fromUtf8("label_6"));
+        label_6->setGeometry(QRect(50, 130, 16, 21));
+        edt_light_pos_x = new QLineEdit(centralwidget);
+        edt_light_pos_x->setObjectName(QString::fromUtf8("edt_light_pos_x"));
+        edt_light_pos_x->setGeometry(QRect(90, 90, 31, 20));
+        edt_light_pos_z = new QLineEdit(centralwidget);
+        edt_light_pos_z->setObjectName(QString::fromUtf8("edt_light_pos_z"));
+        edt_light_pos_z->setGeometry(QRect(90, 130, 31, 20));
+        edt_light_pos_y = new QLineEdit(centralwidget);
+        edt_light_pos_y->setObjectName(QString::fromUtf8("edt_light_pos_y"));
+        edt_light_pos_y->setGeometry(QRect(90, 110, 31, 20));
         MainWindow->setCentralWidget(centralwidget);
 
         retranslateUi(MainWindow);
@@ -109,6 +150,16 @@ public:
         btn_Ambient->setText(QApplication::translate("MainWindow", "SetAmbient", nullptr));
         label->setText(QApplication::translate("MainWindow", "MouseSpeed", nullptr));
         label_2->setText(QApplication::translate("MainWindow", "Color", nullptr));
+        label_3->setText(QApplication::translate("MainWindow", "DirLight Dir & Pos", nullptr));
+        edt_light_dir_x->setText(QApplication::translate("MainWindow", "1", nullptr));
+        edt_light_dir_y->setText(QApplication::translate("MainWindow", "1", nullptr));
+        edt_light_dir_z->setText(QApplication::translate("MainWindow", "0", nullptr));
+        label_4->setText(QApplication::translate("MainWindow", "X", nullptr));
+        label_5->setText(QApplication::translate("MainWindow", "Y", nullptr));
+        label_6->setText(QApplication::translate("MainWindow", "Z", nullptr));
+        edt_light_pos_x->setText(QApplication::translate("MainWindow", "0", nullptr));
+        edt_light_pos_z->setText(QApplication::translate("MainWindow", "0", nullptr));
+        edt_light_pos_y->setText(QApplication::translate("MainWindow", "50", nullptr));
     } // retranslateUi
 
 };
