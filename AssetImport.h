@@ -8,7 +8,12 @@
 #include "ShaderHelper.h"
 #include <map>
 
+#define VS2019
+#ifdef VS2019
+#pragma comment(lib, "assimp-vc142-mtd.lib")
+#else
 #pragma comment(lib, "assimp-vc141-mtd.lib")
+#endif
 
 class Mesh;
 class Model;
