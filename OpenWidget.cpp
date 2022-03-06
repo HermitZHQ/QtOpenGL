@@ -80,7 +80,7 @@ void OpenWidget::initializeGL()
 	initializeOpenGLFunctions();
 
 	m_shaderHelperPtr = &ShaderHelper::Instance();
-	CheckError;
+	ChkGLErr;
 // 	TestGeometryPoints();
 	// test for a quad
 	{
@@ -101,13 +101,13 @@ void OpenWidget::initializeGL()
 
 		glGenVertexArrays(1, &vao_quad);
 		glBindVertexArray(vao_quad);
-		CheckError;
+		ChkGLErr;
 
 		texId = TextureMgr::Instance().LoadTexture("./textures/container.jpg");
 		SwitchShader(ShaderHelper::FrameBuffer1);
 		auto loc = ShaderHelper::Instance().GetUniformLocation("tex");
 		glUniform1i(loc, 0);
-		CheckError;
+		ChkGLErr;
 
 		GLuint vbo = 0;
 		glGenBuffers(1, &vbo);
@@ -115,62 +115,72 @@ void OpenWidget::initializeGL()
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 24, nullptr, GL_STATIC_DRAW);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 12, g_vertices);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 12, sizeof(GLfloat) * 12, g_uvs);
-		CheckError;
+		ChkGLErr;
 
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-		CheckError;
+		ChkGLErr;
 		glEnableVertexAttribArray(0);
 
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(GLfloat) * 12));
-		CheckError;
+		ChkGLErr;
 		glEnableVertexAttribArray(1);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
+
+	// a test for 2d array textures
+	QVector<QString> pathVec = {
+		"",
+		""
+	};
+	m_texArr01Id = TextureMgr::Instance().Load2DArrTextures(pathVec);
+	//m_tex3d01Id = TextureMgr::Instance().Load3DTexture(pathVec);
 
 // 	glEnable(GL_CULL_FACE);
 // 	glCullFace(GL_BACK);
 // 	glFrontFace(GL_CW);
 
 	glEnable(GL_DEPTH_TEST);
-	CheckError;
+	ChkGLErr;
 	glEnable(GL_STENCIL_TEST);
-	CheckError;
+	ChkGLErr;
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-	CheckError;
+	ChkGLErr;
+	//glEnable(GL_TEXTURE_3D);
+	//ChkGLErr;
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	CheckError;
+	ChkGLErr;
 // 	glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 
 	TextureMgr::Instance();
-	CheckError;
+	ChkGLErr;
 
 	// load the light box
-    auto lightNum = LightMgr::Instance().GetCurLightNum();
-    for (int i = 0; i < lightNum; ++i)
-    {
-        auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
-        if (lightInfo.isEnabled) {
-            QMatrix4x4 matModel;
-            matModel.translate(lightInfo.pos);
-            matModel.scale(0.1f);
-            auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
-            lightInfo.SetModel(mod);
-        }
-    }
+    //auto lightNum = LightMgr::Instance().GetCurLightNum();
+    //for (int i = 0; i < lightNum; ++i)
+    //{
+    //    auto &lightInfo = LightMgr::Instance().GetLightInfo(i);
+    //    if (lightInfo.isEnabled) {
+    //        QMatrix4x4 matModel;
+    //        matModel.translate(lightInfo.pos);
+    //        matModel.scale(0.1f);
+    //        auto mod = m_assimpPtr->LoadModelWithModelMatrixAndShaderType("./models/LightBox.obj", matModel, ShaderHelper::PureColor);
+    //        lightInfo.SetModel(mod);
+    //    }
+    //}
 
 	// test load model
-    m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
+    //m_assimpPtr->LoadModel("./models/WaterWave/water.obj");
     m_assimpPtr->LoadModel("./models/plane.obj");
 // 
 // 	m_assimpPtr->LoadModel("./models/largesphere.obj");
-    m_assimpPtr->LoadModel("./models/Box001.obj");
-    m_assimpPtr->LoadModel("./models/plane2.obj");
-    m_assimpPtr->LoadModel("./models/plane3.obj");
-    m_assimpPtr->LoadModel("./models/teapot.obj");
-    m_assimpPtr->LoadModel("./models/dva/001.obj");
-    m_assimpPtr->LoadModel("./models/Box002.obj");
+    //m_assimpPtr->LoadModel("./models/Box001.obj");
+    //m_assimpPtr->LoadModel("./models/plane2.obj");
+    //m_assimpPtr->LoadModel("./models/plane3.obj");
+    //m_assimpPtr->LoadModel("./models/teapot.obj");
+    //m_assimpPtr->LoadModel("./models/dva/001.obj");
+    //m_assimpPtr->LoadModel("./models/Box002.obj");
     //m_assimpPtr->LoadModel("./models/Sponza/Sponza.obj");
 
 	// create the sphere walls, left and right side----
@@ -441,6 +451,7 @@ void OpenWidget::paintGL()
  	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
 	//--------Deferred rendering g-buffer handle pass
+	// 关闭deferred绘制后，gbuffer也应该关闭，否则绘制不正常
  	CreateGBufferFrameBufferTextures();
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		qDebug() << "check frame buffer failed";
@@ -488,13 +499,13 @@ void OpenWidget::paintGL()
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, m_gBufferAlbedoTex);
 		glGenerateMipmap(GL_TEXTURE_2D);
-		CheckError;
+		ChkGLErr;
 
 		QMatrix4x4 matModel = pWater->GetWorldMat();
 		pWater->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo); // must restore after pass down
-	CheckError;
+	ChkGLErr;
 
 	//--------SSAO buffer handle pass
 // 	CreateSSAOFrameBufferTextures();
@@ -751,28 +762,28 @@ void OpenWidget::CreateShadowMapFrameBufferTexture()
 		}
 		glCreateFramebuffers(1, &m_shadowMapFbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
-		CheckError;
+		ChkGLErr;
 	
 		auto wndSize = size();
 		glGenTextures(1, &m_shadowMapTexId);
 		glBindTexture(GL_TEXTURE_2D, m_shadowMapTexId);
-		CheckError;
+		ChkGLErr;
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_shadowTexWidth, m_shadowTexHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-		CheckError;
+		ChkGLErr;
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		static float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
-		CheckError;
+		ChkGLErr;
 	
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMapTexId, 0);
 	// 	glDrawBuffer(GL_NONE);
 	// 	glReadBuffer(GL_NONE);
 	
 		glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
-		CheckError;
+		ChkGLErr;
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
@@ -954,6 +965,12 @@ void OpenWidget::DrawDeferredShading()
 	glBindTexture(GL_TEXTURE_2D, m_ssaoTex);
 	glActiveTexture(GL_TEXTURE10);
 	glBindTexture(GL_TEXTURE_2D, m_ssaoBlurTex);
+
+	// test 2d array textures(use the last texture id)
+	glActiveTexture(GL_TEXTURE31);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, m_texArr01Id);
+	glActiveTexture(GL_TEXTURE30);
+	glBindTexture(GL_TEXTURE_3D, m_tex3d01Id);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 

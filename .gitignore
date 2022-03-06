@@ -8,3 +8,5 @@ textures/
 .vs/
 assimp-vc142-mtd.dll
 QtOpenGL.sln
+imageformats/
+platforms/

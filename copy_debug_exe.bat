@@ -1,0 +1,1 @@
+xcopy c:\projects\qtopengl\debug\qtopengl.exe c:\projects\qtopengl\ /Y

@@ -16,6 +16,8 @@ TextureMgr::~TextureMgr()
 
 void TextureMgr::Init()
 {
+	TCHAR tmp[MAX_PATH] = { 0 };
+	GetCurrentDirectory(MAX_PATH, tmp);
 	LoadTexture("./models/brickwall_normal.jpg");
 	LoadTexture("./textures/proj.jpg");
 	LoadCubemapTexture();
@@ -34,6 +36,54 @@ unsigned int TextureMgr::LoadTexture(const QString &path)
 
 		return pTex->GetId();
 	}
+}
+
+unsigned int TextureMgr::Load2DArrTextures(const QVector<QString>& pathList)
+{
+	//if (0 == pathList.size()) {
+	//	return 1;
+	//}
+
+    QVector<QString> pathVec = {
+    "./textures/skybox/right.jpg",
+    "./textures/skybox/left.jpg",
+    "./textures/skybox/top.jpg",
+    "./textures/skybox/bottom.jpg",
+    "./textures/skybox/front.jpg",
+    "./textures/skybox/back.jpg",
+    };
+
+
+    Texture* pTex = new Texture;
+    pTex->Load2DArrTextures(pathVec);
+	// TODO: change the cache name, for now just a test
+    m_texMap.insert("test_2d_arr_tmp_name", pTex);
+
+    return pTex->GetId();
+}
+
+unsigned int TextureMgr::Load3DTexture(const QVector<QString>& pathVec)
+{
+    //if (0 == pathList.size()) {
+//	return 1;
+//}
+
+    QVector<QString> paths = {
+    "./textures/skybox/right.jpg",
+    "./textures/skybox/left.jpg",
+    "./textures/skybox/top.jpg",
+    "./textures/skybox/bottom.jpg",
+    "./textures/skybox/front.jpg",
+    "./textures/skybox/back.jpg",
+    };
+
+
+    Texture* pTex = new Texture;
+    pTex->Load3DTexture(paths);
+    // TODO: change the cache name, for now just a test
+    m_texMap.insert("test_3d_arr_tmp_name", pTex);
+
+    return pTex->GetId();
 }
 
 unsigned int TextureMgr::LoadCubemapTexture()

@@ -36,6 +36,11 @@ uniform sampler2D ssaoBlurTex;
 
 uniform samplerCube skybox;
 
+// 31(set in shaderHelper.cpp)
+uniform sampler2DArray texArr01;
+// 30
+uniform sampler3D tex3d01;
+
 uniform mat4x4 lightVPMat;
 uniform mat4x4 viewMat;
 
@@ -368,7 +373,7 @@ void main()
 
 	for(int i = 0; i < 8; ++i){
 		if (lights[i].isEnabled && lights[i].isDirectional){
-			fColor += CalculateDirLight(lights[i]);
+			//fColor += CalculateDirLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && lights[i].isPoint){
 			//fColor += CalculatePointLight(lights[i]);
@@ -377,4 +382,8 @@ void main()
 			//fColor += CalculateSpotLight(lights[i]);
 		}
 	}
+	
+	// test for 2d array tex
+	fColor += texture(texArr01, vec3(uv.x, 1.0 - uv.y, 4));
+	//fColor += texture(tex3d01, vec3(uv.x, uv.y, 4));
 }

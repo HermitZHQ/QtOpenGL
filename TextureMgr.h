@@ -14,6 +14,8 @@ public:
 	}
 
 	unsigned int LoadTexture(const QString &path);
+	unsigned int Load2DArrTextures(const QVector<QString>& pathVec);
+	unsigned int Load3DTexture(const QVector<QString>& pathVec);
 
 protected:
 	void Init();

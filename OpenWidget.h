@@ -90,6 +90,8 @@ private:
 	GLuint						m_shadowMapTexId;
 	GLushort					m_shadowTexWidth;
 	GLushort					m_shadowTexHeight;
+	GLuint						m_texArr01Id = -1;
+	GLuint						m_tex3d01Id = -1;
 
 	GLuint						m_gBufferFbo;
 	GLuint						m_gBufferPosTex;

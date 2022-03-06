@@ -16,7 +16,7 @@ MainWindow* GetGlobalMainWndPtr();
 }
 
 #ifdef VERBOSE_DEBUG
-	#define CheckError \
+	#define ChkGLErr \
 	{ \
 		auto err = glGetError(); \
 		if (0 != err) { \
@@ -26,7 +26,7 @@ MainWindow* GetGlobalMainWndPtr();
 		} \
 	}
 
-	#define CheckErrorMsg(msg) \
+	#define ChkGLErrMsg(msg) \
 	{ \
 		auto err = glGetError(); \
 		if (0 != err) { \
@@ -36,7 +36,7 @@ MainWindow* GetGlobalMainWndPtr();
 		} \
 	}
 
-	#define CheckErrorFatal \
+	#define ChkGLErrFatal \
 	{ \
 		auto err = glGetError(); \
 		if (0 != err) { \
@@ -47,7 +47,9 @@ MainWindow* GetGlobalMainWndPtr();
 		} \
 	}
 #else
-	#define CheckError
-	#define CheckErrorMsg
-	#define CheckErrorFatal
+	#define ChkGLErr
+	#define ChkGLErrMsg
+	#define ChkGLErrFatal
 #endif
+
+#define max(a, b) (((a) > (b) ? (a) : (b)))

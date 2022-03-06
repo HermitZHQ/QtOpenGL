@@ -23,6 +23,8 @@ uniform sampler2D tex;
 uniform sampler2D normalMap;
 uniform sampler2D shadowMap;
 uniform samplerCube skybox;
+// test array, use 31
+//uniform sampler2DArray texArr01;
 
 uniform mat4x4 lightVPMat;
 
@@ -170,5 +172,7 @@ void main()
 		}
 	}
 
+	//fColor = vec4(1, 0, 0, 1);
 	//fColor = vec4(lights[0].color);
+	//fColor = texture(texArr01, vec3(uv.x, uv.y, 0));
 }

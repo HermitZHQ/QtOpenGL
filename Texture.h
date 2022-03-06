@@ -9,6 +9,8 @@ public:
 	~Texture();
 
 	void LoadTexture(QString path);
+	void Load2DArrTextures(const QVector<QString>& pathVec);
+	void Load3DTexture(const QVector<QString>& pathVec);
 	void LoadSkyboxTexture(QVector<QString> paths);
 	GLuint GetId() const;
 

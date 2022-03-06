@@ -187,49 +187,49 @@ void Mesh::BindVertexRelevantBuffer()
 	//--------------------------You must gen and bind the VAO first, the after operations all depends on it!!!!!!
 	// set vertex array object
 	glGenVertexArrays(1, &m_vao);
-	CheckError;
+	ChkGLErr;
 	glBindVertexArray(m_vao);
-	CheckError;
+	ChkGLErr;
 
 	// set element array(index array) buffer
 	glGenBuffers(1, &m_vaeo);
-	CheckError;
+	ChkGLErr;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vaeo);
-	CheckError;
+	ChkGLErr;
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, GetIndicesMemSize(), vertex_indices, GL_STATIC_DRAW);
-	CheckError;
+	ChkGLErr;
 	glVertexArrayElementBuffer(m_vao, m_vaeo);
-	CheckError;
+	ChkGLErr;
 
 	// also create the lines indices at the same time, so we can switch them dynamicly
 	glGenBuffers(1, &m_vaeo_lines);
-	CheckError;
+	ChkGLErr;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vaeo_lines);
-	CheckError;
+	ChkGLErr;
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, GetLinesIndicesMemSize(), GetLinesIndices(), GL_STATIC_DRAW);
-	CheckError;
+	ChkGLErr;
 
 	glGenBuffers(1, &m_vbo);
-	CheckError;
+	ChkGLErr;
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	CheckError;
+	ChkGLErr;
 	glBufferData(GL_ARRAY_BUFFER, GetVerticesMemSize() + GetUvs1MemSize()
 		+ GetTangentsMemSize() + GetBitangentsMemSize() + GetNormalsMemSize()
 		/*+ GetBoneIdsMemSize() + GetBoneWeightsMemSize()*/, NULL, GL_STATIC_DRAW);
-	CheckError;
+	ChkGLErr;
 	glBufferSubData(GL_ARRAY_BUFFER, 0, GetVerticesMemSize(), vertex_positions);
-	CheckError;
+	ChkGLErr;
 	glBufferSubData(GL_ARRAY_BUFFER, GetVerticesMemSize(), GetUvs1MemSize(), vertex_uvs);
-	CheckError;
+	ChkGLErr;
 	glBufferSubData(GL_ARRAY_BUFFER, GetVerticesMemSize() + GetUvs1MemSize(), GetTangentsMemSize(), vertex_tangents);
-	CheckError;
+	ChkGLErr;
 	glBufferSubData(GL_ARRAY_BUFFER, GetVerticesMemSize() + GetUvs1MemSize() + GetTangentsMemSize(),
 		GetBitangentsMemSize(), vertex_bitangents);
-	CheckError;
+	ChkGLErr;
 	glBufferSubData(GL_ARRAY_BUFFER, GetVerticesMemSize() + GetUvs1MemSize()
 		+ GetTangentsMemSize() + GetBitangentsMemSize(),
 		GetNormalsMemSize(), vertex_normals);
-	CheckError;
+	ChkGLErr;
 	
 	// 骨骼相关Buffer，在下面会单独生成
 // 	glBufferSubData(GL_ARRAY_BUFFER, GetVerticesMemSize() + GetUvs1MemSize()
@@ -256,25 +256,25 @@ void Mesh::BindVertexRelevantBuffer()
 	auto boneWeightNum = GetBoneWeightsNum();
 
 	glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 0, (0));
-	CheckError;
+	ChkGLErr;
 	glEnableVertexAttribArray(positionLoc);
 	glVertexAttribPointer(uvLoc, 2, GL_FLOAT, GL_FALSE, 0, (void*)(GetVerticesMemSize()));
-	CheckError;
+	ChkGLErr;
 	glEnableVertexAttribArray(uvLoc);
-	CheckError;
+	ChkGLErr;
 	glVertexAttribPointer(tangentLoc, 3, GL_FLOAT, GL_FALSE, 0, (void*)(GetVerticesMemSize() + GetUvs1MemSize()));
-	CheckError;
+	ChkGLErr;
 	glEnableVertexAttribArray(tangentLoc);
-	CheckError;
+	ChkGLErr;
 
 	glVertexAttribPointer(bitangentLoc, 3, GL_FLOAT, GL_FALSE, 0,
 		(void*)(GetVerticesMemSize() + GetUvs1MemSize() + GetTangentsMemSize()));
-	CheckError;
+	ChkGLErr;
 	glEnableVertexAttribArray(bitangentLoc);
 
 	glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, 0,
 		(void*)(GetVerticesMemSize() + GetUvs1MemSize() + GetTangentsMemSize() + GetBitangentsMemSize()));
-	CheckError;
+	ChkGLErr;
 	glEnableVertexAttribArray(normalLoc);
 
 	// 不能使用glEnableVertexAttribArray来设置GL_INT类型，shader中读取的数据不正常，但是官方又说可以使用两种来设置glint类型
@@ -282,38 +282,38 @@ void Mesh::BindVertexRelevantBuffer()
 	//----Bone Ids(8)
 	GLuint boneIdBuffer = 0;
 	glGenBuffers(1, &boneIdBuffer);
-	CheckError;
+	ChkGLErr;
 	glBindBuffer(GL_ARRAY_BUFFER, boneIdBuffer);
-	CheckError;
+	ChkGLErr;
 	glBufferData(GL_ARRAY_BUFFER, GetBoneIdsMemSize(), vertex_boneIds, GL_STATIC_DRAW);
-	CheckError;
+	ChkGLErr;
 	glVertexAttribPointer(boneIdsLoc, 4, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 8, (void*)(0));
-	CheckError;
+	ChkGLErr;
 	glEnableVertexAttribArray(boneIdsLoc);
 
 	glVertexAttribPointer(boneIdsLoc + 1, 4, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 8, (void*)(sizeof(GL_FLOAT) * 4));
-	CheckError;
+	ChkGLErr;
 	glEnableVertexAttribArray(boneIdsLoc + 1);
 
 	//----Bone Weights(8)
 	GLuint boneWeightBuffer = 0;
 	glGenBuffers(1, &boneWeightBuffer);
-	CheckError;
+	ChkGLErr;
 	glBindBuffer(GL_ARRAY_BUFFER, boneWeightBuffer);
-	CheckError;
+	ChkGLErr;
 	glBufferData(GL_ARRAY_BUFFER, GetBoneWeightsMemSize(), vertex_boneWeights, GL_STATIC_DRAW);
-	CheckError;
+	ChkGLErr;
 	glVertexAttribPointer(boneWeightsLoc, 4, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 8,
 		(void*)(0));
-	CheckError;
+	ChkGLErr;
 	glEnableVertexAttribArray(boneWeightsLoc);
-	CheckError;
+	ChkGLErr;
 
 	glVertexAttribPointer(boneWeightsLoc + 1, 4, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 8,
 		(void*)(sizeof(GL_FLOAT) * 4));
-	CheckError;
+	ChkGLErr;
 	glEnableVertexAttribArray(boneWeightsLoc + 1);
-	CheckError;
+	ChkGLErr;
 
 	// multi instances model matrix
 // 	if (-1 != modelMatLoc) {
@@ -524,19 +524,19 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	QMatrix4x4 matOrtho)
 {
 	glBindVertexArray(GetVao());
-	CheckError;
+	ChkGLErr;
 
 	if (0 != m_skyboxTexID) {
 		m_shader.SetShaderType(ShaderHelper::SkyboxGBuffer);
 // 		m_shader.SetShaderType(ShaderHelper::Skybox);
-		CheckError;
+		ChkGLErr;
 		// should learn more, I don't know why here....
 		// find some clue from Nsigth tool, other texture index, such as 0(gl_texture0), already bind to gl_texture_2d
 		// so, you can't rebind it to another format tex
 		glActiveTexture(GL_TEXTURE18);
-		CheckError;
+		ChkGLErr;
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexID);
-		CheckError;
+		ChkGLErr;
 		matModel.translate(camPos);
 		matModel.scale(10000);
 		glCullFace(GL_FRONT);
@@ -547,13 +547,13 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 		glBindTexture(GL_TEXTURE_2D, m_projTexID);
 		ShaderHelper::Instance().SetShaderType(ShaderHelper::Decal);
 	}
-	CheckError;
+	ChkGLErr;
 
 	if (0 != m_diffuseTex1ID) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_diffuseTex1ID);
 	}
-	CheckError;
+	ChkGLErr;
 
 	if (0 != m_normalmapTexID && 0 == m_skyboxTexID) {
 		glActiveTexture(GL_TEXTURE1);
@@ -563,47 +563,47 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	else {
 		m_shader.SetHasNormalMap(false);
 	}
-	CheckError;
+	ChkGLErr;
 
 	matVP = matVP * matModel;
 	m_shader.SetMVPMatrix(matVP, matModel, matView, matProj);
 	m_shader.SetCamWorldPos(camPos);
 	m_shader.SetOrthoMat(matOrtho);
-	CheckError;
+	ChkGLErr;
 
 	m_shader.SetAmbientSpecularColor(m_mainWnd->GetAmbientColor(), m_mainWnd->GetSpecularColor());
 	m_shader.SetTime(GetTickCount());
-	CheckError;
+	ChkGLErr;
 
 	// Draw element(with indices)
 	if (Triangle == m_drawType) {
 		glVertexArrayElementBuffer(GetVao(), m_vaeo);
-		CheckError;
+		ChkGLErr;
 		glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, 0);
-		CheckError;
+		ChkGLErr;
 	}
 	else if (Point == m_drawType) {
 		glDrawArrays(GL_TRIANGLES, 0, GetVerticesNum());
-		CheckError;
+		ChkGLErr;
 	}
 	else if (Line == m_drawType) {
 		glVertexArrayElementBuffer(GetVao(), m_vaeo_lines);
-		CheckError;
+		ChkGLErr;
 		glDrawElements(GL_LINES, GetLinesIndicesNum(), GL_UNSIGNED_INT, 0);
-		CheckError;
+		ChkGLErr;
 	}
 
 	if (0 != m_skyboxTexID) {
 		glCullFace(GL_BACK);
 		glDepthMask(1);
 	}
-	CheckError;
+	ChkGLErr;
 
 	// Test draw skeleton here
 	if (GetAnimId() != 0) {
 		AnimationMgr::Instance().DrawSkeleton(GetAnimId());
 	}
-	CheckError;
+	ChkGLErr;
 
 	glBindVertexArray(0);
 }
