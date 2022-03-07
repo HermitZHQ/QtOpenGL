@@ -12,6 +12,43 @@ Texture::~Texture()
 {
 }
 
+HRESULT generateBmp(BYTE* pData, BYTE pixelWidth, int width, int height, const char* filename)
+{
+    int size = width * height * pixelWidth;
+    BITMAPFILEHEADER bfh;
+    bfh.bfType = 0X4d42;
+    bfh.bfSize = size + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    bfh.bfReserved1 = 0;// reserved  
+    bfh.bfReserved2 = 0;// reserved  
+    bfh.bfOffBits = bfh.bfSize - size;
+
+    // 位图第二部分，数据信息  
+    BITMAPINFOHEADER bih;
+    bih.biSize = sizeof(BITMAPINFOHEADER);
+    bih.biWidth = width;
+    bih.biHeight = height;
+    bih.biPlanes = 1;
+    bih.biBitCount = pixelWidth * 8;
+    bih.biCompression = 0;
+    bih.biSizeImage = size;
+    bih.biXPelsPerMeter = 0;
+    bih.biYPelsPerMeter = 0;
+    bih.biClrUsed = 0;
+    bih.biClrImportant = 0;
+    FILE* fp = fopen(filename, "wb");
+    if (!fp)
+    {
+        return S_FALSE;
+    }
+
+    size_t s = fwrite(&bfh, 1, sizeof(BITMAPFILEHEADER), fp);
+    s = fwrite(&bih, 1, sizeof(BITMAPINFOHEADER), fp);
+    s = fwrite(pData, 1, size, fp);
+    fclose(fp);
+
+    return S_OK;
+}
+
 void Texture::LoadTexture(QString path)
 {
     m_path = path;
@@ -45,6 +82,29 @@ void Texture::LoadTexture(QString path)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	ChkGLErr;
+
+    // test get tex data out
+    // 经过测试，这个lv的值如果是没有的，那么得到的width或者height是0，切会生成一个glErr
+    // 一般来说通过width == 0就足够判断没有该层的mipmap了
+//     GLint texWidth = 0, texHeight = 0, texInternalFmt = 0;
+//     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
+//     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texHeight);
+//     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &texInternalFmt);
+//     if (0 != texWidth && 0 != texHeight)
+//     {
+// 	    uchar* tmpBuf = new uchar[texWidth * texHeight * 4];
+// 	    glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmpBuf);
+// 	
+// 	 	static int i = 0;
+// 	 	QString strTmp = "c:/users/zhq/desktop/qt_out_";
+// 	 	generateBmp(tmpBuf, 4, texWidth, texHeight, (QString("c:/users/zhq/desktop/qt_out_%1.bmp").arg(i)).toStdString().c_str());
+// 	 	++i;
+// 
+//      delete[] tmpBuf;
+//     }
+//     else {
+//         AddTipInfo("导出纹理失败，尺寸为0");
+//     }
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	ChkGLErr;
@@ -149,12 +209,33 @@ void Texture::Load2DArrTextures(const QVector<QString>& pathList)
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 	// 2d array和2d不一样，直接使用GenerateMipmap并没有作用
-	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+	//glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 	delete[] totalBits;
 	delete[] totalBitsTestRed;
     ChkGLErr;
+
+    // test get tex data out
+    GLint texWidth = 0, texHeight = 0, texDepth = 0, texInternalFmt = 0;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &texWidth);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_HEIGHT, &texHeight);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_DEPTH, &texDepth);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_INTERNAL_FORMAT, &texInternalFmt);
+
+    if (0 != texWidth && 0 != texHeight)
+    {
+	    uchar* tmpBuf = new uchar[texWidth * texHeight * 4 * texDepth];
+	    glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmpBuf);
+	    static int i = 0;
+	    QString strTmp = "c:/users/zhq/desktop/qt_out_";
+	    generateBmp(tmpBuf, 4, texWidth, texHeight * texDepth, (QString("c:/users/zhq/desktop/qt_out_arr_%1.bmp").arg(i)).toStdString().c_str());
+	    ++i;
+
+        delete[] tmpBuf;
+    }
+
+    // reset binding at last
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }
 
 void Texture::Load3DTexture(const QVector<QString>& pathList)
@@ -191,7 +272,7 @@ void Texture::Load3DTexture(const QVector<QString>& pathList)
     // here copy all the image's bits to the total bits
     auto combine_bits_func = [&]() {
         int w = 0, h = 0;
-        for (int i = 0; i < texNum; ++i)
+        for (unsigned int i = 0; i < texNum; ++i)
         {
             QImage image(pathList[i]);
             QImage iamge_scaled = image.scaled(width, height);
