@@ -328,10 +328,12 @@ void Texture::Load3DTexture(const QVector<QString>& pathList)
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glBindTexture(GL_TEXTURE_3D, 0);
     delete[] totalBits;
     delete[] totalBitsTestRed;
     ChkGLErr;
+
+
+    glBindTexture(GL_TEXTURE_3D, 0);
 }
 
 void Texture::LoadSkyboxTexture(QVector<QString> paths)
