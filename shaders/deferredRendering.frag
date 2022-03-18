@@ -373,7 +373,7 @@ void main()
 
 	for(int i = 0; i < 8; ++i){
 		if (lights[i].isEnabled && lights[i].isDirectional){
-			//fColor += CalculateDirLight(lights[i]);
+			fColor += CalculateDirLight(lights[i]);
 		}
 		else if (lights[i].isEnabled && lights[i].isPoint){
 			//fColor += CalculatePointLight(lights[i]);
@@ -384,6 +384,6 @@ void main()
 	}
 	
 	// test for 2d array tex
-	fColor += texture(texArr01, vec3(uv.x, 1.0 - uv.y, 4));
+	//fColor += texture(texArr01, vec3(uv.x, 1.0 - uv.y, 4));
 	//fColor += texture(tex3d01, vec3(uv.x, uv.y, 4));
 }

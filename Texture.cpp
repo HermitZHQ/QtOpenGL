@@ -69,13 +69,38 @@ void Texture::LoadTexture(QString path)
 	// Assign texture to ID
 	glBindTexture(GL_TEXTURE_2D, m_texId);
 	ChkGLErr;
-// 	glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
+
+    // test with unpack flag
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    ChkGLErr;
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 512);
+    ChkGLErr;
+    // skip pixels可以搭配row length使用
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 256);
+    ChkGLErr;
+    //glPixelStorei(GL_UNPACK_SKIP_ROWS, 10);
+    ChkGLErr;
+
+ 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
+ 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
 	ChkGLErrMsg(path);
+
+    // restore test unpack params
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    ChkGLErr;
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    ChkGLErr;
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    ChkGLErr;
+    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+    ChkGLErr;
+
+    // 自动生成mipmap，没有这句的话，默认只有lv0的原图
 	glGenerateMipmap(GL_TEXTURE_2D);
 	ChkGLErr;
 
 	// Parameters
+    // GL_CLAMP, GL_REPEAT
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	ChkGLErr;
@@ -178,7 +203,7 @@ void Texture::Load2DArrTextures(const QVector<QString>& pathList)
 	// 开辟存储空间
 	// 需要手动mipmap的话，我们应该有对应的图片，而不是一直使用同样的totalBits数据，这是有问题的
 	// 我在上面已经加了处理生成缩小图片的函数了，texture3d那边还没加，应该是一样的
-	unsigned int lvls = 5;
+	unsigned int lvls = 3;
 	// 下面的intelnalFormat必须严格写对，不然就无法正常显示，不能写成GL_RGBA
 	// 这块的说明官方文档倒是对的，不过下面还是有2个天坑
 	// 这里属于是开辟空间大小和指定格式，并不需要有具体的像素数据，但是下面调用SubImage3D的时候就必须要有数据了，不能为空
@@ -324,6 +349,7 @@ void Texture::Load3DTexture(const QVector<QString>& pathList)
     }
 
     // GL_LINEAR_MIPMAP_LINEAR我测试过了，使用了也不会变黑，是正常的
+    // 但是，如果用了mipmap的linear，如何生成的mipmap有问题，那么混合的结果就是错误的了
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);

@@ -223,7 +223,8 @@ void OpenWidget::initializeGL()
 // 		pMod->EnableProjTex();
 		QMatrix4x4 mat;
 // 		mat.translate(0, 30, 0);
-// 		mat.rotate(90, QVector3D(0, 0, 1));
+        mat.rotate(180, QVector3D(0, 1, 0));
+        //mat.rotate(180, QVector3D(1, 0, 0));
 		mat.scale(40, 40, 40);
 		pMod->SetWroldMat(mat);
 		pMod->SetNormalMapTextureByMeshName("./models/brickwall_normal.jpg", "Plane001");
