@@ -64,6 +64,20 @@ void Texture::LoadTexture(QString path)
 	h = image.height();
 	//auto f = image.format();
 
+    // create 6000 per row test data
+    // height:512(same as brickwall), RGBA
+    static unsigned int unpack_size = 6000;
+    //unsigned char* testBuf = new unsigned char[h * unpack_size * 4];
+    //memset(testBuf, 0, h * unpack_size * 4);
+    //for (int i = 0; i < h; ++i) {
+    //    for (int j = 0; j < w * 4; j += 4) {
+    //        memset(testBuf + (i * unpack_size) + j, 0, 1);
+    //        memset(testBuf + (i * unpack_size) + j + 1, 0, 1);
+    //        memset(testBuf + (i * unpack_size) + j + 2, 255, 1);
+    //        memset(testBuf + (i * unpack_size) + j + 3, 255, 1);
+    //	}
+    //}
+
 	glGenTextures(1, &m_texId);
 	ChkGLErr;
 	// Assign texture to ID
@@ -73,10 +87,11 @@ void Texture::LoadTexture(QString path)
     // test with unpack flag
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     ChkGLErr;
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 512);
+    //glPixelStorei(GL_UNPACK_ROW_LENGTH, 6000);
     ChkGLErr;
     // skip pixels可以搭配row length使用
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 256);
+    // 不搭配也能用，就是指定从开始的像素跳过多少个像素开始拷贝而已
+    //glPixelStorei(GL_UNPACK_SKIP_PIXELS, 5488);
     ChkGLErr;
     //glPixelStorei(GL_UNPACK_SKIP_ROWS, 10);
     ChkGLErr;
@@ -95,14 +110,16 @@ void Texture::LoadTexture(QString path)
     glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
     ChkGLErr;
 
+    //delete[] testBuf;
+
     // 自动生成mipmap，没有这句的话，默认只有lv0的原图
 	glGenerateMipmap(GL_TEXTURE_2D);
 	ChkGLErr;
 
 	// Parameters
     // GL_CLAMP, GL_REPEAT
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	ChkGLErr;
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

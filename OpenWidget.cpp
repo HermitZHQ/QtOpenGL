@@ -73,6 +73,22 @@ void OpenWidget::TestGeometryPoints()
 	glBindVertexArray(0);
 }
 
+
+void MessageCallback(GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam)
+{
+    //fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+    //    (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+    //    type, severity, message);
+
+    AddTipInfo(QString("GL CALLBACK: %1 type = %2, severity = %3, message = %4").arg((type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "")).arg(type).arg(severity).arg(message));
+}
+
 GLuint vao_quad = 0;
 GLuint texId = 0;
 void OpenWidget::initializeGL()
@@ -139,6 +155,11 @@ void OpenWidget::initializeGL()
 // 	glEnable(GL_CULL_FACE);
 // 	glCullFace(GL_BACK);
 // 	glFrontFace(GL_CW);
+
+// During init, enable debug output
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback, 0);
+
 
 	glEnable(GL_DEPTH_TEST);
 	ChkGLErr;

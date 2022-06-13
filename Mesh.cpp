@@ -172,6 +172,14 @@ void Mesh::BindBuffer()
 
 void Mesh::BindVertexRelevantBuffer()
 {
+	// just for crash test
+	//{
+	//	// reduce the indices vector to half
+	//	auto size = m_indices.size();
+	//	for (int i = 0; i < size / 2; ++i) {
+	//		m_indices.pop_back();
+	//	}
+	//}
 	const GLuint *vertex_indices = GetIndices();
 
 	const GLfloat *vertex_positions = GetVertices();
@@ -575,11 +583,34 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	m_shader.SetTime(GetTickCount());
 	ChkGLErr;
 
+    // test glInvalidateFramebuffer
+    // 下面的测试会造成花屏，和之前遇到的一个bst里的bug一样，应该是对函数的错误调用
+    //GLenum arr[1] = { GL_COLOR_ATTACHMENT0 };
+    //glInvalidateFramebuffer(GL_FRAMEBUFFER, 1, arr);
+
 	// Draw element(with indices)
 	if (Triangle == m_drawType) {
-		glVertexArrayElementBuffer(GetVao(), m_vaeo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vaeo);// 方法1，单独绑定elements
+		//glVertexArrayElementBuffer(GetVao(), m_vaeo);// 方法2，连同vao一起绑定，但其实不需要，函数第一行我们就绑定了vao了
 		ChkGLErr;
-		glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, 0);
+		// test crash with indices ptr
+		const char* strTest = "34324344";// this can cause crash, if we set it to the 4th param of glDrawElements
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        GLint iTmp = 0;
+        //glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &iTmp);
+        glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &iTmp);
+        //void *pAddr1 = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
+        //void *pAddr2 = glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, 1, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
+        //auto err111 = glGetError();
+
+        unsigned int test[] = { 0, 1, 2, 2, 3, 4 };
+        // this will cause crash, must set valid vao, before wo draw??
+        //glBindVertexArray(0);
+        glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, (const void*)0);
+        // this code can cause the 4101 error.....
+        //auto ptr = m_indices.data();
+        //glDrawElements(GL_TRIANGLES, GetIndicesNum(), GL_UNSIGNED_INT, m_indices.data());
 		ChkGLErr;
 	}
 	else if (Point == m_drawType) {
