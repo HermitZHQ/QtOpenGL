@@ -56,6 +56,9 @@ protected:
 	void CreateSSAOFrameBufferTextures();
 	void CreateSSAOBlurFrameBufferTextures();
 
+    void CreateReadAndDrawBufferTextures();
+    void GetFboPixelSaveToBmp();
+
 	virtual void moveEvent(QMoveEvent *event) override;
 	virtual void keyPressEvent(QKeyEvent *event) override;
 	virtual void keyReleaseEvent(QKeyEvent *event) override;
@@ -109,5 +112,11 @@ private:
 
 	GLuint						m_ssaoBlurFbo;
 	GLuint						m_ssaoBlurTex;
+
+    // 测试read和draw分离的fbo的一些相关特性
+    GLuint                      m_readFbo = 0;
+    GLuint                      m_drawFbo = 0;
+    GLuint                      m_readTexId = 0;
+    GLuint                      m_drawTexId = 0;
 };
 

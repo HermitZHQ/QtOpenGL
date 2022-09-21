@@ -1,6 +1,44 @@
 #include "TextureMgr.h"
 #include "Texture.h"
 
+
+int generateBmp(unsigned char* pData, unsigned char pixelWidth, int width, int height, const char* filename)
+{
+    int size = width * height * pixelWidth;
+    BITMAPFILEHEADER bfh;
+    bfh.bfType = 0X4d42;
+    bfh.bfSize = size + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    bfh.bfReserved1 = 0;// reserved  
+    bfh.bfReserved2 = 0;// reserved  
+    bfh.bfOffBits = bfh.bfSize - size;
+
+    // 位图第二部分，数据信息  
+    BITMAPINFOHEADER bih;
+    bih.biSize = sizeof(BITMAPINFOHEADER);
+    bih.biWidth = width;
+    bih.biHeight = height;
+    bih.biPlanes = 1;
+    bih.biBitCount = pixelWidth * 8;
+    bih.biCompression = 0;
+    bih.biSizeImage = size;
+    bih.biXPelsPerMeter = 0;
+    bih.biYPelsPerMeter = 0;
+    bih.biClrUsed = 0;
+    bih.biClrImportant = 0;
+    FILE* fp = fopen(filename, "wb");
+    if (!fp)
+    {
+        return S_FALSE;
+    }
+
+    size_t s = fwrite(&bfh, 1, sizeof(BITMAPFILEHEADER), fp);
+    s = fwrite(&bih, 1, sizeof(BITMAPINFOHEADER), fp);
+    s = fwrite(pData, 1, size, fp);
+    fclose(fp);
+
+    return S_OK;
+}
+
 TextureMgr::TextureMgr()
 {
 	Init();

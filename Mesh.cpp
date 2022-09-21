@@ -559,7 +559,48 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 
 	if (0 != m_diffuseTex1ID) {
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_diffuseTex1ID);
+        glBindTexture(GL_TEXTURE_2D, m_diffuseTex1ID);
+
+        GLint ver = 0, ver2 = 0;
+        glGetIntegerv(GL_MINOR_VERSION, &ver);
+        glGetIntegerv(GL_MAJOR_VERSION, &ver2);
+
+        // 下面的测试代码，是用来验证当时bs5中的diablo freeze的问题，GL_COMPARE_REF_TO_TEXTURE对应的texture如果不是depth的话，则会有报错输出，且在Intel上会freeze（可能是某些复合情况导致的）
+        if (0)
+        {
+            static GLuint samp = 0;
+            static GLuint texArrId = 0;
+            if (0 == samp) {
+                glGenSamplers(1, &samp);
+                glSamplerParameteri(samp, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glSamplerParameteri(samp, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                glSamplerParameteri(samp, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glSamplerParameteri(samp, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glSamplerParameteri(samp, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+                glSamplerParameteri(samp, GL_TEXTURE_COMPARE_FUNC, GL_GREATER);
+
+                QVector<QString> pathVec = {
+                    "",
+                    ""
+                };
+                texArrId = TextureMgr::Instance().Load2DArrTextures(pathVec);
+            }
+            glBindTexture(GL_TEXTURE_2D_ARRAY, texArrId);
+
+            glBindSampler(0, samp);
+
+            GLint sampler = 0;
+            glGetIntegerv(GL_SAMPLER_BINDING, &sampler);
+            GLint cmp_mode = 0;
+            glGetSamplerParameteriv(sampler, GL_TEXTURE_COMPARE_MODE, &cmp_mode);
+
+            GLint fmt = 0;
+            glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_INTERNAL_FORMAT, &fmt);
+            if (0 != fmt) {
+                int i = 0;
+                ++i;
+            }
+        }
 	}
 	ChkGLErr;
 
@@ -636,5 +677,8 @@ void Mesh::Draw(QMatrix4x4 matVP, QMatrix4x4 matModel, QVector3D camPos, QMatrix
 	}
 	ChkGLErr;
 
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    //glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    glBindSampler(0, 0);
 	glBindVertexArray(0);
 }

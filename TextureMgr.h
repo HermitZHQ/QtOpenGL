@@ -3,6 +3,8 @@
 #include "QMap"
 #include "QString"
 
+int generateBmp(unsigned char* pData, unsigned char pixelWidth, int width, int height, const char* filename);
+
 class Texture;
 class TextureMgr
 {

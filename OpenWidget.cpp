@@ -12,7 +12,6 @@
 #include "LightMgr.h"
 #include "Cube.h"
 
-
 OpenWidget::OpenWidget()
 	:m_mainObj(Q_NULLPTR), m_cam(Q_NULLPTR)
 	, m_matWorldLoc(0), m_worldCamPosLoc(0), m_query(0), m_sampleNum(0)
@@ -74,7 +73,7 @@ void OpenWidget::TestGeometryPoints()
 }
 
 
-void MessageCallback(GLenum source,
+void GLErrorMessageCallback(GLenum source,
     GLenum type,
     GLuint id,
     GLenum severity,
@@ -101,14 +100,14 @@ void OpenWidget::initializeGL()
 	// test for a quad
 	{
         // 这里使用的quad就是延迟渲染使用的两个三角面片，第一个中间有条裂纹，第二个是完全拼接的
-		//const GLfloat g_vertices[6][2] = {
-		//	{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
-		//	{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
-		//};
- 		const GLfloat g_vertices[6][2] = {
- 			{-1, -1}, {1, -1}, {-1, 1}, // first triangle
- 			{1, -1}, {1, 1}, {-1, 1}, // second triangle
- 		};
+		const GLfloat g_vertices[6][2] = {
+			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
+			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
+		};
+ 		//const GLfloat g_vertices[6][2] = {
+ 		//	{-1, -1}, {1, -1}, {-1, 1}, // first triangle
+ 		//	{1, -1}, {1, 1}, {-1, 1}, // second triangle
+ 		//};
 
 		const GLfloat g_uvs[6][2] = {
 			{0, 1}, {1, 1}, {0, 0}, //
@@ -158,7 +157,7 @@ void OpenWidget::initializeGL()
 
 // During init, enable debug output
     glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
+    glDebugMessageCallback(GLErrorMessageCallback, 0);
 
 
 	glEnable(GL_DEPTH_TEST);
@@ -503,7 +502,7 @@ void OpenWidget::paintGL()
  		mod->SetShaderType(ShaderHelper::GBufferGeometry);
 		QMatrix4x4 matModel = mod->GetWorldMat();
 		mod->Draw(matVP, matModel, camPos, matProj, matView, matOrtho);
-	}
+    }
 
 // 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 // 	SwitchShader(ShaderHelper::FrameBuffer1);
@@ -927,7 +926,7 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 
 void OpenWidget::DrawDeferredShading()
 {
-// 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+    // 	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
 
 	// check if we are good to go
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -994,7 +993,28 @@ void OpenWidget::DrawDeferredShading()
 	glActiveTexture(GL_TEXTURE30);
 	glBindTexture(GL_TEXTURE_3D, m_tex3d01Id);
 
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    // ----测试read和draw的fbo的分离使用细节
+    // 之前没有这么用过，因为bs5模拟器所以详细测试了下，这里简单记录下要点：
+    // 1：如果设置的是GL_FRAMEBUFFER，那就相当于同时把read和draw都设置到了一个fbo上（read和draw分别同时只能存在一个）
+    // 2：开始因为没用过这种分离式的fb，所以有点懵，理解以后其实很简单，就是设置一个read（src）和一个draw（dest）后，我们就可以使用glBlitFramebuffer快速的把内容拷贝到另外一个fbo中了
+    // 3：所以说CreateReadAndDrawBufferTextures中是不需要创建一个新的read fbo的，因为没理解我才创建了一个
+    if (0) {
+	    CreateReadAndDrawBufferTextures();
+	    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_drawFbo);
+	    GLenum arr[] = { GL_COLOR_ATTACHMENT0 };
+	    //glDrawBuffers(1, arr);
+	
+	    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_originalFbo);
+	    glReadBuffer(GL_COLOR_ATTACHMENT0);
+	
+	    int w = size().width(), h = size().height();
+	    glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	    GetFboPixelSaveToBmp();
+	
+	    glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+    }
 
 	//----Test draw water wave effect after deferred rendering
 // 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_gBufferFbo);
@@ -1083,6 +1103,99 @@ void OpenWidget::CreateSSAOBlurFrameBufferTextures()
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoBlurFbo);
+}
+
+void OpenWidget::CreateReadAndDrawBufferTextures()
+{
+    if (0 == m_readFbo) {
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
+        if (m_originalFbo != 1) {
+            AddTipInfo(Q8("Read帧缓存创建错误，应该在主窗口创建之后再创建"));
+        }
+
+        auto s = size();
+        GLuint w = s.width(), h = s.height();
+        glCreateFramebuffers(1, &m_readFbo);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_readFbo);
+
+        glGenTextures(1, &m_readTexId);
+        glBindTexture(GL_TEXTURE_2D, m_readTexId);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_readTexId, 0);
+
+        if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            AddTipInfo(Q8("Read帧缓存创建错误，应该在主窗口创建之后再创建"));
+            return;
+        }
+    }
+
+    if (0 == m_drawFbo) {
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
+        if (m_originalFbo != 1) {
+            AddTipInfo(Q8("Draw帧缓存创建错误，应该在主窗口创建之后再创建"));
+        }
+
+        auto s = size();
+        GLuint w = s.width(), h = s.height();
+        glCreateFramebuffers(1, &m_drawFbo);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_drawFbo);
+
+        glGenTextures(1, &m_drawTexId);
+        glBindTexture(GL_TEXTURE_2D, m_drawTexId);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_drawTexId, 0);
+
+        if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            AddTipInfo(Q8("Draw帧缓存创建错误，应该在主窗口创建之后再创建"));
+            return;
+        }
+    }
+}
+
+void OpenWidget::GetFboPixelSaveToBmp()
+{
+    unsigned int w = size().width(), h = size().height();
+    GLint picSize = w * h * 4;
+    unsigned char* tmpBuf = new unsigned char[picSize];
+    // test get tex data out
+    //#define GL_BGRA 0x80E1
+    glReadPixels(0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, tmpBuf);
+
+
+    if (0 != w && 0 != h) {
+
+        bool allBlackFlag = true;
+        for (int i = 0; i < picSize; i += 4) {
+            if (tmpBuf[i] != 0 || tmpBuf[i + 1] != 0 || tmpBuf[i + 2] != 0) {
+                allBlackFlag = false;
+                break;
+            }
+        }
+
+        if (!allBlackFlag) {
+            GLint param = 0;
+            static int iCount = 0;
+            //ctx->dispatcher().glGetIntegerv(GL_TEXTURE_BINDING_2D, &param);
+            std::string strTmp = "c:/users/administrator/desktop/tmpPic/qt_out_";
+            strTmp += std::to_string(param);
+            strTmp += "_";
+            strTmp += std::to_string(iCount);
+            strTmp += ".bmp";
+
+            generateBmp(tmpBuf, 4, w, h, strTmp.c_str());
+            ++iCount;
+        }
+
+        delete[] tmpBuf;
+    }
 }
 
 void OpenWidget::DrawShadowMapTexture_ForTest()
