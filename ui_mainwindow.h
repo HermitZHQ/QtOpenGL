@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created by: Qt User Interface Compiler version 5.12.3
+** Created by: Qt User Interface Compiler version 5.15.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -145,21 +145,21 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", nullptr));
-        btn_Specular->setText(QApplication::translate("MainWindow", "SetSpecular", nullptr));
-        btn_Ambient->setText(QApplication::translate("MainWindow", "SetAmbient", nullptr));
-        label->setText(QApplication::translate("MainWindow", "MouseSpeed", nullptr));
-        label_2->setText(QApplication::translate("MainWindow", "Color", nullptr));
-        label_3->setText(QApplication::translate("MainWindow", "DirLight Dir & Pos", nullptr));
-        edt_light_dir_x->setText(QApplication::translate("MainWindow", "1", nullptr));
-        edt_light_dir_y->setText(QApplication::translate("MainWindow", "1", nullptr));
-        edt_light_dir_z->setText(QApplication::translate("MainWindow", "0", nullptr));
-        label_4->setText(QApplication::translate("MainWindow", "X", nullptr));
-        label_5->setText(QApplication::translate("MainWindow", "Y", nullptr));
-        label_6->setText(QApplication::translate("MainWindow", "Z", nullptr));
-        edt_light_pos_x->setText(QApplication::translate("MainWindow", "0", nullptr));
-        edt_light_pos_z->setText(QApplication::translate("MainWindow", "0", nullptr));
-        edt_light_pos_y->setText(QApplication::translate("MainWindow", "50", nullptr));
+        MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
+        btn_Specular->setText(QCoreApplication::translate("MainWindow", "SetSpecular", nullptr));
+        btn_Ambient->setText(QCoreApplication::translate("MainWindow", "SetAmbient", nullptr));
+        label->setText(QCoreApplication::translate("MainWindow", "MouseSpeed", nullptr));
+        label_2->setText(QCoreApplication::translate("MainWindow", "Color", nullptr));
+        label_3->setText(QCoreApplication::translate("MainWindow", "DirLight Dir & Pos", nullptr));
+        edt_light_dir_x->setText(QCoreApplication::translate("MainWindow", "1", nullptr));
+        edt_light_dir_y->setText(QCoreApplication::translate("MainWindow", "1", nullptr));
+        edt_light_dir_z->setText(QCoreApplication::translate("MainWindow", "0", nullptr));
+        label_4->setText(QCoreApplication::translate("MainWindow", "X", nullptr));
+        label_5->setText(QCoreApplication::translate("MainWindow", "Y", nullptr));
+        label_6->setText(QCoreApplication::translate("MainWindow", "Z", nullptr));
+        edt_light_pos_x->setText(QCoreApplication::translate("MainWindow", "0", nullptr));
+        edt_light_pos_z->setText(QCoreApplication::translate("MainWindow", "0", nullptr));
+        edt_light_pos_y->setText(QCoreApplication::translate("MainWindow", "50", nullptr));
     } // retranslateUi
 
 };

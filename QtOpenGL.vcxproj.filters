@@ -35,30 +35,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{0ff2b67b-7370-4ca6-98a0-7f8038f0c481}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Camera">
-      <UniqueIdentifier>{7c83c62a-2be2-430a-bf59-1fb6d9d7741c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="AssetImport">
-      <UniqueIdentifier>{1d54b3df-a9cc-42ba-bf15-ac5692dc0b12}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Light">
-      <UniqueIdentifier>{98be7122-0361-4fb1-a612-cbd7212f2b32}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Animation">
-      <UniqueIdentifier>{b9215516-827e-498e-9b61-a66ab54f5fb9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Common">
-      <UniqueIdentifier>{52e438ec-e863-4359-a1f5-e47ffc7541ea}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Model">
-      <UniqueIdentifier>{e334f862-960c-4272-b140-569c983376f1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="BaseShape">
-      <UniqueIdentifier>{69e96a96-d279-46b6-895f-104233352bb0}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -67,53 +43,53 @@
     <ClCompile Include="mainwindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ShaderHelper.cpp">
-      <Filter>Shaders</Filter>
-    </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Camera</Filter>
-    </ClCompile>
-    <ClCompile Include="AssetImport.cpp">
-      <Filter>AssetImport</Filter>
-    </ClCompile>
-    <ClCompile Include="LightMgr.cpp">
-      <Filter>Light</Filter>
+    <ClCompile Include="AABB.cpp">
+      <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="AnimationMgr.cpp">
-      <Filter>Animation</Filter>
+      <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>AssetImport</Filter>
+    <ClCompile Include="AssetImport.cpp">
+      <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="Object.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>Model</Filter>
-    </ClCompile>
-    <ClCompile Include="Model.cpp">
-      <Filter>Model</Filter>
-    </ClCompile>
-    <ClCompile Include="ModelMgr.cpp">
-      <Filter>Model</Filter>
-    </ClCompile>
-    <ClCompile Include="Texture.cpp">
-      <Filter>Model</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureMgr.cpp">
-      <Filter>Model</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PreDef.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AABB.cpp">
-      <Filter>Model</Filter>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="Cube.cpp">
-      <Filter>BaseShape</Filter>
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LightMgr.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelMgr.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenWidget.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PreDef.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderHelper.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureMgr.cpp">
+      <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -135,67 +111,59 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="OpenWidget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderHelper.h">
-      <Filter>Shaders</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="AssetImport.h">
-      <Filter>AssetImport</Filter>
-    </ClInclude>
-    <ClInclude Include="PreDef.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LightMgr.h">
-      <Filter>Light</Filter>
+    <ClInclude Include="AABB.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="AnimationMgr.h">
-      <Filter>Animation</Filter>
+      <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>AssetImport</Filter>
+    <ClInclude Include="AssetImport.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="Object.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>Model</Filter>
-    </ClInclude>
-    <ClInclude Include="Model.h">
-      <Filter>Model</Filter>
-    </ClInclude>
-    <ClInclude Include="ModelMgr.h">
-      <Filter>Model</Filter>
-    </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>Model</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureMgr.h">
-      <Filter>Model</Filter>
-    </ClInclude>
-    <ClInclude Include="AABB.h">
-      <Filter>Model</Filter>
+    <ClInclude Include="Camera.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="Cube.h">
-      <Filter>BaseShape</Filter>
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LightMgr.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelMgr.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenWidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PreDef.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderHelper.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureMgr.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\triangle.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaders\triangle.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaders\program1.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaders\program1.vert">
-      <Filter>Shaders</Filter>
-    </None>
+    <None Include="shaders\program1.frag" />
+    <None Include="shaders\program1.vert" />
+    <None Include="shaders\triangle.frag" />
+    <None Include="shaders\triangle.vert" />
   </ItemGroup>
 </Project>

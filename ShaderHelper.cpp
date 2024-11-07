@@ -55,6 +55,28 @@ GLuint ShaderHelper::LoadShaders(ShaderInfo *info, GLuint size)
 	}
 
 	glLinkProgram(program);
+
+    // test code to get the shader source back from program id
+    {
+        // test get shader source back from program.
+        GLint shaderSize = 2;
+        GLuint shaderArr[2] = { 0 };
+        GLint shaderTypeArr[2] = { 0 };
+        GLint shaderLenArr[2] = { 0 };
+        glGetAttachedShaders(program, 2, &shaderSize, shaderArr);
+
+        glGetShaderiv(shaderArr[0], GL_SHADER_TYPE, &shaderTypeArr[0]);
+        glGetShaderiv(shaderArr[1], GL_SHADER_TYPE, &shaderTypeArr[1]);
+
+        glGetShaderiv(shaderArr[0], GL_SHADER_SOURCE_LENGTH, &shaderLenArr[0]);
+        glGetShaderiv(shaderArr[1], GL_SHADER_SOURCE_LENGTH, &shaderLenArr[1]);
+
+        char *cTmp = new char[shaderLenArr[0]];
+        glGetShaderSource(shaderArr[0], shaderLenArr[0], nullptr, cTmp);
+        delete[]cTmp;
+        ChkGLErr;
+    }
+
 	ChkGLErr;
 	glGetProgramiv(program, GL_LINK_STATUS, &res);
 	if (!res) {
@@ -245,6 +267,12 @@ void ShaderHelper::GetCommonUniformLocation()
 	Unuse();
 }
 
+GLint UBOSize;
+enum {
+    enum_test1 = 0,
+    enum_test2,
+    NumberOfUniform,
+};
 void ShaderHelper::InitDefaultShader()
 {
 	m_shaderType = Default;
@@ -254,6 +282,133 @@ void ShaderHelper::InitDefaultShader()
 		{GL_FRAGMENT_SHADER, "./shaders/triangle.frag"}
 	};
 	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	if (0)
+	{
+		// test laod program binary
+		// when you try to test load PB, you should comment the above LoadShaders!!!
+		char filename[] = "./cache/default.data";
+		FILE* fp = fopen(filename, "rb");
+		if (fp != nullptr) {
+			fseek(fp, 0, SEEK_END);
+			auto size = ftell(fp);
+			rewind(fp);
+			unsigned char* program_binary = new unsigned char[size];
+			fread(program_binary, 1, size, fp);
+			m_programs[m_shaderType] = glCreateProgram();
+			glProgramBinary(m_programs[m_shaderType], 36385, program_binary, size);
+
+			// Check for success/failure
+			GLint status;
+			glGetProgramiv(m_programs[m_shaderType], GL_LINK_STATUS, &status);
+			if (GL_FALSE == status) {
+				// this should not happen...
+				return;
+			}
+			else {
+				// test generated program binary info
+				GLint shaderSize = 2;
+				GLuint shaderArr[2] = { 1234567, 1234567 };
+				GLint shaderTypeArr[2] = { 0 };
+				GLint shaderLenArr[2] = { 0 };
+				// 经过测试得出结论：使用PB load进来的program，无法再次获取到shader size和有效的shader内容，shader size为0是正常的
+				glGetAttachedShaders(m_programs[m_shaderType], 2, &shaderSize, shaderArr);
+
+				int i = 0;
+				i += 2;
+			}
+
+			fclose(fp);
+		}
+	}
+
+	if (0)
+	{
+		// test generate program binary
+		GLint shaderSize = 2;
+		GLuint shaderArr[2] = { 1234567, 1234567 };
+		GLint shaderTypeArr[2] = { 0 };
+		GLint shaderLenArr[2] = { 0 };
+		glGetAttachedShaders(m_programs[m_shaderType], 2, &shaderSize, shaderArr);
+
+		// Get the expected size of the program binary
+		GLint binary_size = 0;
+		glGetProgramiv(m_programs[m_shaderType], GL_PROGRAM_BINARY_LENGTH, &binary_size);
+		// Allocate some memory to store the program binary
+		unsigned char* program_binary = new unsigned char[binary_size];// Now retrieve the binary from the program object
+		GLenum binary_format = GL_NONE; // 36385
+		glGetProgramBinary(m_programs[m_shaderType], binary_size, NULL, &binary_format, program_binary);
+		// ------拿到program_binary的内容后，我们就可以把它保存到文件中了，这样下次我们就可以直接使用，而省去了大段的读取文件，以及编译的时间了
+		char filename[] = "./cache/default.data";
+		FILE* fp = fopen(filename, "wb");
+		if (fp != nullptr) {
+			fwrite(program_binary, 1, binary_size, fp);
+			fclose(fp);
+		}
+
+		delete[] program_binary;
+	}
+
+    // test the uniform block here(need relevant shader code, it's in the vertex shader with triangle.vert file)
+    if (0)
+    {
+        auto matblockPos1 = glGetUniformBlockIndex(m_programs[m_shaderType], "testBlock1");
+        //auto matblockPos2 = glGetUniformBlockIndex(m_programs[m_shaderType], "testBlock2");
+        auto err = glGetError();
+
+        GLint buf = -1;
+        //glGetActiveUniformBlockiv(m_programs[m_shaderType], matblockPos1, GL_UNIFORM_BLOCK_BINDING, &buf);
+        err = glGetError();
+
+        //创建uniform块大小的buffer空间
+        glGetActiveUniformBlockiv(m_programs[m_shaderType], matblockPos1, GL_UNIFORM_BLOCK_DATA_SIZE, &UBOSize);
+        GLvoid * buffer = malloc(UBOSize);
+        err = glGetError();
+
+        //建立变量名称数组
+        const char * names[NumberOfUniform] =
+        {
+            "test11",
+            "test12",
+        };
+
+        //查询每个uniform成员对应的属性
+
+        GLuint indices[NumberOfUniform];
+        GLint size[NumberOfUniform];
+        GLint offset[NumberOfUniform];
+        GLint type[NumberOfUniform];
+
+        glGetUniformIndices(m_programs[m_shaderType], NumberOfUniform, names, indices);
+        glGetActiveUniformsiv(m_programs[m_shaderType], NumberOfUniform, indices, GL_UNIFORM_OFFSET, offset);
+        glGetActiveUniformsiv(m_programs[m_shaderType], NumberOfUniform, indices, GL_UNIFORM_SIZE, size);
+        glGetActiveUniformsiv(m_programs[m_shaderType], NumberOfUniform, indices, GL_UNIFORM_TYPE, type);
+
+        for (GLuint i = 0; i < NumberOfUniform; i++) {
+            printf("\r\n-------------------------\r\n");
+            printf("uniform name  = %s \r\n", names[i]);
+            printf("uniform indices = %d \r\n", indices[i]);
+            printf("uniform offset = %d\r\n", offset[i]);
+            printf("uniform size = %d\r\n", size[i]);
+            printf("uniform type = 0x%x\r\n", type[i]);
+        }
+
+        GLuint ubo = -1;
+        glGenBuffers(1, &ubo);
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        //glBufferData(GL_UNIFORM_BUFFER, UBOSize, buffer, GL_STATIC_DRAW);
+
+        glBindBufferBase(GL_UNIFORM_BUFFER, matblockPos1, ubo);
+        err = glGetError();
+
+        // get binding info again
+        glGetActiveUniformBlockiv(m_programs[m_shaderType], matblockPos1, GL_UNIFORM_BLOCK_BINDING, &buf);
+        //glGetActiveUniformBlockiv(m_programs[m_shaderType], matblockPos2, GL_UNIFORM_BLOCK_BINDING, &buf);
+        err = glGetError();
+
+        int i = 0;
+        ++i;
+    }
 
 	GetCommonUniformLocation();
 }

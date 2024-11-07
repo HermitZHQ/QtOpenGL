@@ -45,6 +45,7 @@ protected:
 	void CreateOffScreenFrameBufferTexture();
 	void DrawOffScreenTexture();
 	void DrawWaterWaveWithOffScreenTexture();
+    void gles1();
 
 	void CreateShadowMapFrameBufferTexture();
 	void DrawShadowMapTexture_ForTest();

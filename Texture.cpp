@@ -88,28 +88,44 @@ void Texture::LoadTexture(QString path)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	ChkGLErr;
 
+    // 测试map到texture的内存内容
+    if (1)
+    {   
+        // 暂时没有找到有效的示例，后面有了再补充，现在取出来都是null，但是大体作用肯定是一样的，都是映射一段GPU的内存到本地
+        void *texAddr = glMapBufferRange(GL_TEXTURE_BUFFER, 0, 100, GL_MAP_WRITE_BIT);
+        auto err = glGetError();
+        if (0 != err) {
+        }
+        else {
+            char c = ((char*)texAddr)[0];
+        }
+    }
+
     // test get tex data out
     // 经过测试，这个lv的值如果是没有的，那么得到的width或者height是0，切会生成一个glErr
     // 一般来说通过width == 0就足够判断没有该层的mipmap了
-    //GLint texWidth = 0, texHeight = 0, texInternalFmt = 0;
-    //glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
-    //glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texHeight);
-    //glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &texInternalFmt);
-    //if (0 != texWidth && 0 != texHeight)
-    //{
-    //    uchar* tmpBuf = new uchar[texWidth * texHeight * 4];
-    //    glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmpBuf);
-
-    //    static int i = 0;
-    //    QString strTmp = "c:/users/zhq/desktop/qt_out_";
-    //    generateBmp(tmpBuf, 4, texWidth, texHeight, (QString("c:/users/zhq/desktop/qt_out_%1.bmp").arg(i)).toStdString().c_str());
-    //    ++i;
-
-    //    delete[] tmpBuf;
-    //}
-    //else {
-    //    AddTipInfo("导出纹理失败，尺寸为0");
-    //}
+    if (0) 
+    {
+	    GLint texWidth = 0, texHeight = 0, texInternalFmt = 0;
+	    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
+	    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texHeight);
+	    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &texInternalFmt);
+	    if (0 != texWidth && 0 != texHeight)
+	    {
+	        uchar* tmpBuf = new uchar[texWidth * texHeight * 4];
+	        glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmpBuf);
+	
+	        static int i = 0;
+	        QString strTmp = "c:/users/zhq/desktop/qt_out_";
+	        //generateBmp(tmpBuf, 4, texWidth, texHeight, (QString("c:/users/zhq/desktop/qt_out_%1.bmp").arg(i)).toStdString().c_str());
+	        ++i;
+	
+	        delete[] tmpBuf;
+	    }
+	    else {
+	        AddTipInfo("导出纹理失败，尺寸为0");
+	    }
+    }
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	ChkGLErr;

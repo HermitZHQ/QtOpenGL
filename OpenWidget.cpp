@@ -12,6 +12,51 @@
 #include "LightMgr.h"
 #include "Cube.h"
 
+
+#include <windows.h>
+#include <DbgHelp.h>
+#include <iostream>
+#include <string>
+#include <sstream>
+#pragma comment(lib, "Dbghelp.lib")
+
+std::string TraceStack()
+{
+    static const int MAX_STACK_FRAMES = 10;
+
+    void *pStack[MAX_STACK_FRAMES];
+
+    HANDLE process = GetCurrentProcess();
+    SymInitialize(process, NULL, TRUE);
+    WORD frames = CaptureStackBackTrace(0, MAX_STACK_FRAMES, pStack, NULL);
+
+    std::ostringstream oss;
+    oss << "stack traceback: " << std::endl;
+    for (WORD i = 0; i < frames; ++i) {
+        DWORD64 address = (DWORD64)(pStack[i]);
+
+        DWORD64 displacementSym = 0;
+        char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
+        PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
+        pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+        pSymbol->MaxNameLen = MAX_SYM_NAME;
+
+        DWORD displacementLine = 0;
+        IMAGEHLP_LINE64 line;
+        //SymSetOptions(SYMOPT_LOAD_LINES);
+        line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+
+        if (SymFromAddr(process, address, &displacementSym, pSymbol)
+            && SymGetLineFromAddr64(process, address, &displacementLine, &line)) {
+            oss << "\t" << pSymbol->Name << " at " << line.FileName << ":" << line.LineNumber << "(0x" << std::hex << pSymbol->Address << std::dec << ")" << std::endl;
+        }
+        else {
+            oss << "\terror: " << GetLastError() << std::endl;
+        }
+    }
+    return oss.str();
+}
+
 OpenWidget::OpenWidget()
 	:m_mainObj(Q_NULLPTR), m_cam(Q_NULLPTR)
 	, m_matWorldLoc(0), m_worldCamPosLoc(0), m_query(0), m_sampleNum(0)
@@ -85,17 +130,34 @@ void GLErrorMessageCallback(GLenum source,
     //    (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
     //    type, severity, message);
 
-    AddTipInfo(QString("GL CALLBACK: %1 type = %2, severity = %3, message = %4").arg((type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "")).arg(type).arg(severity).arg(message));
+    AddTipInfo(QString("GL CALLBACK: %1 type = %2, severity = %3, message = %4, source = %5, id = %6").arg((type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "Warning")).arg(type).arg(severity).arg(message).arg(source).arg(id));
 }
 
 GLuint vao_quad = 0;
+GLuint vbo_quad = 0;
 GLuint texId = 0;
 void OpenWidget::initializeGL()
 {
 	initializeOpenGLFunctions();
 
+    // return here to test gles1.1 apis with gles1 function
+    //return;
+
+    double i = 0;
+
+    double result = 0 / i;
+    auto r = isnan(result);
+
+    double i2 = 0;
+
+    double result2 = 1 / i2;
+    auto r2 = isnan(result2);
+
 	m_shaderHelperPtr = &ShaderHelper::Instance();
 	ChkGLErr;
+
+	auto exts = glGetString(GL_EXTENSIONS);
+
 // 	TestGeometryPoints();
 	// test for a quad
 	{
@@ -124,10 +186,9 @@ void OpenWidget::initializeGL()
 		glUniform1i(loc, 0);
 		ChkGLErr;
 
-		GLuint vbo = 0;
-		glGenBuffers(1, &vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 24, nullptr, GL_STATIC_DRAW);
+		glGenBuffers(1, &vbo_quad);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_quad);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 24, nullptr, GL_DYNAMIC_DRAW); // GL_STATIC_DRAW GL_DYNAMIC_DRAW，GL_STREAM_DRAW，这三个没太搞懂，好像设置哪个都不影响后面动态修改。。。。后面懂了再来加注释
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 12, g_vertices);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 12, sizeof(GLfloat) * 12, g_uvs);
 		ChkGLErr;
@@ -254,7 +315,7 @@ void OpenWidget::initializeGL()
     pMod = m_modelMgrPtr->FindModelByName("sponza_00");
     if (Q_NULLPTR != pMod) {
         QMatrix4x4 mat;
-        mat.scale(0.1, 0.1, 0.1);
+        mat.scale(0.1f, 0.1f, 0.1f);
         pMod->SetWroldMat(mat);
     }
 
@@ -351,6 +412,12 @@ void OpenWidget::ClearAndReset()
 	static GLuint fps = 0;
 	static GLuint time = GetTickCount();
 
+    // test gl scissor
+    {
+        //glEnable(GL_SCISSOR_TEST);
+        glScissor(0, 0, 300, 300);
+    }
+
 	// set the default value at the beginning, otherwise may cause the unexpected error
 	glColorMask(1, 1, 1, 1);
 	glStencilMask(0xff);
@@ -367,7 +434,10 @@ void OpenWidget::ClearAndReset()
 	glClearBufferfv(GL_COLOR, 3, black);
 	glClearBufferfv(GL_COLOR, 4, black);
 	glClearBufferfv(GL_COLOR, 5, black);
-	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glDisable(GL_SCISSOR_TEST);
+
+    //glOrtho(100, 100, 200, 200, -1, 1000);
 
 	++fps;
 	if (GetTickCount() - time >= 1000) {
@@ -417,8 +487,145 @@ void OpenWidget::UpdateAllLightsInfo()
 	}
 }
 
+void OpenWidget::gles1()
+{
+    // gles1中的最大区别就在于，是固定管线，不用shader，像mat的设置都是调用api完成的
+
+    const GLfloat g_vertices[12] = {
+        -0.95f, -0.95f, 0.92f, -0.95f, -0.95f, 0.92f, // first triangle
+        0.95f, -0.92f, 0.95f, 0.95f, -0.92f, 0.95f, // second triangle
+    };
+
+    const GLfloat g_uvs[12] = {
+        0, 1, 1, 1, 0, 0, //
+        1, 1, 1, 0, 0, 0
+    };
+
+    float triangleCoords[] = {
+        // X, Y, Z
+        -0.4f, -0.25f, 0,
+         0.5f, -0.25f, 0,
+         0.0f,  0.559016994f, 0
+    };
+
+
+    float ratio;
+    float zNear = -1.0f;
+    float zFar = 1000.0f;
+    float fieldOfView = 3.1415926f * (30.0f / 180.0f);
+    float size;
+
+    glEnable(GL_NORMALIZE);
+    ratio = (float)80 / (float)60;
+    glMatrixMode(GL_PROJECTION);
+    size = zNear * (float)(tan((double)(fieldOfView / 2.0f)));
+    //glFrustumf(-size, size, -size / ratio, size / ratio, zNear, zFar);
+    glFrustum(-size, size, -size / ratio, size / ratio, zNear, zFar);
+    // 设置某个type的矩阵之前，一般要loadIdentity，否则矩阵的数据会一直叠加，是不正确的
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0, 0, 0);
+
+    static const GLfloat black[] = { 1, 0, 0, 0.5 };
+    glClearBufferfv(GL_COLOR, 0, black);
+    glClearBufferfv(GL_COLOR, 1, black);
+    glClearBufferfv(GL_COLOR, 2, black);
+    glClearBufferfv(GL_COLOR, 3, black);
+    glClearBufferfv(GL_COLOR, 4, black);
+    glClearBufferfv(GL_COLOR, 5, black);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glEnable(GL_LIGHTING);// 开灯会导致设置的颜色无效，绘制出的物体是全黑的，灯光应该需要相应的设置
+    glEnable(GL_BLEND);
+    glDisable(GL_LIGHTING);
+
+    //glUseProgram(0);
+    //glMatrixMode(GL_MODELVIEW);
+    //glLoadIdentity();
+
+    //glTranslatef(start_x - width / 2, start_y + height / 2, 0.0);
+    //glTranslatef(width / 2, -height / 2, 0.0);
+    //glRotatef(0.0f, 0.0f, 0.0f, 1.0f);
+    //glTranslatef(-width / 2, height / 2, 0.0);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, g_vertices);
+    glColor4f(1, 1, 0, 1);
+    GLubyte idx[6] = { 0, 1, 2, 3, 4, 5 };
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, idx);
+    //glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    //glDisableClientState(GL_VERTEX_ARRAY);
+    //glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+}
+
 void OpenWidget::paintGL()
 {
+    //gles1();
+    //return; // return for gles1 test
+
+    // 测试map和unmap buffer的用法
+    if (GetAsyncKeyState(VK_RMENU))
+    {
+        // 注意这里是没有绑定buffer的，因为是接着外面绑定好的buffer，直接就进行修改
+        // 我会在其他位置（buffer已经变化后，再尝试修改内存值试试看什么情况）
+        // 这里就是其他的地方了，我会在绘制途中，按键，进行修改
+        // 经过我的测试，目前比较有意思的结论是，target是否是GL_ARRAY_BUFFER并不影响，也可以用GL_COPY_WRITE_BUFFER
+        // 而且，绑定的是vbo还是vao（当然是基于同一个vao下面的vbo），都可以拿回数据修改
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_quad);
+
+        // 基础的flag就是GL_MAP_READ_BIT和GL_MAP_WRITE_BIT，其中write的话，也是可以看到值的（不过为了防止误修改，一般read的时候还是只设置read）
+        // 关于GL_MAP_FLUSH_EXPLICIT_BIT这个flag，比较有意思，官方说的是如果指明了这个bit，就必须要明确的调用glFlushMappedBufferRange，但是我这里试了下，每调用，还是可以成功修改，range外的值，以后有发现再补充吧
+        void *dataPtr = glMapBufferRange(GL_ARRAY_BUFFER, 0, 48, GL_MAP_WRITE_BIT);
+        ChkGLErr;
+
+		float fArr[6][2] = { 0 };
+		memcpy_s(fArr, sizeof(GLfloat) * 12, dataPtr, sizeof(GLfloat) * 12);
+
+        float f1 = *(float*)dataPtr;
+        float f2 = *((float*)dataPtr + 1);
+        // 尝试不使用write bit来修改数据，测试结果是无效的
+        // 只有使用了GL_MAP_WRITE_BIT，才能让修改生效
+        //*((float*)dataPtr + 1) = -1;
+
+        float f3 = *((float*)dataPtr + 2);
+		// 尝试读取范围以外的数据，可以读取，但是可能有未知风险
+        float f13 = *((float*)dataPtr + 12);
+        float f14 = *((float*)dataPtr + 13);
+		// 尝试修改范围外的数据，可以修改，但是可能有未定义错误
+        //*((float*)dataPtr + 13) = 0;
+
+		// 没有指定GL_MAP_FLUSH_EXPLICIT_BIT的话，只不需要调用flush的
+        //glFlushMappedBufferRange(GL_ARRAY_BUFFER, 0, 48);
+
+        // 调用unmap的时候会自动flush整个mapbuffer
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+        ChkGLErr;
+
+		// --------------------------------测试sub data替代mapBufferRange的用法
+		
+		// 尝试用glBufferSubData替换unmap
+		// 这里并不需要原始数据，我们应该填入的数据，应该是之前map过来的指针
+        const GLfloat g_vertices[6][2] = {
+			{-0.95f, -0.55f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
+			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
+        };
+		// 使用sub data的时候，并不能和mapbuffer混用，我记错了bst那边的代码，那边在mapBufferRange的时候就没有调用mapBufferRange，而是直接返回的内存段指针
+		// 所以这里要使用sub data的时候，就直接使用subdata的函数进行修改既可，mapBufferRange以后，反而不能使用subdata修改，因为正在map中
+		//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 12, g_vertices);
+
+		// 即便要先取得之前的数据，我们也应该再unmap之后再使用
+		fArr[0][1] = -0.5;
+		((float*)dataPtr)[1] = -0.5;// 使用map出来的指针也可以，但是必须再Unmap之后！！！
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 12, dataPtr);
+
+        //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    //TraceStack();
+
 	//----test geometry shader
 // 	QMatrix4x4 matVP = m_cam->GetVPMatrix();
 // 	QMatrix4x4 matProj = m_cam->GetProjectionMatrix();
@@ -1000,20 +1207,88 @@ void OpenWidget::DrawDeferredShading()
     // 1：如果设置的是GL_FRAMEBUFFER，那就相当于同时把read和draw都设置到了一个fbo上（read和draw分别同时只能存在一个）
     // 2：开始因为没用过这种分离式的fb，所以有点懵，理解以后其实很简单，就是设置一个read（src）和一个draw（dest）后，我们就可以使用glBlitFramebuffer快速的把内容拷贝到另外一个fbo中了
     // 3：所以说CreateReadAndDrawBufferTextures中是不需要创建一个新的read fbo的，因为没理解我才创建了一个
+    // 4（补充）：第3点，本来说是没有问题的，确实是从read拷贝到draw，我们可以选择default fbo作为src来read，但是我当时是想了解新建的read如何运作，其最经典的处理就在于，绑定fbo的texture时，和其他fbo的使用的texture绑定在一起
+    // 这样的话，只要任何一方fbo进行了绘制，两个fbo就都有相同的像素了，这是我以前没有接触过的一种方式
     if (0) {
-	    CreateReadAndDrawBufferTextures();
-	    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_drawFbo);
-	    GLenum arr[] = { GL_COLOR_ATTACHMENT0 };
-	    //glDrawBuffers(1, arr);
-	
-	    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_originalFbo);
-	    glReadBuffer(GL_COLOR_ATTACHMENT0);
+        CreateReadAndDrawBufferTextures();
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_readFbo);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_drawFbo);
+        GLenum arr[] = { GL_COLOR_ATTACHMENT0 };
+        glDrawBuffers(1, arr);
 	
 	    int w = size().width(), h = size().height();
-	    glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-	    GetFboPixelSaveToBmp();
+        GLint err = 0;
+        GLuint newTexId = 0;
+        glGenTextures(1, &newTexId);
+        glBindTexture(GL_TEXTURE_2D, newTexId);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        // 都不需要绑定fb的tex2d居然也可以成功CopyTexSubImage2D.....
+        //glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, newTexId, 0);
+        err = glGetError();
+
+        err = glGetError();
+        glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, 800, 600);
+        err = glGetError();
+        // test get tex data out
+        GLint texWidth = 0, texHeight = 0, texDepth = 0, texInternalFmt = 0;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0,
+            GL_TEXTURE_WIDTH,
+            &texWidth);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0,
+            GL_TEXTURE_HEIGHT,
+            &texHeight);
+        glGetTexLevelParameteriv(
+            GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &texInternalFmt);
+        static int iCount = 0;
+
+#define GL_BGRA 0x80E1
+        if (0 != texWidth && 0 != texHeight) {
+            GLint picSize = texWidth * texHeight * 4;
+            unsigned char* tmpBuf = new unsigned char[picSize];
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE,
+                tmpBuf);
+
+            bool allBlackFlag = true;
+            for (int i = 0; i < picSize; i += 4) {
+                if (tmpBuf[i] != 0 || tmpBuf[i + 1] != 0 || tmpBuf[i + 2] != 0) {
+                    allBlackFlag = false;
+                    break;
+                }
+            }
+
+            if (!allBlackFlag) {
+                GLint param = 0;
+                
+                std::string strTmp = "c:/users/administrator/desktop/tmpPic/qt_out_";
+                strTmp += std::to_string(param);
+                strTmp += "_";
+                strTmp += std::to_string(iCount);
+                strTmp += ".bmp";
+
+                generateBmp(tmpBuf, 4, texWidth, texHeight, strTmp.c_str());
+                ++iCount;
+            }
+
+            delete[] tmpBuf;
+        }
+
+
+
+
+        glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        if (0)
+        GetFboPixelSaveToBmp();
 	
-	    glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);
+        //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, 1);
     }
 
 	//----Test draw water wave effect after deferred rendering
@@ -1125,7 +1400,7 @@ void OpenWidget::CreateReadAndDrawBufferTextures()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_readTexId, 0);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBufferAlbedoTex, 0);
 
         if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             AddTipInfo(Q8("Read帧缓存创建错误，应该在主窗口创建之后再创建"));
@@ -1153,7 +1428,8 @@ void OpenWidget::CreateReadAndDrawBufferTextures()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_drawTexId, 0);
 
-        if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        auto err = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+        if (err != GL_FRAMEBUFFER_COMPLETE) {
             AddTipInfo(Q8("Draw帧缓存创建错误，应该在主窗口创建之后再创建"));
             return;
         }
