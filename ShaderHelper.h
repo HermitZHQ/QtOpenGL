@@ -26,6 +26,7 @@ public:
 		SSAO,
 		SSAOBlur,
 		Geometry,
+		ComputeNormal1,
 	};
 
 	struct ShaderInfo 
@@ -103,6 +104,8 @@ protected:
 	void InitSSAOShader();
 	void InitSSAOBlurShader();
 	void InitGeometryShader();
+	// test compute shader------
+	void InitComputeShader();
 
 private:
 	ShaderHelper();

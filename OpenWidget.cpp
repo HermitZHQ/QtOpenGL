@@ -133,6 +133,75 @@ void GLErrorMessageCallback(GLenum source,
     AddTipInfo(QString("GL CALLBACK: %1 type = %2, severity = %3, message = %4, source = %5, id = %6").arg((type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "Warning")).arg(type).arg(severity).arg(message).arg(source).arg(id));
 }
 
+void OpenWidget::SimpleComputeShaderTest() {
+
+	if (1) {
+		// test compute data array, will send into compute shader later...
+		GLfloat data[10];
+		for (int i = 0; i < 10; ++i) {
+			data[i] = i;
+		}
+
+		// å…³é”®shaderå†…ç½®å˜é‡è®°å½•
+		// gl_WorkGroupSizeï¼Œè¿™ä¸ªå°±æ˜¯shaderé‡Œé¢å£°æ˜çš„local_size_x,y,zçš„å€¼
+		// gl_LocalInvocationIndexï¼Œè¿™ä¸ªæ˜¯å±€éƒ¨çš„ç´¢å¼•ï¼Œå°±æ˜¯shaderä¸­å£°æ˜çš„x,y,zï¼Œæ¯”å¦‚10ï¼Œ1ï¼Œ1ï¼Œé‚£ä¹ˆå®ƒçš„èŒƒå›´æ˜¯0-9
+		// gl_WorkGroupIDï¼Œå½“æ—¶å·¥ä½œçš„group IDï¼ˆdispatchè®¾ç½®çš„ï¼Œæ¯”å¦‚4ï¼Œ4ï¼Œ0ï¼‰ï¼Œé‚£ä¹ˆå®ƒçš„èŒƒå›´æ˜¯[0, vec3(4, 4, 0))ï¼Œä¹Ÿå°±æ˜¯3ï¼Œ3ï¼Œ0ï¼Œå› ä¸º4ä¸ªçš„è¯ï¼Œå’Œforä¸€æ ·ï¼ŒèŒƒå›´å°±æ˜¯0-3
+		// 
+		// gl_GlobalInvocationIDï¼Œå…¨å±€è°ƒç”¨IDï¼Œ
+		// This value uniquely identifies this particular invocation of the compute shader among all invocations of this compute dispatch call. It's a short-hand for the math computation:
+		// gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID;
+		// gl_GlobalInvocationIndex =
+		//	gl_GlobalInvocationID.z * gl_WorkGroupSize.x * gl_WorkGroupSize.y +
+		//	gl_GlobalInvocationID.y * gl_WorkGroupSize.x +
+		//	gl_GlobalInvocationID.x;
+		// 
+		// gl_LocalInvocationIDï¼Œæœ¬åœ°ï¼ˆshader sizeï¼‰è°ƒç”¨ID
+		// gl_LocalInvocationIndexï¼ŒThis is a 1D version of gl_LocalInvocationID
+		// gl_LocalInvocationIndex =
+		//	gl_LocalInvocationID.z * gl_WorkGroupSize.x * gl_WorkGroupSize.y +
+		//	gl_LocalInvocationID.y * gl_WorkGroupSize.x +
+		//	gl_LocalInvocationID.x;
+
+		// å…³è”shaderæ–‡ä»¶ï¼šcompute.cs
+		m_shaderHelperPtr->SetShaderType(ShaderHelper::eShaderType::ComputeNormal1);
+		GLuint ssob = 0;
+		glGenBuffers(1, &ssob);
+		auto err = glGetError();
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssob);
+		// è¿™é‡Œæ˜¯ç”Ÿæˆssboï¼Œå¹¶ä¸”ç»‘å®šæ•°æ®ï¼Œæ²¡æœ‰ä»€ä¹ˆå¥½è¯´çš„
+		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+		err = glGetError();
+
+		// å…³é”®æ˜¯è¿™é‡Œï¼ŒuseProgramåï¼Œæˆ‘ä»¬è¦ç»‘å®šåˆšåˆšçš„æ•°æ®åˆ°shaderçš„bufferä¸Šï¼Œindexå’Œshaderä¸­çš„å£°æ˜è¦å¯¹åº”èµ·æ¥ï¼Œæ˜¯å…³é”®ç‚¹
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssob);
+		err = glGetError();
+
+		// 20äº¿æ¬¡çš„è®¡ç®—ï¼Œç›®å‰ç»Ÿè®¡æ˜¯éœ€è¦900å¤šmsï¼Œä¸èƒ½è®¡ç®—200äº¿æ¬¡ï¼Œä¼šå¤±è´¥ï¼Œåº”è¯¥æ˜¯æœ‰å•æ¬¡æœ€å¤§è¿ç®—çš„é™åˆ¶
+		// Dispatchè¿™é‡Œå¹¶ä¸ä¼šæ¶ˆè€—GPUï¼Œè€Œæ˜¯è¦å–å›æ•°æ®çš„ç¬é—´æ‰ä¼šå¼€å§‹è¿›è¡Œè®¡ç®—ï¼Œæ¶ˆè€—GPU
+		glDispatchCompute(2000000000, 1, 1);
+		// GL_ALL_BARRIER_BIT
+		//glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+		GLfloat dataReadBack[10] = { 0 };
+		auto time = GetTickCount();
+		// åˆ«ä¹±å¡«å‚æ•°å•Šï¼Œä¹‹å‰å§ç¬¬ä¸€ä¸ªå¡«æˆssobäº†ï¼Œåº”è¯¥æ˜¯å¡«targetçš„ç±»å‹GL_SHADER_STORAGE_BUFFER
+		// æ ¹æ®æˆ‘çš„æµ‹è¯•ï¼ŒGetBufferSubDataçš„æ—¶å€™ï¼Œæ‰ä¼šçœŸæ­£çš„å¼€å§‹è®¡ç®—ï¼Œå¹¶æ¶ˆè€—GPUä½¿ç”¨ç‡ï¼Œä¹‹å‰çš„Dispatchåªæ˜¯è®¾ç½®äº†å‚æ•°ï¼Œå¹¶æ²¡æœ‰å¼€å§‹è¿ç®—ï¼Œåº”è¯¥æ˜¯è¿™æ ·çš„
+		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(data), dataReadBack);
+		time = GetTickCount() - time;
+		err = glGetError();
+
+		time = GetTickCount();
+		int num = 0;
+		for (int i = 0; i < 2000000000; ++i) {
+			num += i * i;
+		}
+		time = GetTickCount() - time;
+
+
+		m_shaderHelperPtr->Unuse();
+	}
+}
+
 GLuint vao_quad = 0;
 GLuint vbo_quad = 0;
 GLuint texId = 0;
@@ -161,7 +230,7 @@ void OpenWidget::initializeGL()
 // 	TestGeometryPoints();
 	// test for a quad
 	{
-        // ÕâÀïÊ¹ÓÃµÄquad¾ÍÊÇÑÓ³ÙäÖÈ¾Ê¹ÓÃµÄÁ½¸öÈı½ÇÃæÆ¬£¬µÚÒ»¸öÖĞ¼äÓĞÌõÁÑÎÆ£¬µÚ¶ş¸öÊÇÍêÈ«Æ´½ÓµÄ
+        // ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ãµï¿½quadï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½È¾Ê¹ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ğ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«Æ´ï¿½Óµï¿½
 		const GLfloat g_vertices[6][2] = {
 			{-0.95f, -0.95f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
 			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
@@ -188,7 +257,7 @@ void OpenWidget::initializeGL()
 
 		glGenBuffers(1, &vbo_quad);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_quad);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 24, nullptr, GL_DYNAMIC_DRAW); // GL_STATIC_DRAW GL_DYNAMIC_DRAW£¬GL_STREAM_DRAW£¬ÕâÈı¸öÃ»Ì«¸ã¶®£¬ºÃÏñÉèÖÃÄÄ¸ö¶¼²»Ó°ÏìºóÃæ¶¯Ì¬ĞŞ¸Ä¡£¡£¡£¡£ºóÃæ¶®ÁËÔÙÀ´¼Ó×¢ÊÍ
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 24, nullptr, GL_DYNAMIC_DRAW); // GL_STATIC_DRAW GL_DYNAMIC_DRAWï¿½ï¿½GL_STREAM_DRAWï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»Ì«ï¿½ã¶®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½æ¶¯Ì¬ï¿½Ş¸Ä¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¶®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 12, g_vertices);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 12, sizeof(GLfloat) * 12, g_uvs);
 		ChkGLErr;
@@ -203,6 +272,9 @@ void OpenWidget::initializeGL()
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
+
+	//------A simple test for compute shader
+	SimpleComputeShaderTest();
 
 	// a test for 2d array textures
 	QVector<QString> pathVec = {
@@ -489,7 +561,7 @@ void OpenWidget::UpdateAllLightsInfo()
 
 void OpenWidget::gles1()
 {
-    // gles1ÖĞµÄ×î´óÇø±ğ¾ÍÔÚÓÚ£¬ÊÇ¹Ì¶¨¹ÜÏß£¬²»ÓÃshader£¬ÏñmatµÄÉèÖÃ¶¼ÊÇµ÷ÓÃapiÍê³ÉµÄ
+    // gles1ï¿½Ğµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½Ç¹Ì¶ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ï¿½shaderï¿½ï¿½ï¿½ï¿½matï¿½ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½Çµï¿½ï¿½ï¿½apiï¿½ï¿½Éµï¿½
 
     const GLfloat g_vertices[12] = {
         -0.95f, -0.95f, 0.92f, -0.95f, -0.95f, 0.92f, // first triangle
@@ -521,7 +593,7 @@ void OpenWidget::gles1()
     size = zNear * (float)(tan((double)(fieldOfView / 2.0f)));
     //glFrustumf(-size, size, -size / ratio, size / ratio, zNear, zFar);
     glFrustum(-size, size, -size / ratio, size / ratio, zNear, zFar);
-    // ÉèÖÃÄ³¸ötypeµÄ¾ØÕóÖ®Ç°£¬Ò»°ãÒªloadIdentity£¬·ñÔò¾ØÕóµÄÊı¾İ»áÒ»Ö±µş¼Ó£¬ÊÇ²»ÕıÈ·µÄ
+    // ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½typeï¿½Ä¾ï¿½ï¿½ï¿½Ö®Ç°ï¿½ï¿½Ò»ï¿½ï¿½ÒªloadIdentityï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ»ï¿½Ò»Ö±ï¿½ï¿½ï¿½Ó£ï¿½ï¿½Ç²ï¿½ï¿½ï¿½È·ï¿½ï¿½
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0, 0, 0);
@@ -536,7 +608,7 @@ void OpenWidget::gles1()
     glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glEnable(GL_LIGHTING);// ¿ªµÆ»áµ¼ÖÂÉèÖÃµÄÑÕÉ«ÎŞĞ§£¬»æÖÆ³öµÄÎïÌåÊÇÈ«ºÚµÄ£¬µÆ¹âÓ¦¸ÃĞèÒªÏàÓ¦µÄÉèÖÃ
+    glEnable(GL_LIGHTING);// ï¿½ï¿½ï¿½Æ»áµ¼ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½É«ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ÚµÄ£ï¿½ï¿½Æ¹ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     glEnable(GL_BLEND);
     glDisable(GL_LIGHTING);
 
@@ -566,18 +638,18 @@ void OpenWidget::paintGL()
     //gles1();
     //return; // return for gles1 test
 
-    // ²âÊÔmapºÍunmap bufferµÄÓÃ·¨
+    // ï¿½ï¿½ï¿½ï¿½mapï¿½ï¿½unmap bufferï¿½ï¿½ï¿½Ã·ï¿½
     if (GetAsyncKeyState(VK_RMENU))
     {
-        // ×¢ÒâÕâÀïÊÇÃ»ÓĞ°ó¶¨bufferµÄ£¬ÒòÎªÊÇ½Ó×ÅÍâÃæ°ó¶¨ºÃµÄbuffer£¬Ö±½Ó¾Í½øĞĞĞŞ¸Ä
-        // ÎÒ»áÔÚÆäËûÎ»ÖÃ£¨bufferÒÑ¾­±ä»¯ºó£¬ÔÙ³¢ÊÔĞŞ¸ÄÄÚ´æÖµÊÔÊÔ¿´Ê²Ã´Çé¿ö£©
-        // ÕâÀï¾ÍÊÇÆäËûµÄµØ·½ÁË£¬ÎÒ»áÔÚ»æÖÆÍ¾ÖĞ£¬°´¼ü£¬½øĞĞĞŞ¸Ä
-        // ¾­¹ıÎÒµÄ²âÊÔ£¬Ä¿Ç°±È½ÏÓĞÒâË¼µÄ½áÂÛÊÇ£¬targetÊÇ·ñÊÇGL_ARRAY_BUFFER²¢²»Ó°Ïì£¬Ò²¿ÉÒÔÓÃGL_COPY_WRITE_BUFFER
-        // ¶øÇÒ£¬°ó¶¨µÄÊÇvbo»¹ÊÇvao£¨µ±È»ÊÇ»ùÓÚÍ¬Ò»¸övaoÏÂÃæµÄvbo£©£¬¶¼¿ÉÒÔÄÃ»ØÊı¾İĞŞ¸Ä
+        // ×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ğ°ï¿½bufferï¿½Ä£ï¿½ï¿½ï¿½Îªï¿½Ç½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó¶¨ºÃµï¿½bufferï¿½ï¿½Ö±ï¿½Ó¾Í½ï¿½ï¿½ï¿½ï¿½Ş¸ï¿½
+        // ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½bufferï¿½Ñ¾ï¿½ï¿½ä»¯ï¿½ï¿½ï¿½Ù³ï¿½ï¿½ï¿½ï¿½Ş¸ï¿½ï¿½Ú´ï¿½Öµï¿½ï¿½ï¿½Ô¿ï¿½Ê²Ã´ï¿½ï¿½ï¿½ï¿½ï¿½
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÄµØ·ï¿½ï¿½Ë£ï¿½ï¿½Ò»ï¿½ï¿½Ú»ï¿½ï¿½ï¿½Í¾ï¿½Ğ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ş¸ï¿½
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ÒµÄ²ï¿½ï¿½Ô£ï¿½Ä¿Ç°ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¼ï¿½Ä½ï¿½ï¿½ï¿½ï¿½Ç£ï¿½targetï¿½Ç·ï¿½ï¿½ï¿½GL_ARRAY_BUFFERï¿½ï¿½ï¿½ï¿½Ó°ï¿½ì£¬Ò²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GL_COPY_WRITE_BUFFER
+        // ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ó¶¨µï¿½ï¿½ï¿½vboï¿½ï¿½ï¿½ï¿½vaoï¿½ï¿½ï¿½ï¿½È»ï¿½Ç»ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½vaoï¿½ï¿½ï¿½ï¿½ï¿½vboï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ş¸ï¿½
         glBindBuffer(GL_ARRAY_BUFFER, vbo_quad);
 
-        // »ù´¡µÄflag¾ÍÊÇGL_MAP_READ_BITºÍGL_MAP_WRITE_BIT£¬ÆäÖĞwriteµÄ»°£¬Ò²ÊÇ¿ÉÒÔ¿´µ½ÖµµÄ£¨²»¹ıÎªÁË·ÀÖ¹ÎóĞŞ¸Ä£¬Ò»°ãreadµÄÊ±ºò»¹ÊÇÖ»ÉèÖÃread£©
-        // ¹ØÓÚGL_MAP_FLUSH_EXPLICIT_BITÕâ¸öflag£¬±È½ÏÓĞÒâË¼£¬¹Ù·½ËµµÄÊÇÈç¹ûÖ¸Ã÷ÁËÕâ¸öbit£¬¾Í±ØĞëÒªÃ÷È·µÄµ÷ÓÃglFlushMappedBufferRange£¬µ«ÊÇÎÒÕâÀïÊÔÁËÏÂ£¬Ã¿µ÷ÓÃ£¬»¹ÊÇ¿ÉÒÔ³É¹¦ĞŞ¸Ä£¬rangeÍâµÄÖµ£¬ÒÔºóÓĞ·¢ÏÖÔÙ²¹³ä°É
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½flagï¿½ï¿½ï¿½ï¿½GL_MAP_READ_BITï¿½ï¿½GL_MAP_WRITE_BITï¿½ï¿½ï¿½ï¿½ï¿½ï¿½writeï¿½Ä»ï¿½ï¿½ï¿½Ò²ï¿½Ç¿ï¿½ï¿½Ô¿ï¿½ï¿½ï¿½Öµï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Ë·ï¿½Ö¹ï¿½ï¿½ï¿½Ş¸Ä£ï¿½Ò»ï¿½ï¿½readï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½readï¿½ï¿½
+        // ï¿½ï¿½ï¿½ï¿½GL_MAP_FLUSH_EXPLICIT_BITï¿½ï¿½ï¿½flagï¿½ï¿½ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¼ï¿½ï¿½ï¿½Ù·ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½bitï¿½ï¿½ï¿½Í±ï¿½ï¿½ï¿½Òªï¿½ï¿½È·ï¿½Äµï¿½ï¿½ï¿½glFlushMappedBufferRangeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½Ã¿ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½Ô³É¹ï¿½ï¿½Ş¸Ä£ï¿½rangeï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½Ôºï¿½ï¿½Ğ·ï¿½ï¿½ï¿½ï¿½Ù²ï¿½ï¿½ï¿½ï¿½
         void *dataPtr = glMapBufferRange(GL_ARRAY_BUFFER, 0, 48, GL_MAP_WRITE_BIT);
         ChkGLErr;
 
@@ -586,39 +658,39 @@ void OpenWidget::paintGL()
 
         float f1 = *(float*)dataPtr;
         float f2 = *((float*)dataPtr + 1);
-        // ³¢ÊÔ²»Ê¹ÓÃwrite bitÀ´ĞŞ¸ÄÊı¾İ£¬²âÊÔ½á¹ûÊÇÎŞĞ§µÄ
-        // Ö»ÓĞÊ¹ÓÃÁËGL_MAP_WRITE_BIT£¬²ÅÄÜÈÃĞŞ¸ÄÉúĞ§
+        // ï¿½ï¿½ï¿½Ô²ï¿½Ê¹ï¿½ï¿½write bitï¿½ï¿½ï¿½Ş¸ï¿½ï¿½ï¿½ï¿½İ£ï¿½ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½
+        // Ö»ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½GL_MAP_WRITE_BITï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ş¸ï¿½ï¿½ï¿½Ğ§
         //*((float*)dataPtr + 1) = -1;
 
         float f3 = *((float*)dataPtr + 2);
-		// ³¢ÊÔ¶ÁÈ¡·¶Î§ÒÔÍâµÄÊı¾İ£¬¿ÉÒÔ¶ÁÈ¡£¬µ«ÊÇ¿ÉÄÜÓĞÎ´Öª·çÏÕ
+		// ï¿½ï¿½ï¿½Ô¶ï¿½È¡ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ£ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½Î´Öªï¿½ï¿½ï¿½ï¿½
         float f13 = *((float*)dataPtr + 12);
         float f14 = *((float*)dataPtr + 13);
-		// ³¢ÊÔĞŞ¸Ä·¶Î§ÍâµÄÊı¾İ£¬¿ÉÒÔĞŞ¸Ä£¬µ«ÊÇ¿ÉÄÜÓĞÎ´¶¨Òå´íÎó
+		// ï¿½ï¿½ï¿½ï¿½ï¿½Ş¸Ä·ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ş¸Ä£ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         //*((float*)dataPtr + 13) = 0;
 
-		// Ã»ÓĞÖ¸¶¨GL_MAP_FLUSH_EXPLICIT_BITµÄ»°£¬Ö»²»ĞèÒªµ÷ÓÃflushµÄ
+		// Ã»ï¿½ï¿½Ö¸ï¿½ï¿½GL_MAP_FLUSH_EXPLICIT_BITï¿½Ä»ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½flushï¿½ï¿½
         //glFlushMappedBufferRange(GL_ARRAY_BUFFER, 0, 48);
 
-        // µ÷ÓÃunmapµÄÊ±ºò»á×Ô¶¯flushÕû¸ömapbuffer
+        // ï¿½ï¿½ï¿½ï¿½unmapï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½flushï¿½ï¿½ï¿½ï¿½mapbuffer
         glUnmapBuffer(GL_ARRAY_BUFFER);
         ChkGLErr;
 
-		// --------------------------------²âÊÔsub dataÌæ´úmapBufferRangeµÄÓÃ·¨
+		// --------------------------------ï¿½ï¿½ï¿½ï¿½sub dataï¿½ï¿½ï¿½mapBufferRangeï¿½ï¿½ï¿½Ã·ï¿½
 		
-		// ³¢ÊÔÓÃglBufferSubDataÌæ»»unmap
-		// ÕâÀï²¢²»ĞèÒªÔ­Ê¼Êı¾İ£¬ÎÒÃÇÓ¦¸ÃÌîÈëµÄÊı¾İ£¬Ó¦¸ÃÊÇÖ®Ç°map¹ıÀ´µÄÖ¸Õë
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½glBufferSubDataï¿½æ»»unmap
+		// ï¿½ï¿½ï¿½ï²¢ï¿½ï¿½ï¿½ï¿½ÒªÔ­Ê¼ï¿½ï¿½ï¿½İ£ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ£ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Ö®Ç°mapï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
         const GLfloat g_vertices[6][2] = {
 			{-0.95f, -0.55f}, {0.92f, -0.95f}, {-0.95f, 0.92f}, // first triangle
 			{0.95f, -0.92f}, {0.95f, 0.95f}, {-0.92f, 0.95f}, // second triangle
         };
-		// Ê¹ÓÃsub dataµÄÊ±ºò£¬²¢²»ÄÜºÍmapbuffer»ìÓÃ£¬ÎÒ¼Ç´íÁËbstÄÇ±ßµÄ´úÂë£¬ÄÇ±ßÔÚmapBufferRangeµÄÊ±ºò¾ÍÃ»ÓĞµ÷ÓÃmapBufferRange£¬¶øÊÇÖ±½Ó·µ»ØµÄÄÚ´æ¶ÎÖ¸Õë
-		// ËùÒÔÕâÀïÒªÊ¹ÓÃsub dataµÄÊ±ºò£¬¾ÍÖ±½ÓÊ¹ÓÃsubdataµÄº¯Êı½øĞĞĞŞ¸Ä¼È¿É£¬mapBufferRangeÒÔºó£¬·´¶ø²»ÄÜÊ¹ÓÃsubdataĞŞ¸Ä£¬ÒòÎªÕıÔÚmapÖĞ
+		// Ê¹ï¿½ï¿½sub dataï¿½ï¿½Ê±ï¿½ò£¬²ï¿½ï¿½ï¿½ï¿½Üºï¿½mapbufferï¿½ï¿½ï¿½Ã£ï¿½ï¿½Ò¼Ç´ï¿½ï¿½ï¿½bstï¿½Ç±ßµÄ´ï¿½ï¿½ë£¬ï¿½Ç±ï¿½ï¿½ï¿½mapBufferRangeï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ã»ï¿½Ğµï¿½ï¿½ï¿½mapBufferRangeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó·ï¿½ï¿½Øµï¿½ï¿½Ú´ï¿½ï¿½Ö¸ï¿½ï¿½
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÊ¹ï¿½ï¿½sub dataï¿½ï¿½Ê±ï¿½ò£¬¾ï¿½Ö±ï¿½ï¿½Ê¹ï¿½ï¿½subdataï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ş¸Ä¼È¿É£ï¿½mapBufferRangeï¿½Ôºó£¬·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½subdataï¿½Ş¸Ä£ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½mapï¿½ï¿½
 		//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 12, g_vertices);
 
-		// ¼´±ãÒªÏÈÈ¡µÃÖ®Ç°µÄÊı¾İ£¬ÎÒÃÇÒ²Ó¦¸ÃÔÙunmapÖ®ºóÔÙÊ¹ÓÃ
+		// ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½È¡ï¿½ï¿½Ö®Ç°ï¿½ï¿½ï¿½ï¿½ï¿½İ£ï¿½ï¿½ï¿½ï¿½ï¿½Ò²Ó¦ï¿½ï¿½ï¿½ï¿½unmapÖ®ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½
 		fArr[0][1] = -0.5;
-		((float*)dataPtr)[1] = -0.5;// Ê¹ÓÃmap³öÀ´µÄÖ¸ÕëÒ²¿ÉÒÔ£¬µ«ÊÇ±ØĞëÔÙUnmapÖ®ºó£¡£¡£¡
+		((float*)dataPtr)[1] = -0.5;// Ê¹ï¿½ï¿½mapï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ò²ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½ï¿½ï¿½UnmapÖ®ï¿½ó£¡£ï¿½ï¿½ï¿½
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 12, dataPtr);
 
         //glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -656,10 +728,10 @@ void OpenWidget::paintGL()
 	QMatrix4x4 matView = m_cam->GetViewMatrix();
 	QVector3D camPos = m_cam->GetCamPos().toVector3D();
     // shadow should use light vp mat(restore to normal vp, after shadow pass)
-    // ÕâÀïÖ®Ç°³öÁËÒ»¸ö·Ç³£ÑÏÖØµÄÎÊÌâ£¬Ó¦¸ÃÊÇÎÒËæÊÖ¸ÄµÄ£¬ÄÇ¾ÍÊÇ¶ÔÓÚÆ½ĞĞ¹âÀ´Ëµ£¬ÎÒÃÇµÄlightVPÀïµÄÍ¶Ó°£¬Ó¦¸ÃÊ¹ÓÃÕı½»Í¶Ó°£¬³ı·ÇÊÇÆäËû¹âÔ´
-    // ¶øÎÒÕâÀïÓÃ³ÉÁËprojectionµÄ¾ØÕó£¬Ã»ÓĞºÍ×îºópassÖĞÉèÖÃµÄorthoganal¶ÔÓ¦ÆğÀ´
+    // ï¿½ï¿½ï¿½ï¿½Ö®Ç°ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ç³ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½â£¬Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ÄµÄ£ï¿½ï¿½Ç¾ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½Æ½ï¿½Ğ¹ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½Çµï¿½lightVPï¿½ï¿½ï¿½Í¶Ó°ï¿½ï¿½Ó¦ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¶Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã³ï¿½ï¿½ï¿½projectionï¿½Ä¾ï¿½ï¿½ï¿½Ã»ï¿½Ğºï¿½ï¿½ï¿½ï¿½passï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½orthoganalï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½
     matVP = matOrtho * m_cam->GetLightViewMatrix();
-    // Ê¹ÓÃÍ¸ÊÓµÄÏ¸½ÚÎÒÓĞµãÍüÁË£¬Ê¹ÓÃÕı½»µÄ»°£¬ÒõÓ°±íÏÖºÜÕı³££¬µ«ÊÇ¹âÔ´µÄÎ»ÖÃ¸Ä±ä¾Í²»ÄÜÆğĞ§ÁË£¬ÕâÀïÓ¦¸Ã»¹ÓĞµãÎÊÌâ
+    // Ê¹ï¿½ï¿½Í¸ï¿½Óµï¿½Ï¸ï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½ï¿½ï¿½ï¿½Ë£ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½ï¿½Öºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¹ï¿½Ô´ï¿½ï¿½Î»ï¿½Ã¸Ä±ï¿½Í²ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½Ë£ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã»ï¿½ï¿½Ğµï¿½ï¿½ï¿½ï¿½ï¿½
     //matVP = matProj * m_cam->GetLightViewMatrix();
 
 	//-----Shadow render pass
@@ -679,7 +751,7 @@ void OpenWidget::paintGL()
  	glBindFramebuffer(GL_FRAMEBUFFER, m_originalFbo);// after handle one pass, you should restore the original pass, it's not necessary(mainly because of my function flow)
 
 	//--------Deferred rendering g-buffer handle pass
-	// ¹Ø±Õdeferred»æÖÆºó£¬gbufferÒ²Ó¦¸Ã¹Ø±Õ£¬·ñÔò»æÖÆ²»Õı³£
+	// ï¿½Ø±ï¿½deferredï¿½ï¿½ï¿½Æºï¿½gbufferÒ²Ó¦ï¿½Ã¹Ø±Õ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ²ï¿½ï¿½ï¿½ï¿½ï¿½
  	CreateGBufferFrameBufferTextures();
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		qDebug() << "check frame buffer failed";
@@ -700,7 +772,7 @@ void OpenWidget::paintGL()
 // 		m_shaderHelperPtr->SetLightVPMat(matLightVP);
 
 		Model *mod = ModelMgr::Instance().GetModel(i);
-		// ¿ªÆôÏß¿òÄ£Ê½
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ß¿ï¿½Ä£Ê½
 // 		mod->SetDrawType(Mesh::Line);
 
 		if (mod->GetModelName().compare("water") == 0) {
@@ -888,7 +960,7 @@ void OpenWidget::CreateOffScreenFrameBufferTexture()
 	{
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
 		if (m_originalFbo != 1) {
-			AddTipInfo(Q8("OffScreenÖ¡»º´æ´´½¨´íÎó£¬Ó¦¸ÃÔÚÖ÷´°¿Ú´´½¨Ö®ºóÔÙ´´½¨"));
+			AddTipInfo(Q8("OffScreenÖ¡ï¿½ï¿½ï¿½æ´´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½"));
 		}
 		glCreateFramebuffers(1, &m_offScreenFbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_offScreenFbo);
@@ -986,7 +1058,7 @@ void OpenWidget::CreateShadowMapFrameBufferTexture()
 	{
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
 		if (m_originalFbo != 1) {
-			AddTipInfo(Q8("ShadowMapÖ¡»º´æ´´½¨´íÎó£¬Ó¦¸ÃÔÚÖ÷´°¿Ú´´½¨Ö®ºóÔÙ´´½¨"));
+			AddTipInfo(Q8("ShadowMapÖ¡ï¿½ï¿½ï¿½æ´´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½"));
 		}
 		glCreateFramebuffers(1, &m_shadowMapFbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFbo);
@@ -1024,7 +1096,7 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 	if (0 == m_gBufferFbo) {
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
 		if (m_originalFbo != 1) {
-			AddTipInfo(Q8("GBufferÖ¡»º´æ´´½¨´íÎó£¬Ó¦¸ÃÔÚÖ÷´°¿Ú´´½¨Ö®ºóÔÙ´´½¨"));
+			AddTipInfo(Q8("GBufferÖ¡ï¿½ï¿½ï¿½æ´´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½"));
 		}
 
 		glCreateFramebuffers(1, &m_gBufferFbo);
@@ -1060,8 +1132,8 @@ void OpenWidget::CreateGBufferFrameBufferTextures()
 		// This ensures we don't accidentally oversample position/depth values in screen-space outside the texture's default coordinate region
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		// ÕâÊÇÒ»¸ö¿ÉÄÜ»áÔì³ÉtexÈ¡ÖµÉÁË¸µÄÖØÒªº¯Êı£¬Ö®Ç°Ë®ÃæÏÂµÄÉÁË¸¾ÍºÍÕâ¸öÓĞ¹Ø
-		// µ«ÊÇ£¬ËüµÄµ÷ÓÃµØµãÓ¦¸ÃÔÚÉèÖÃÍêÓĞĞ§ÄÚÈİºóÔÙ½øĞĞÉú³É£¬ÕâÀïÉú³ÉµÄ»°¾ÍÊÇÒ»¸ö¿ÕµÄ£¨ÎŞĞ§µÄ£©Mipmap
+		// ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ü»ï¿½ï¿½ï¿½ï¿½texÈ¡Öµï¿½ï¿½Ë¸ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®Ç°Ë®ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½Ë¸ï¿½Íºï¿½ï¿½ï¿½ï¿½ï¿½Ğ¹ï¿½
+		// ï¿½ï¿½ï¿½Ç£ï¿½ï¿½ï¿½ï¿½Äµï¿½ï¿½ÃµØµï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½İºï¿½ï¿½Ù½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÉµÄ»ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ÕµÄ£ï¿½ï¿½ï¿½Ğ§ï¿½Ä£ï¿½Mipmap
 // 		glGenerateMipmap(GL_TEXTURE_2D);
 // 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
@@ -1149,7 +1221,7 @@ void OpenWidget::DrawDeferredShading()
 	UpdateDynamicLightsInfo();
 	auto camPos = m_cam->GetCamPos().toVector3D();
 	m_shaderHelperPtr->SetCamWorldPos(camPos);
-    // ÓÉÓÚÊÇÆ½ĞĞ¹â£¬ËùÒÔÓÃµÄÕı½»Í¶Ó°Âğ£¿£¿£¨¾­¹ıÑéÖ¤£¬Ê¹ÓÃÕı½»µÄÒõÓ°²»ÕıÈ·????£¬Ä£ÄâÉãÏñ»úµÄ»°£¬Ó¦¸Ã»¹ÊÇÒªÓÃÍ¸ÊÓÍ¶Ó°???£©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ½ï¿½Ğ¹â£¬ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½Í¶Ó°ï¿½ğ£¿£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½È·????ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½Ó¦ï¿½Ã»ï¿½ï¿½ï¿½Òªï¿½ï¿½Í¸ï¿½ï¿½Í¶Ó°???ï¿½ï¿½
     QMatrix4x4 matLightVP = m_cam->GetOrthographicMatrix() * m_cam->GetLightViewMatrix();
     //matLightVP = m_cam->GetProjectionMatrix() * m_cam->GetLightViewMatrix();
 	m_shaderHelperPtr->SetLightVPMat(matLightVP);
@@ -1202,13 +1274,13 @@ void OpenWidget::DrawDeferredShading()
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    // ----²âÊÔreadºÍdrawµÄfboµÄ·ÖÀëÊ¹ÓÃÏ¸½Ú
-    // Ö®Ç°Ã»ÓĞÕâÃ´ÓÃ¹ı£¬ÒòÎªbs5Ä£ÄâÆ÷ËùÒÔÏêÏ¸²âÊÔÁËÏÂ£¬ÕâÀï¼òµ¥¼ÇÂ¼ÏÂÒªµã£º
-    // 1£ºÈç¹ûÉèÖÃµÄÊÇGL_FRAMEBUFFER£¬ÄÇ¾ÍÏàµ±ÓÚÍ¬Ê±°ÑreadºÍdraw¶¼ÉèÖÃµ½ÁËÒ»¸öfboÉÏ£¨readºÍdraw·Ö±ğÍ¬Ê±Ö»ÄÜ´æÔÚÒ»¸ö£©
-    // 2£º¿ªÊ¼ÒòÎªÃ»ÓÃ¹ıÕâÖÖ·ÖÀëÊ½µÄfb£¬ËùÒÔÓĞµããÂ£¬Àí½âÒÔºóÆäÊµºÜ¼òµ¥£¬¾ÍÊÇÉèÖÃÒ»¸öread£¨src£©ºÍÒ»¸ödraw£¨dest£©ºó£¬ÎÒÃÇ¾Í¿ÉÒÔÊ¹ÓÃglBlitFramebuffer¿ìËÙµÄ°ÑÄÚÈİ¿½±´µ½ÁíÍâÒ»¸öfboÖĞÁË
-    // 3£ºËùÒÔËµCreateReadAndDrawBufferTexturesÖĞÊÇ²»ĞèÒª´´½¨Ò»¸öĞÂµÄread fboµÄ£¬ÒòÎªÃ»Àí½âÎÒ²Å´´½¨ÁËÒ»¸ö
-    // 4£¨²¹³ä£©£ºµÚ3µã£¬±¾À´ËµÊÇÃ»ÓĞÎÊÌâµÄ£¬È·ÊµÊÇ´Óread¿½±´µ½draw£¬ÎÒÃÇ¿ÉÒÔÑ¡Ôñdefault fbo×÷ÎªsrcÀ´read£¬µ«ÊÇÎÒµ±Ê±ÊÇÏëÁË½âĞÂ½¨µÄreadÈçºÎÔË×÷£¬Æä×î¾­µäµÄ´¦Àí¾ÍÔÚÓÚ£¬°ó¶¨fboµÄtextureÊ±£¬ºÍÆäËûfboµÄÊ¹ÓÃµÄtexture°ó¶¨ÔÚÒ»Æğ
-    // ÕâÑùµÄ»°£¬Ö»ÒªÈÎºÎÒ»·½fbo½øĞĞÁË»æÖÆ£¬Á½¸öfbo¾Í¶¼ÓĞÏàÍ¬µÄÏñËØÁË£¬ÕâÊÇÎÒÒÔÇ°Ã»ÓĞ½Ó´¥¹ıµÄÒ»ÖÖ·½Ê½
+    // ----ï¿½ï¿½ï¿½ï¿½readï¿½ï¿½drawï¿½ï¿½fboï¿½Ä·ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Ï¸ï¿½ï¿½
+    // Ö®Ç°Ã»ï¿½ï¿½ï¿½ï¿½Ã´ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½Îªbs5Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½òµ¥¼ï¿½Â¼ï¿½ï¿½Òªï¿½ã£º
+    // 1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½GL_FRAMEBUFFERï¿½ï¿½ï¿½Ç¾ï¿½ï¿½àµ±ï¿½ï¿½Í¬Ê±ï¿½ï¿½readï¿½ï¿½drawï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½Ò»ï¿½ï¿½fboï¿½Ï£ï¿½readï¿½ï¿½drawï¿½Ö±ï¿½Í¬Ê±Ö»ï¿½Ü´ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½
+    // 2ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ÎªÃ»ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ê½ï¿½ï¿½fbï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôºï¿½ï¿½ï¿½Êµï¿½Ü¼òµ¥£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½readï¿½ï¿½srcï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½drawï¿½ï¿½destï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾Í¿ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½glBlitFramebufferï¿½ï¿½ï¿½ÙµÄ°ï¿½ï¿½ï¿½ï¿½İ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½fboï¿½ï¿½ï¿½ï¿½
+    // 3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ËµCreateReadAndDrawBufferTexturesï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Âµï¿½read fboï¿½Ä£ï¿½ï¿½ï¿½ÎªÃ»ï¿½ï¿½ï¿½ï¿½ï¿½Ò²Å´ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
+    // 4ï¿½ï¿½ï¿½ï¿½ï¿½ä£©ï¿½ï¿½ï¿½ï¿½3ï¿½ã£¬ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½È·Êµï¿½Ç´ï¿½readï¿½ï¿½ï¿½ï¿½ï¿½ï¿½drawï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½default fboï¿½ï¿½Îªsrcï¿½ï¿½readï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ë½ï¿½ï¿½Â½ï¿½ï¿½ï¿½readï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½î¾­ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½fboï¿½ï¿½textureÊ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½fboï¿½ï¿½Ê¹ï¿½Ãµï¿½textureï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½Ö»Òªï¿½Îºï¿½Ò»ï¿½ï¿½fboï¿½ï¿½ï¿½ï¿½ï¿½Ë»ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½fboï¿½Í¶ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°Ã»ï¿½Ğ½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ö·ï¿½Ê½
     if (0) {
         CreateReadAndDrawBufferTextures();
 
@@ -1229,7 +1301,7 @@ void OpenWidget::DrawDeferredShading()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // ¶¼²»ĞèÒª°ó¶¨fbµÄtex2d¾ÓÈ»Ò²¿ÉÒÔ³É¹¦CopyTexSubImage2D.....
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½fbï¿½ï¿½tex2dï¿½ï¿½È»Ò²ï¿½ï¿½ï¿½Ô³É¹ï¿½CopyTexSubImage2D.....
         //glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, newTexId, 0);
         err = glGetError();
 
@@ -1326,7 +1398,7 @@ void OpenWidget::CreateSSAOFrameBufferTextures()
 	if (0 == m_ssaoFbo) {
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
 		if (m_originalFbo != 1) {
-			AddTipInfo(Q8("SSAOÖ¡»º´æ´´½¨´íÎó£¬Ó¦¸ÃÔÚÖ÷´°¿Ú´´½¨Ö®ºóÔÙ´´½¨"));
+			AddTipInfo(Q8("SSAOÖ¡ï¿½ï¿½ï¿½æ´´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½"));
 		}
 
 		auto s = size();
@@ -1361,7 +1433,7 @@ void OpenWidget::CreateSSAOBlurFrameBufferTextures()
 	if (0 == m_ssaoBlurFbo) {
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
 		if (m_originalFbo != 1) {
-			AddTipInfo(Q8("SSAOÖ¡»º´æ´´½¨´íÎó£¬Ó¦¸ÃÔÚÖ÷´°¿Ú´´½¨Ö®ºóÔÙ´´½¨"));
+			AddTipInfo(Q8("SSAOÖ¡ï¿½ï¿½ï¿½æ´´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½"));
 		}
 
 		auto s = size();
@@ -1385,7 +1457,7 @@ void OpenWidget::CreateReadAndDrawBufferTextures()
     if (0 == m_readFbo) {
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
         if (m_originalFbo != 1) {
-            AddTipInfo(Q8("ReadÖ¡»º´æ´´½¨´íÎó£¬Ó¦¸ÃÔÚÖ÷´°¿Ú´´½¨Ö®ºóÔÙ´´½¨"));
+            AddTipInfo(Q8("ReadÖ¡ï¿½ï¿½ï¿½æ´´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½"));
         }
 
         auto s = size();
@@ -1403,7 +1475,7 @@ void OpenWidget::CreateReadAndDrawBufferTextures()
         glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBufferAlbedoTex, 0);
 
         if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            AddTipInfo(Q8("ReadÖ¡»º´æ´´½¨´íÎó£¬Ó¦¸ÃÔÚÖ÷´°¿Ú´´½¨Ö®ºóÔÙ´´½¨"));
+            AddTipInfo(Q8("ReadÖ¡ï¿½ï¿½ï¿½æ´´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½"));
             return;
         }
     }
@@ -1411,7 +1483,7 @@ void OpenWidget::CreateReadAndDrawBufferTextures()
     if (0 == m_drawFbo) {
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_originalFbo);
         if (m_originalFbo != 1) {
-            AddTipInfo(Q8("DrawÖ¡»º´æ´´½¨´íÎó£¬Ó¦¸ÃÔÚÖ÷´°¿Ú´´½¨Ö®ºóÔÙ´´½¨"));
+            AddTipInfo(Q8("DrawÖ¡ï¿½ï¿½ï¿½æ´´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½"));
         }
 
         auto s = size();
@@ -1430,7 +1502,7 @@ void OpenWidget::CreateReadAndDrawBufferTextures()
 
         auto err = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
         if (err != GL_FRAMEBUFFER_COMPLETE) {
-            AddTipInfo(Q8("DrawÖ¡»º´æ´´½¨´íÎó£¬Ó¦¸ÃÔÚÖ÷´°¿Ú´´½¨Ö®ºóÔÙ´´½¨"));
+            AddTipInfo(Q8("DrawÖ¡ï¿½ï¿½ï¿½æ´´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½"));
             return;
         }
     }

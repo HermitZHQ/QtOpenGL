@@ -27,7 +27,7 @@ GLuint ShaderHelper::LoadShaders(ShaderInfo *info, GLuint size)
 		QFile file(info[i].shaderPath);
 		if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 		{
-			AddTipInfo(Q8("´ò¿ªÎÄ¼şÊ§°Ü"));
+			AddTipInfo(Q8("ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½"));
 			return 0;
 		}
 
@@ -43,7 +43,7 @@ GLuint ShaderHelper::LoadShaders(ShaderInfo *info, GLuint size)
 
 		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &res);
 		if (!res) {
-			AddTipInfo(Q8("±àÒëÎÄ¼şÊ§°Ü£º%1").arg(info[i].shaderPath));
+			AddTipInfo(Q8("ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½Ü£ï¿½%1").arg(info[i].shaderPath));
 			GLchar cLog[520] = { 0 };
 			glGetShaderInfoLog(shaderId, 520, NULL, cLog);
 			AddTipInfo(cLog);
@@ -92,10 +92,10 @@ GLuint ShaderHelper::LoadShaders(ShaderInfo *info, GLuint size)
 void ShaderHelper::GetCommonUniformLocation()
 {
 	if (m_programs[m_shaderType] != 0) {
-		AddTipInfo(Q8("¶ÁÈ¡shaderÎÄ¼ş³É¹¦----[%1]").arg(m_shaderType));
+		AddTipInfo(Q8("ï¿½ï¿½È¡shaderï¿½Ä¼ï¿½ï¿½É¹ï¿½----[%1]").arg(m_shaderType));
 	}
 	else {
-		AddTipInfo(Q8("¶ÁÈ¡shaderÎÄ¼şÊ§°Ü----[%1]").arg(m_shaderType));
+		AddTipInfo(Q8("ï¿½ï¿½È¡shaderï¿½Ä¼ï¿½Ê§ï¿½ï¿½----[%1]").arg(m_shaderType));
 	}
 
 	Use();
@@ -243,12 +243,12 @@ void ShaderHelper::GetCommonUniformLocation()
 
 	auto skyboxId = GetUniformLocation("skybox");// put skybox unit far away.....
 	if (-1 != skyboxId) {
-		// ¼´Ê¹ÉèÖÃÁËunit£¨²¢ÇÒ¼¤»îÁË¶ÔÓ¦unit£©£¬ÔÚNsightµ÷ÊÔµÄÊ±ºò£¬Ò²»á·¢ÏÖUnit0ÖĞ¿ÉÒÔÍ¬Ê±´æÔÚÒ»¸ö
-		// tex2dºÍtex cubemap£¬ÄÇÃ´ÊÇ²»ÊÇÖ»ÓĞ¶àcubemapµÄÊ±ºò²ÅĞèÒªÉèÖÃÄØ£¿
-		// Óöµ½Çé¿öºó¿ÉÒÔÓÃNsightÀ´ÑéÖ¤
+		// ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½unitï¿½ï¿½ï¿½ï¿½ï¿½Ò¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½Ó¦unitï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Nsightï¿½ï¿½ï¿½Ôµï¿½Ê±ï¿½ï¿½Ò²ï¿½á·¢ï¿½ï¿½Unit0ï¿½Ğ¿ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
+		// tex2dï¿½ï¿½tex cubemapï¿½ï¿½ï¿½ï¿½Ã´ï¿½Ç²ï¿½ï¿½ï¿½Ö»ï¿½Ğ¶ï¿½cubemapï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Nsightï¿½ï¿½ï¿½ï¿½Ö¤
 
-		// ÒÔÎª½â¾öµÄ×îºó£¬¶¼»¹¸øÎÒÀ´¸ö·´×ª....£¬ËäÈ»unit0¿ÉÒÔÍ¬Ê±´æÔÚ2dºÍcubemap£¬µ«ÊÇÒª²»±¨´í±ØĞë¸øcubemapÁíÍâÉèÖÃunit²ÅĞĞ£¡£¡
-		// µ±È»Ò²²»ÄÜºÍÆäËûunitÖØ¸´
+		// ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó£¬¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ª....ï¿½ï¿½ï¿½ï¿½È»unit0ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½ï¿½ï¿½2dï¿½ï¿½cubemapï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½cubemapï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½unitï¿½ï¿½ï¿½Ğ£ï¿½ï¿½ï¿½
+		// ï¿½ï¿½È»Ò²ï¿½ï¿½ï¿½Üºï¿½ï¿½ï¿½ï¿½ï¿½unitï¿½Ø¸ï¿½
  		glUniform1i(skyboxId, 18);
 	}
 	ChkGLErr;
@@ -311,7 +311,7 @@ void ShaderHelper::InitDefaultShader()
 				GLuint shaderArr[2] = { 1234567, 1234567 };
 				GLint shaderTypeArr[2] = { 0 };
 				GLint shaderLenArr[2] = { 0 };
-				// ¾­¹ı²âÊÔµÃ³ö½áÂÛ£ºÊ¹ÓÃPB load½øÀ´µÄprogram£¬ÎŞ·¨ÔÙ´Î»ñÈ¡µ½shader sizeºÍÓĞĞ§µÄshaderÄÚÈİ£¬shader sizeÎª0ÊÇÕı³£µÄ
+				// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÔµÃ³ï¿½ï¿½ï¿½ï¿½Û£ï¿½Ê¹ï¿½ï¿½PB loadï¿½ï¿½ï¿½ï¿½ï¿½ï¿½programï¿½ï¿½ï¿½Ş·ï¿½ï¿½Ù´Î»ï¿½È¡ï¿½ï¿½shader sizeï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½shaderï¿½ï¿½ï¿½İ£ï¿½shader sizeÎª0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				glGetAttachedShaders(m_programs[m_shaderType], 2, &shaderSize, shaderArr);
 
 				int i = 0;
@@ -338,7 +338,7 @@ void ShaderHelper::InitDefaultShader()
 		unsigned char* program_binary = new unsigned char[binary_size];// Now retrieve the binary from the program object
 		GLenum binary_format = GL_NONE; // 36385
 		glGetProgramBinary(m_programs[m_shaderType], binary_size, NULL, &binary_format, program_binary);
-		// ------ÄÃµ½program_binaryµÄÄÚÈİºó£¬ÎÒÃÇ¾Í¿ÉÒÔ°ÑËü±£´æµ½ÎÄ¼şÖĞÁË£¬ÕâÑùÏÂ´ÎÎÒÃÇ¾Í¿ÉÒÔÖ±½ÓÊ¹ÓÃ£¬¶øÊ¡È¥ÁË´ó¶ÎµÄ¶ÁÈ¡ÎÄ¼ş£¬ÒÔ¼°±àÒëµÄÊ±¼äÁË
+		// ------ï¿½Ãµï¿½program_binaryï¿½ï¿½ï¿½ï¿½ï¿½İºï¿½ï¿½ï¿½ï¿½Ç¾Í¿ï¿½ï¿½Ô°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æµ½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½ï¿½Ç¾Í¿ï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ê¹ï¿½Ã£ï¿½ï¿½ï¿½Ê¡È¥ï¿½Ë´ï¿½ÎµÄ¶ï¿½È¡ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
 		char filename[] = "./cache/default.data";
 		FILE* fp = fopen(filename, "wb");
 		if (fp != nullptr) {
@@ -350,6 +350,7 @@ void ShaderHelper::InitDefaultShader()
 	}
 
     // test the uniform block here(need relevant shader code, it's in the vertex shader with triangle.vert file)
+	// uniform block æµ‹è¯•ä»£ç æ®µï¼Œéœ€è¦çš„è¯å¯ä»¥æ‰“å¼€å¸®åŠ©ç†è§£
     if (0)
     {
         auto matblockPos1 = glGetUniformBlockIndex(m_programs[m_shaderType], "testBlock1");
@@ -360,19 +361,19 @@ void ShaderHelper::InitDefaultShader()
         //glGetActiveUniformBlockiv(m_programs[m_shaderType], matblockPos1, GL_UNIFORM_BLOCK_BINDING, &buf);
         err = glGetError();
 
-        //´´½¨uniform¿é´óĞ¡µÄbuffer¿Õ¼ä
+        //ï¿½ï¿½ï¿½ï¿½uniformï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½bufferï¿½Õ¼ï¿½
         glGetActiveUniformBlockiv(m_programs[m_shaderType], matblockPos1, GL_UNIFORM_BLOCK_DATA_SIZE, &UBOSize);
         GLvoid * buffer = malloc(UBOSize);
         err = glGetError();
 
-        //½¨Á¢±äÁ¿Ãû³ÆÊı×é
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         const char * names[NumberOfUniform] =
         {
             "test11",
             "test12",
         };
 
-        //²éÑ¯Ã¿¸öuniform³ÉÔ±¶ÔÓ¦µÄÊôĞÔ
+        //ï¿½ï¿½Ñ¯Ã¿ï¿½ï¿½uniformï¿½ï¿½Ô±ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
         GLuint indices[NumberOfUniform];
         GLint size[NumberOfUniform];
@@ -609,6 +610,18 @@ void ShaderHelper::InitGeometryShader()
 	GetCommonUniformLocation();
 }
 
+void ShaderHelper::InitComputeShader()
+{
+	m_shaderType = ComputeNormal1;
+
+	ShaderHelper::ShaderInfo info[] = {
+		{GL_COMPUTE_SHADER, "./shaders/compute.cs"},
+	};
+	m_programs[m_shaderType] = LoadShaders(info, sizeof(info) / sizeof(ShaderHelper::ShaderInfo));
+
+	GetCommonUniformLocation();
+}
+
 void ShaderHelper::Init()
 {
 	initializeOpenGLFunctions();
@@ -669,6 +682,8 @@ void ShaderHelper::Init()
 	InitSSAOShader();
 	InitSSAOBlurShader();
 	InitGeometryShader();
+	//----test compute shader
+	InitComputeShader();
 
 	m_shaderType = Default;
 	Use();
@@ -877,8 +892,8 @@ GLint ShaderHelper::GetAttriLocation(const GLchar *name)
 {
 	GLint res = glGetAttribLocation(m_programs[m_shaderType], name);
 	if (-1 == res) {
-// 		AddTipInfo(Q8("ÕÒ²»µ½Attrib:%1").arg(name));
-		qDebug() << Q8("ÕÒ²»µ½Attrib:%1").arg(name);
+// 		AddTipInfo(Q8("ï¿½Ò²ï¿½ï¿½ï¿½Attrib:%1").arg(name));
+		qDebug() << Q8("ï¿½Ò²ï¿½ï¿½ï¿½Attrib:%1").arg(name);
 	}
 	return res;
 }
@@ -887,8 +902,8 @@ GLint ShaderHelper::GetUniformLocation(const GLchar *name)
 {
 	GLint res = glGetUniformLocation(m_programs[m_shaderType], name);
 	if (-1 == res) {
-// 		AddTipInfo(Q8("ÕÒ²»µ½uniform:%1").arg(name));
-		qDebug() << Q8("ÕÒ²»µ½Attrib:%1").arg(name);
+// 		AddTipInfo(Q8("ï¿½Ò²ï¿½ï¿½ï¿½uniform:%1").arg(name));
+		qDebug() << Q8("ï¿½Ò²ï¿½ï¿½ï¿½Attrib:%1").arg(name);
 	}
 	return res;
 }

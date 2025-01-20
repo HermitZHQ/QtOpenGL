@@ -34,6 +34,8 @@ protected:
 	void UpdateAllLightsInfo();
 	void UpdateAnimTime();
 	virtual void paintGL() override;
+	//---- compute shader test
+	void SimpleComputeShaderTest();
 
 	float lerp(float a, float b, float f);
 	void GenerateHemisphereSamplers();

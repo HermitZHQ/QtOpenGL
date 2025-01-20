@@ -12,6 +12,13 @@ uniform mat4x4 mat_mvp;
 uniform mat4x4 mat_world;
 uniform vec3 worldCamPos;
 
+//----test uniform block
+uniform testBlock1{
+	vec4 test11;
+	vec4 test12;
+};
+
+
 //----out vars
 out Vertex {
 	vec2 uv;
