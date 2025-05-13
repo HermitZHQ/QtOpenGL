@@ -7,6 +7,12 @@ layout(binding = 1) buffer calcBuf {
     float data[];
 }CalcBuf;
 
+layout(binding = 2) buffer outBuf
+{
+    float data [];
+}OutBuf;
+
 void main() {
-    CalcBuf.data[gl_LocalInvocationIndex] = CalcBuf.data[gl_LocalInvocationIndex] * CalcBuf.data[gl_LocalInvocationIndex];
+    //CalcBuf.data[gl_LocalInvocationIndex] = CalcBuf.data[gl_LocalInvocationIndex] * CalcBuf.data[gl_LocalInvocationIndex];
+    OutBuf.data[gl_LocalInvocationIndex] = CalcBuf.data[gl_LocalInvocationIndex] * CalcBuf.data[gl_LocalInvocationIndex];
 }

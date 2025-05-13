@@ -136,12 +136,6 @@ void GLErrorMessageCallback(GLenum source,
 void OpenWidget::SimpleComputeShaderTest() {
 
 	if (1) {
-		// test compute data array, will send into compute shader later...
-		GLfloat data[10];
-		for (int i = 0; i < 10; ++i) {
-			data[i] = i;
-		}
-
 		// 关键shader内置变量记录
 		// gl_WorkGroupSize，这个就是shader里面声明的local_size_x,y,z的值
 		// gl_LocalInvocationIndex，这个是局部的索引，就是shader中声明的x,y,z，比如10，1，1，那么它的范围是0-9
@@ -161,36 +155,66 @@ void OpenWidget::SimpleComputeShaderTest() {
 		//	gl_LocalInvocationID.z * gl_WorkGroupSize.x * gl_WorkGroupSize.y +
 		//	gl_LocalInvocationID.y * gl_WorkGroupSize.x +
 		//	gl_LocalInvocationID.x;
+		
+
+		// test compute data array, will send into compute shader later...
+		GLfloat data[10];
+		for (int i = 0; i < 10; ++i) {
+			data[i] = i;
+		}
 
 		// 关联shader文件：compute.cs
 		m_shaderHelperPtr->SetShaderType(ShaderHelper::eShaderType::ComputeNormal1);
-		GLuint ssob = 0;
-		glGenBuffers(1, &ssob);
+		GLuint input_buffer = 0;
+		glGenBuffers(1, &input_buffer);
 		auto err = glGetError();
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssob);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, input_buffer);
 		// 这里是生成ssbo，并且绑定数据，没有什么好说的
 		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
 		err = glGetError();
 
+		// ----这里是测试compute shader里面的输出buffer的
+		GLuint output_buffer = 0;
+		glGenBuffers(1, &output_buffer);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_buffer);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(data), 0, GL_DYNAMIC_DRAW);
+
 		// 关键是这里，useProgram后，我们要绑定刚刚的数据到shader的buffer上，index和shader中的声明要对应起来，是关键点
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssob);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, input_buffer);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, output_buffer);
 		err = glGetError();
 
 		// 20亿次的计算，目前统计是需要900多ms，不能计算200亿次，会失败，应该是有单次最大运算的限制
 		// Dispatch这里并不会消耗GPU，而是要取回数据的瞬间才会开始进行计算，消耗GPU
-		glDispatchCompute(2000000000, 1, 1);
-		// GL_ALL_BARRIER_BIT
-		//glMemoryBarrier(GL_ALL_BARRIER_BITS);
+		glDispatchCompute(10, 1, 1);
 
-		GLfloat dataReadBack[10] = { 0 };
+		// ------there are two methods to get compute buffer data back，one is MapBufferRange，Another is glGetBufferSubData
+		// now, we enable two methods at the same time, just to do the example(in fact we only need one of them)
+		// method01
+		{
+			// GL_ALL_BARRIER_BIT
+			glMemoryBarrier(GL_ALL_BARRIER_BITS);
+			// ----check output buffer data change(need use GL_DYNAMIC_DRAW with output_buffer, otherwise we can't get valid ptr here)
+			void* ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(data), GL_MAP_READ_BIT);
+			glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		}
+
+		// method02
+		{
+			GLfloat dataReadBack[10] = { 0 };
+			auto time = GetTickCount();
+			// 别乱填参数啊，之前吧第一个填成input_buffer了，应该是填target的类型GL_SHADER_STORAGE_BUFFER
+			// 根据我的测试，GetBufferSubData的时候，才会真正的开始计算，并消耗GPU使用率，之前的Dispatch只是设置了参数，并没有开始运算，应该是这样的
+			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(data), dataReadBack);
+			time = GetTickCount() - time;
+			err = glGetError();
+		}
+
+		// ------release buffer
+		glDeleteBuffers(1, &input_buffer);
+		glDeleteBuffers(1, &output_buffer);
+
 		auto time = GetTickCount();
-		// 别乱填参数啊，之前吧第一个填成ssob了，应该是填target的类型GL_SHADER_STORAGE_BUFFER
-		// 根据我的测试，GetBufferSubData的时候，才会真正的开始计算，并消耗GPU使用率，之前的Dispatch只是设置了参数，并没有开始运算，应该是这样的
-		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(data), dataReadBack);
-		time = GetTickCount() - time;
-		err = glGetError();
-
-		time = GetTickCount();
 		int num = 0;
 		for (int i = 0; i < 2000000000; ++i) {
 			num += i * i;
